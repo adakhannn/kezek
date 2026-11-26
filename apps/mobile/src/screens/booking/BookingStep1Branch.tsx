@@ -16,6 +16,7 @@ import RatingBadge from '../../components/ui/RatingBadge';
 import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
+import BookingLoadError from './BookingLoadError';
 import { useBookingStep1Business } from './useBookingStep1Business';
 import type { BookingInitialData } from '../bookingFlow/useBookingScreenData';
 
@@ -37,7 +38,13 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
     const { bookingData, hydrateInitialData, setBranchId } = useBooking();
     const { t } = useLanguage();
     const preparedData = initialData?.business.slug === slug ? initialData : undefined;
-    const { businessData: fallbackData, isLoading } = useBookingStep1Business({
+    const {
+        businessData: fallbackData,
+        isLoading,
+        hasError,
+        isRetrying,
+        retry,
+    } = useBookingStep1Business({
         slug: preparedData ? undefined : slug,
         hydrateInitialData,
     });
@@ -65,6 +72,14 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
         return (
             <View style={styles.container}>
                 <LoadingSpinner message={t('common.loading')} />
+            </View>
+        );
+    }
+
+    if (!businessData && hasError) {
+        return (
+            <View style={[styles.container, styles.section]}>
+                <BookingLoadError title={t('booking.error.loadBusiness')} onRetry={retry} retrying={isRetrying} />
             </View>
         );
     }

@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     return withRateLimit(
         req,
         routeRateLimit('api/staff-invitations', RateLimitConfigs.normal),
-        () => withErrorHandler('StaffInvitationsList', () => runListStaffInvitationsHttp()),
+        () => withErrorHandler('StaffInvitationsList', () => runListStaffInvitationsHttp(req)),
         '/api/staff-invitations',
     );
 }

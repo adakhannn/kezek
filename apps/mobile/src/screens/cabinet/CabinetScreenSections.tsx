@@ -1,5 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import {
+    RefreshControl,
+    ScrollView,
+    Text,
+    useWindowDimensions,
+    View,
+    type NativeScrollEvent,
+    type NativeSyntheticEvent,
+} from 'react-native';
 
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -11,15 +19,31 @@ import { useLanguage } from '../../i18n';
 import { formatDate, formatTime } from '../../utils/format';
 import { getStatusColor, getStatusText } from '../../utils/i18n';
 import { styles } from './cabinetScreenStyles';
-import type { Booking } from './types';
+import { StaffInvitationsBlock } from './StaffInvitationsBlock';
+import { bookingTitle, type Booking } from './types';
+import { VisitPackagesBlock } from './VisitPackagesBlock';
 
 export const CABINET_STACKED_HEADER_MAX_WIDTH = 420;
+
+/** Distance from the bottom (px) at which the next history page starts loading (B11). */
+const LOAD_MORE_THRESHOLD = 320;
 
 export function shouldStackCabinetHeader(width: number) {
     return width <= CABINET_STACKED_HEADER_MAX_WIDTH;
 }
 
+export function isNearBottom({ layoutMeasurement, contentOffset, contentSize }: NativeScrollEvent, threshold = LOAD_MORE_THRESHOLD) {
+    return layoutMeasurement.height + contentOffset.y >= contentSize.height - threshold;
+}
+
 type Props = {
+    /** Signed-in user: the packages and invitations blocks load for them. */
+    userId?: string;
+    hasMoreBookings?: boolean;
+    isFetchingMore?: boolean;
+    loadMoreFailed?: boolean;
+    onLoadMore?: () => void;
+    onReview?: (booking: Booking) => void;
     userLabel: string;
     activeTab: 'upcoming' | 'history';
     isOfflineData: boolean;
@@ -37,6 +61,12 @@ type Props = {
 };
 
 export function CabinetScreenSections({
+    userId,
+    hasMoreBookings = false,
+    isFetchingMore = false,
+    loadMoreFailed = false,
+    onLoadMore,
+    onReview,
     userLabel,
     activeTab,
     isOfflineData,
@@ -67,11 +97,20 @@ export function CabinetScreenSections({
           ? t('cabinet.dataMode.cache')
           : t('cabinet.dataMode.live');
 
+    // Older history pages load as the history list is scrolled to its end (B11).
+    const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        if (isHistory && hasMoreBookings && !isFetchingMore && !loadMoreFailed && isNearBottom(event.nativeEvent)) {
+            onLoadMore?.();
+        }
+    };
+
     return (
         <ScrollView
             style={styles.container}
             contentContainerStyle={styles.content}
             testID="cabinet-screen"
+            onScroll={handleScroll}
+            scrollEventThrottle={200}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.accent.primary} />}
         >
             <View style={[styles.header, usesStackedHeader && styles.headerCompact]}>
@@ -176,6 +215,13 @@ export function CabinetScreenSections({
                 </Card>
             )}
 
+            {userId ? (
+                <>
+                    <StaffInvitationsBlock userId={userId} />
+                    <VisitPackagesBlock userId={userId} />
+                </>
+            ) : null}
+
             <View style={styles.sectionHeader}>
                 <View>
                     <Text style={styles.sectionTitle}>{t('cabinet.bookings.title')}</Text>
@@ -230,13 +276,17 @@ export function CabinetScreenSections({
                             style={styles.bookingPressable}
                             scale="firm"
                             accessibilityLabel={t('cabinet.bookings.itemLabel', {
-                                service: booking.service?.name_ru || t('cabinet.ui.serviceFallback'),
+                                service: bookingTitle(booking) || t('cabinet.ui.serviceFallback'),
                                 date: formatDate(booking.start_at, locale, booking.business?.tz),
                                 time: formatTime(booking.start_at, booking.business?.tz),
                             })}
                             accessibilityHint={t('cabinet.bookings.itemHint')}
                         >
-                            <BookingCard booking={booking} isHistory={isHistory} />
+                            <BookingCard
+                                booking={booking}
+                                isHistory={isHistory}
+                                onReview={!isOfflineData && onReview ? () => onReview(booking) : undefined}
+                            />
                         </MotionPressable>
                     ))}
                 </View>
@@ -252,6 +302,20 @@ export function CabinetScreenSections({
                     style={styles.empty}
                 />
             )}
+            {isHistory && (hasMoreBookings || isFetchingMore || loadMoreFailed) ? (
+                <View style={styles.loadMore} testID="cabinet-load-more">
+                    {isFetchingMore ? (
+                        <Text style={styles.footerHint}>{t('cabinet.bookings.loadingMore')}</Text>
+                    ) : loadMoreFailed ? (
+                        <>
+                            <Text style={styles.footerHint}>{t('cabinet.bookings.loadMoreError')}</Text>
+                            <Button title={t('cabinet.ui.retry')} onPress={() => onLoadMore?.()} variant="outline" size="sm" />
+                        </>
+                    ) : (
+                        <Button title={t('cabinet.bookings.loadMore')} onPress={() => onLoadMore?.()} variant="outline" size="sm" />
+                    )}
+                </View>
+            ) : null}
 
             <View style={styles.footer}>
                 <Button
@@ -275,16 +339,17 @@ export function CabinetScreenSections({
     );
 }
 
-function BookingCard({ booking, isHistory }: { booking: Booking; isHistory: boolean }) {
+function BookingCard({ booking, isHistory, onReview }: { booking: Booking; isHistory: boolean; onReview?: () => void }) {
     const statusColor = getStatusColor(booking.status);
     const { t, locale } = useLanguage();
     const statusText = getStatusText(booking.status, locale);
+    const benefitAmount = booking.promotion?.final_amount ?? booking.package?.final_amount ?? null;
 
     return (
         <Card style={styles.bookingCard}>
             <View style={styles.bookingHeader}>
                 <View style={styles.bookingTitleWrap}>
-                    <Text style={styles.bookingService}>{booking.service?.name_ru || t('cabinet.ui.serviceFallback')}</Text>
+                    <Text style={styles.bookingService}>{bookingTitle(booking) || t('cabinet.ui.serviceFallback')}</Text>
                     <Text style={styles.bookingBusiness}>{booking.business?.name || t('cabinet.card.noBusiness')}</Text>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
@@ -319,12 +384,39 @@ function BookingCard({ booking, isHistory }: { booking: Booking; isHistory: bool
                 </View>
             </View>
 
+            {booking.promotion || booking.package ? (
+                <View style={styles.benefitRow} testID={`booking-benefit-${booking.id}`}>
+                    <Ionicons
+                        name={booking.package ? 'ticket-outline' : 'pricetag-outline'}
+                        size={14}
+                        color={colors.accent.primary}
+                    />
+                    <Text style={styles.metaText}>
+                        {booking.package ? t('cabinet.card.paidWithPackage') : t('cabinet.card.promotion')}
+                        {benefitAmount != null ? ` · ${t('cabinet.card.finalAmount', { amount: benefitAmount })}` : ''}
+                    </Text>
+                </View>
+            ) : null}
+
+            {booking.review ? (
+                <Text style={styles.footerHint}>{t('cabinet.card.reviewed', { rating: booking.review.rating })}</Text>
+            ) : null}
+
             <View style={styles.bookingFooter}>
                 <Text style={styles.footerHint}>
                     {isHistory
                         ? t('cabinet.card.historyHint')
                         : t('cabinet.card.upcomingHint')}
                 </Text>
+                {onReview && (booking.canReview || (booking.review && booking.status === 'paid')) ? (
+                    <Button
+                        title={t(booking.review ? 'cabinet.review.edit' : 'cabinet.review.create')}
+                        onPress={onReview}
+                        variant="outline"
+                        size="sm"
+                        style={styles.reviewButton}
+                    />
+                ) : null}
             </View>
         </Card>
     );

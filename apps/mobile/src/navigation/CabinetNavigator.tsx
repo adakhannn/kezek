@@ -8,8 +8,13 @@ import {
     cabinetStackScreenOptions,
     createNavigationHeaderTitle,
 } from './mainNavigatorConfig';
+import { withSessionGate } from './SessionGate';
 
 const CabinetStack = createNativeStackNavigator<CabinetStackParamList>();
+
+// The Cabinet tab is there signed out too: it shows the sign-in entry instead of the account (C1).
+const GuardedCabinetScreen = withSessionGate(CabinetScreen, 'cabinet');
+const GuardedProfileScreen = withSessionGate(ProfileScreen, 'profile');
 
 export function CabinetNavigator() {
     const { t } = useLanguage();
@@ -18,7 +23,7 @@ export function CabinetNavigator() {
         <CabinetStack.Navigator screenOptions={cabinetStackScreenOptions}>
             <CabinetStack.Screen
                 name="CabinetMain"
-                component={CabinetScreen}
+                component={GuardedCabinetScreen}
                 options={{
                     title: t('nav.cabinet'),
                     headerTitle: createNavigationHeaderTitle(t('nav.cabinet')),
@@ -26,7 +31,7 @@ export function CabinetNavigator() {
             />
             <CabinetStack.Screen
                 name="Profile"
-                component={ProfileScreen}
+                component={GuardedProfileScreen}
                 options={{
                     title: t('nav.profile'),
                     headerTitle: createNavigationHeaderTitle(t('nav.profile')),

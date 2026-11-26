@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { createRequestSupabaseClient } from '@/lib/requestAuthContext';
 import {
   createOrUpdateReview,
   type ReviewCreateBody,
 } from '@/lib/reviewCreateService';
-import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export async function runReviewCreateHttp(req: Request): Promise<NextResponse> {
   const result = await createOrUpdateReview({
-    supabase: await createSupabaseServerClient(),
+    // The web session cookie or the app's Bearer token (C9).
+    supabase: await createRequestSupabaseClient(req),
     body: (await req.json()) as ReviewCreateBody,
   });
 

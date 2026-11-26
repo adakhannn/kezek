@@ -310,4 +310,20 @@ export const styles = StyleSheet.create({
     signOutQuickButton: {
         borderColor: colors.status.danger,
     },
+    benefitRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: colors.layout.space2,
+    },
+    reviewButton: {
+        marginTop: colors.layout.space2,
+        alignSelf: 'flex-start',
+    },
+    loadMore: {
+        marginHorizontal: colors.layout.space6,
+        marginBottom: colors.layout.space4,
+        alignItems: 'center',
+        gap: colors.layout.space2,
+    },
 });

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
-import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { createRequestSupabaseClient } from '@/lib/requestAuthContext';
 import { runWhatsAppSendOtpRoute } from '@/lib/whatsAppSendOtpRouteService';
 
 export async function runWhatsAppSendOtpHttp(req: Request): Promise<NextResponse> {
@@ -15,7 +15,8 @@ export async function runWhatsAppSendOtpHttp(req: Request): Promise<NextResponse
   }
 
   const result = await runWhatsAppSendOtpRoute({
-    supabase: await createSupabaseServerClient(),
+    // The web session cookie or the app's Bearer token (B5).
+    supabase: await createRequestSupabaseClient(req),
     phone,
   });
 

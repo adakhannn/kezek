@@ -2,31 +2,32 @@ import { isUuid } from '@shared-client/validation';
 import type { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { createRequestSupabaseClient } from '@/lib/requestAuthContext';
 import { getRouteParam } from '@/lib/routeParams';
 import {
     acceptStaffInvitation,
     declineStaffInvitation,
     listPendingStaffInvitations,
 } from '@/lib/staffInvitationService';
-import { createSupabaseClients } from '@/lib/supabaseHelpers';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 /**
  * The invited person's side of staff invitations (API-06): the signed-in user lists, accepts and
- * declines only their own invitations. The cookie session identifies the user; the service client
+ * declines only their own invitations. The cookie session or the app's Bearer token (C13) identifies the user; the service client
  * reads and calls the commands, which check that the invitation is theirs.
  */
-async function signedInUser() {
-    const { supabase, admin } = await createSupabaseClients();
+async function signedInUser(req: Request) {
+    const supabase = await createRequestSupabaseClient(req);
     const { data, error } = await supabase.auth.getUser();
     const user = error ? null : data?.user ?? null;
-    return { admin, userId: user?.id ?? null };
+    return { admin: user ? createSupabaseAdminClient() : null, userId: user?.id ?? null };
 }
 
 const unauthorized = () => createErrorResponse('auth', 'Не авторизован', undefined, 401);
 
-export async function runListStaffInvitationsHttp(): Promise<NextResponse> {
-    const { admin, userId } = await signedInUser();
-    if (!userId) return unauthorized();
+export async function runListStaffInvitationsHttp(req: Request): Promise<NextResponse> {
+    const { admin, userId } = await signedInUser(req);
+    if (!userId || !admin) return unauthorized();
 
     const result = await listPendingStaffInvitations(admin, userId);
     if (!result.ok) {
@@ -40,9 +41,9 @@ async function invitationId(context: unknown): Promise<string | null> {
     return isUuid(id) ? id : null;
 }
 
-export async function runAcceptStaffInvitationHttp(context: unknown): Promise<NextResponse> {
-    const { admin, userId } = await signedInUser();
-    if (!userId) return unauthorized();
+export async function runAcceptStaffInvitationHttp(req: Request, context: unknown): Promise<NextResponse> {
+    const { admin, userId } = await signedInUser(req);
+    if (!userId || !admin) return unauthorized();
     const id = await invitationId(context);
     if (!id) return createErrorResponse('not_found', 'Приглашение не найдено', undefined, 404);
 
@@ -53,9 +54,9 @@ export async function runAcceptStaffInvitationHttp(context: unknown): Promise<Ne
     return createSuccessResponse(result.data);
 }
 
-export async function runDeclineStaffInvitationHttp(context: unknown): Promise<NextResponse> {
-    const { admin, userId } = await signedInUser();
-    if (!userId) return unauthorized();
+export async function runDeclineStaffInvitationHttp(req: Request, context: unknown): Promise<NextResponse> {
+    const { admin, userId } = await signedInUser(req);
+    if (!userId || !admin) return unauthorized();
     const id = await invitationId(context);
     if (!id) return createErrorResponse('not_found', 'Приглашение не найдено', undefined, 404);
 

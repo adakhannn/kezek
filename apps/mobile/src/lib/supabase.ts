@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import { logEnvVars } from '../utils/debug';
 import { logError, logDebug } from './log';
 import { secureSessionStorage } from './secureSessionStorage';
+import { createSupabaseFetch } from './supabaseFetch';
 import { installNativeAuthCrypto } from './authCrypto';
 
 installNativeAuthCrypto();
@@ -52,5 +53,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         persistSession: true,
         detectSessionInUrl: false,
     },
+    // R25-30: every Supabase request ends within a bound, so screens show an error instead of spinning.
+    global: { fetch: createSupabaseFetch() },
 });
 

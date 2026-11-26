@@ -5,6 +5,7 @@ import { bookingEn } from './booking.en';
 import { commonEn } from './common.en';
 import { navEn } from './nav.en';
 import { pushEn } from './push.en';
+import { discoveryEn } from './discovery.en';
 import type { Dictionary } from './ru';
 
 export const en: Dictionary = {
@@ -15,4 +16,5 @@ export const en: Dictionary = {
     ...commonEn,
     ...navEn,
     ...pushEn,
+    ...discoveryEn,
 };

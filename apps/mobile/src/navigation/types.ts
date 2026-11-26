@@ -1,10 +1,13 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type RootStackParamList = {
-    Auth: undefined;
+    /** Signed out only: the sign-in flow, opened over the screen that asked for it (C1). */
+    Auth: NavigatorScreenParams<AuthStackParamList> | undefined;
     Main: NavigatorScreenParams<MainTabParamList>;
     Map: undefined;
     BookingDetails: { id: string };
+    /** The public business page (/b/<slug>), before the booking steps. */
+    Business: { slug: string; previewName?: string };
     Booking: { slug: string; previewName?: string };
     BookingStep1Branch: { slug: string };
     BookingStep2Service: undefined;

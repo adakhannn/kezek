@@ -13,7 +13,10 @@ describe('linking config', () => {
         // The web serves one booking at /booking/<id> and a business at /b/<slug>.
         expect(config.BookingDetails.path).toBe('booking/:id');
         expect(config.BookingDetails.alias).toEqual(['booking-detail/:id']);
-        expect(config.Booking.path).toBe('b/:slug');
+        // /b/<slug> is the business page (C2) and /b/<slug>/booking its booking flow, as on the web.
+        expect(config.Business.path).toBe('b/:slug');
+        expect(config.Booking.path).toBe('b/:slug/booking');
+        expect(linking.config?.initialRouteName).toBe('Main');
         expect(config.BookingDetails.parse.id('7d9f1c2e-3b4a-4c5d-8e6f-0a1b2c3d4e5f')).toBe('7d9f1c2e-3b4a-4c5d-8e6f-0a1b2c3d4e5f');
         expect(linking.prefixes).toEqual(['kezek://', 'https://kezek.vercel.app']);
     });
@@ -28,8 +31,26 @@ describe('linking config', () => {
         ]);
         // The web cabinet handoff, magic link and password reset stay in the browser.
         const config = linking.config?.screens as Record<string, any>;
+        expect(config.Business.path.startsWith('b/')).toBe(true);
         expect(config.Booking.path.startsWith('b/')).toBe(true);
         expect(config.BookingDetails.path.startsWith('booking/')).toBe(true);
+    });
+});
+
+describe('links resolve to the public screens (C1)', () => {
+    const { getStateFromPath } = jest.requireActual('@react-navigation/native') as typeof import('@react-navigation/native');
+    const routesOf = (path: string) => {
+        const state = getStateFromPath(path, linking.config as never);
+        return state?.routes.map((route) => ({ name: route.name, params: route.params }));
+    };
+
+    test('a business, its booking flow and a booking keep the home screen under them', () => {
+        expect(routesOf('b/salon')).toEqual([
+            { name: 'Main', params: undefined },
+            { name: 'Business', params: { slug: 'salon' } },
+        ]);
+        expect(routesOf('b/salon/booking')?.[1]).toEqual({ name: 'Booking', params: { slug: 'salon' } });
+        expect(routesOf('booking/abc')?.[1]).toEqual({ name: 'BookingDetails', params: { id: 'abc' } });
     });
 });
 

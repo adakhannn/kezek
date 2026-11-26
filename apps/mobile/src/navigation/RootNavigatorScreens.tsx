@@ -11,6 +11,7 @@ import BookingStep3Staff from '../screens/booking/BookingStep3Staff';
 import BookingStep4Date from '../screens/booking/BookingStep4Date';
 import BookingStep5Time from '../screens/booking/BookingStep5Time';
 import BookingStep6Confirm from '../screens/booking/BookingStep6Confirm';
+import BusinessScreen from '../screens/business/BusinessScreen';
 import MapScreen from '../screens/MapScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
 import ShiftQuickScreen from '../screens/ShiftQuickScreen';
@@ -21,14 +22,18 @@ import {
     createNavigationHeaderTitle,
     detailStackScreenOptions,
 } from './mainNavigatorConfig';
+import { withSessionGate } from './SessionGate';
 import { withStaffRouteGuard } from './StaffRouteGuard';
 import type { RootStackParamList } from './types';
 
 /** The root navigator these screens belong to (RootNavigator.tsx). */
 type RootStack = ReturnType<typeof createNativeStackNavigator<RootStackParamList>>;
 
-const GuardedShiftsScreen = withStaffRouteGuard(ShiftsScreen);
-const GuardedShiftQuickScreen = withStaffRouteGuard(ShiftQuickScreen);
+// Account screens stay registered signed out, so a deep link to them is kept: they show the
+// sign-in entry until a session exists, then their content (C1). The staff guard runs after it.
+const GuardedBookingDetailsScreen = withSessionGate(BookingDetailsScreen, 'booking');
+const GuardedShiftsScreen = withSessionGate(withStaffRouteGuard(ShiftsScreen), 'workspace');
+const GuardedShiftQuickScreen = withSessionGate(withStaffRouteGuard(ShiftQuickScreen), 'workspace');
 
 export const rootStackScreenOptions: NativeStackNavigationOptions =
     detailStackScreenOptions;
@@ -41,18 +46,25 @@ const bookingStepOptions = (
         headerRight: () => <BookingCancelButton />,
     });
 
+/**
+ * Registered only while nobody is signed in: opened over the screen that asked for it, and removed
+ * from the stack by the sign-in itself, which returns the user to that screen.
+ */
 export function AuthStackScreen(Stack: RootStack) {
     return (
         <Stack.Screen
             name="Auth"
             component={AuthNavigator}
-            options={{ headerShown: false }}
+            options={{ headerShown: false, presentation: 'modal' }}
         />
     );
 }
 
-/** `t` comes from RootNavigator, so the titles follow the app language. */
-export function SignedInStackScreens(Stack: RootStack, t: Translate) {
+/**
+ * Every screen of the app, with or without a session (Apple 5.1.1: browsing needs no account).
+ * `t` comes from RootNavigator, so the titles follow the app language.
+ */
+export function AppStackScreens(Stack: RootStack, t: Translate) {
     return (
         <>
             <Stack.Screen
@@ -62,11 +74,11 @@ export function SignedInStackScreens(Stack: RootStack, t: Translate) {
             />
             <Stack.Screen
                 name="BookingDetails"
-                component={BookingDetailsScreen}
+                component={GuardedBookingDetailsScreen}
                 options={{
                     ...detailStackScreenOptions,
                     title: t('nav.bookingDetails'),
-                    headerTitle: createNavigationHeaderTitle(t('nav.bookingDetails'), 'Booking'),
+                    headerTitle: createNavigationHeaderTitle(t('nav.bookingDetails'), t('nav.eyebrow.booking')),
                 }}
             />
             <Stack.Screen
@@ -75,7 +87,16 @@ export function SignedInStackScreens(Stack: RootStack, t: Translate) {
                 options={{
                     ...detailStackScreenOptions,
                     title: t('nav.map'),
-                    headerTitle: createNavigationHeaderTitle(t('nav.map'), 'Discovery'),
+                    headerTitle: createNavigationHeaderTitle(t('nav.map'), t('nav.eyebrow.discovery')),
+                }}
+            />
+            <Stack.Screen
+                name="Business"
+                component={BusinessScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('nav.businessPage'),
+                    headerTitle: createNavigationHeaderTitle(t('nav.businessPage'), t('nav.eyebrow.discovery')),
                 }}
             />
             <Stack.Screen
@@ -123,7 +144,7 @@ export function SignedInStackScreens(Stack: RootStack, t: Translate) {
                 options={{
                     ...detailStackScreenOptions,
                     title: t('nav.shifts'),
-                    headerTitle: createNavigationHeaderTitle(t('nav.shifts'), 'Workspace'),
+                    headerTitle: createNavigationHeaderTitle(t('nav.shifts'), t('nav.eyebrow.workspace')),
                 }}
             />
             <Stack.Screen
@@ -132,7 +153,7 @@ export function SignedInStackScreens(Stack: RootStack, t: Translate) {
                 options={{
                     ...detailStackScreenOptions,
                     title: t('nav.shiftQuick'),
-                    headerTitle: createNavigationHeaderTitle(t('nav.shiftQuick'), 'Workspace'),
+                    headerTitle: createNavigationHeaderTitle(t('nav.shiftQuick'), t('nav.eyebrow.workspace')),
                 }}
             />
         </>

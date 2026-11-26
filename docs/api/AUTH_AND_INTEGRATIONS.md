@@ -278,7 +278,7 @@
 
 Цепочка: [route](../../apps/web/src/app/api/whatsapp/send-otp/route.ts) → [HTTP](../../apps/web/src/lib/whatsAppSendOtpHttpService.ts) → [route service](../../apps/web/src/lib/whatsAppSendOtpRouteService.ts) → [WhatsAppSendOtpResult](../../apps/web/src/lib/whatsAppSendOtpService.ts).
 
-- **Auth / input:** cookie session. Optional JSON `phone` (строка); иначе берется `profiles.whatsapp_phone`. Malformed JSON в HTTP превращается в отсутствие `phone`, а не обязательный 400. Номер нормализуется через [normalizePhoneToE164](../../apps/web/src/lib/senders/sms.ts); уже подтвержденный тот же номер отклоняется.
+- **Auth / input:** Bearer мобильного приложения (B5, 26 ноября 2026) или cookie session. Optional JSON `phone` (строка); иначе берется `profiles.whatsapp_phone`. Malformed JSON в HTTP превращается в отсутствие `phone`, а не обязательный 400. Номер нормализуется через [normalizePhoneToE164](../../apps/web/src/lib/senders/sms.ts); уже подтвержденный тот же номер отклоняется.
 - **Success:** `200 S({message: "Код отправлен на WhatsApp"})`.
 - **Errors:** 401 `auth`; 400 `validation` с `details.code`: `profile_error`, `no_phone`, `invalid_phone`, `already_verified`; 503 `internal` / `otp_template_not_configured`; 500 `internal` / `otp_save_failed` либо `send_failed`.
 - **Limiter:** `auth/route`, prefix `api/whatsapp/send-otp`.
@@ -289,7 +289,7 @@
 
 Цепочка: [route](../../apps/web/src/app/api/whatsapp/verify-otp/route.ts) → [HTTP](../../apps/web/src/lib/whatsAppVerifyOtpHttpService.ts) → [route result](../../apps/web/src/lib/whatsAppVerifyOtpRouteService.ts) → [verifyExistingWhatsAppOtp](../../apps/web/src/lib/whatsAppVerifyOtpService.ts) / [identity ownership](../../apps/web/src/lib/whatsAppIdentityOwnershipService.ts).
 
-- **Auth / input:** cookie session; JSON `code`, ожидается строка из 6 цифр. `phone` в body не используется: код, expiry и номер берутся из текущего `user.user_metadata`. TypeScript cast не является полной runtime схемой; service проверяет regex и строгое равенство сохраненному коду.
+- **Auth / input:** Bearer мобильного приложения (B5) или cookie session; JSON `code`, ожидается строка из 6 цифр. `phone` в body не используется: код, expiry и номер берутся из текущего `user.user_metadata`. TypeScript cast не является полной runtime схемой; service проверяет regex и строгое равенство сохраненному коду.
 - **Success:** `200 S({message: "WhatsApp номер подтвержден"})`. Нет `session`, access token или refresh token.
 - **Errors:** 400 `validation` для invalid JSON или `details.code`: `invalid_code`, `no_code`, `expired`, `wrong_code`, `invalid_phone`; 401 `auth`; 409 `conflict` / `whatsapp_identity_already_linked`; 500 `internal` / `auth_owner_lookup_failed`, `profile_lookup_failed`, `auth_phone_release_failed` либо `update_failed`.
 - **Limiter:** `auth/route`, prefix `api/whatsapp/verify-otp`; счетчик независим от send-otp, но основан на IP. Отдельного лимита попыток на конкретный OTP/user в service нет.

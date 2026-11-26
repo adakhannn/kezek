@@ -10,6 +10,7 @@ import BookingStep4Date from '../../screens/booking/BookingStep4Date';
 import BookingStep5Time from '../../screens/booking/BookingStep5Time';
 import BookingStep6Confirm from '../../screens/booking/BookingStep6Confirm';
 import { BookingProvider } from '../../contexts/BookingContext';
+import { supabase } from '../../lib/supabase';
 
 jest.mock('@react-navigation/native', () => ({
     useNavigation: () => ({
@@ -43,6 +44,11 @@ jest.mock('../../hooks/useBusinessWithBranches', () => ({
             ],
         },
     }),
+}));
+
+// Where masters work on the booking days (step 3): nobody is away from the home branch.
+jest.mock('../../lib/api', () => ({
+    apiRequest: jest.fn(async () => ({ ok: true, data: [] })),
 }));
 
 jest.mock('../../hooks/useConfirmBooking', () => ({
@@ -95,9 +101,22 @@ describe('Booking Navigation', () => {
     });
 
     test('renders booking step 6 confirm screen', async () => {
+        jest.mocked(supabase.auth.getSession).mockResolvedValueOnce({
+            data: { session: { user: { id: 'user-1' } } },
+            error: null,
+        } as never);
         renderWithProviders(<BookingStep6Confirm />);
 
         expect(await screen.findByText('Тестовая услуга')).toBeTruthy();
         expect(await screen.findByText('Записаться')).toBeTruthy();
+    });
+
+    test('step 6 offers a guest booking and signing in without a session (C1)', async () => {
+        jest.mocked(supabase.auth.getSession).mockResolvedValueOnce({ data: { session: null }, error: null } as never);
+        renderWithProviders(<BookingStep6Confirm />);
+
+        expect(await screen.findByText('Записаться как гость')).toBeTruthy();
+        expect(screen.getByText('Войти и записаться')).toBeTruthy();
+        expect(screen.queryByText('Записаться')).toBeNull();
     });
 });

@@ -11,8 +11,12 @@ export type TimelineStep = {
     done: boolean;
 };
 
-export function buildTimelineSteps(status: string): TimelineStep[] {
-    return [
+/**
+ * B6: the "promo applied" step was always shown and never done. It is shown only for a booking
+ * with a promotion, done once the visit is paid (when the discount is charged), as on the web card.
+ */
+export function buildTimelineSteps(status: string, promotionApplied = false): TimelineStep[] {
+    const steps: TimelineStep[] = [
         { key: 'created', labelKey: 'cabinet.details.timeline.created', done: true },
         {
             key: 'confirmed',
@@ -24,10 +28,9 @@ export function buildTimelineSteps(status: string): TimelineStep[] {
             labelKey: status === 'cancelled' ? 'cabinet.details.timeline.cancelled' : 'cabinet.details.timeline.completed',
             done: status === 'paid' || status === 'cancelled',
         },
-        {
-            key: 'promo',
-            labelKey: 'cabinet.details.timeline.promo',
-            done: false,
-        },
     ];
+    if (promotionApplied && status !== 'cancelled') {
+        steps.push({ key: 'promo', labelKey: 'cabinet.details.timeline.promo', done: status === 'paid' });
+    }
+    return steps;
 }

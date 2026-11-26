@@ -22,6 +22,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
         };
     },
     config: {
+        // A link opened at a cold start keeps the home screen under it, so Back stays in the app.
+        initialRouteName: 'Main',
         screens: {
             Auth: {
                 screens: {
@@ -44,10 +46,18 @@ export const linking: LinkingOptions<RootStackParamList> = {
                 },
             },
             Map: 'map',
-            // The same paths as the web app (MOB-05): /b/<slug> is a business's booking page and
-            // /booking/<id> is one booking, the link that notifications and the cabinet share.
-            Booking: {
+            // The same paths as the web app (MOB-05): /b/<slug> is a business's page, /b/<slug>/booking
+            // its booking flow and /booking/<id> one booking, the link that notifications and the
+            // cabinet share. The first two open signed out too (C1); a booking asks for the sign-in
+            // on its own screen and shows the booking after it.
+            Business: {
                 path: 'b/:slug',
+                parse: {
+                    slug: (slug: string) => slug,
+                },
+            },
+            Booking: {
+                path: 'b/:slug/booking',
                 parse: {
                     slug: (slug: string) => slug,
                 },

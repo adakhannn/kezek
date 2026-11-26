@@ -63,3 +63,26 @@ describe('whatsAppSendOtpHttpService', () => {
     expect(body.error).toBe('validation');
   });
 });
+
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => ({ kind: 'bearer-client' })),
+}));
+
+describe('whatsAppSendOtpHttpService with the mobile Bearer token (B5)', () => {
+  test('the code is sent for the token user', async () => {
+    jest.clearAllMocks();
+    (runWhatsAppSendOtpRoute as jest.Mock).mockResolvedValue({ ok: true, data: { message: 'sent' } });
+
+    const response = await runWhatsAppSendOtpHttp(
+      new Request('http://localhost/api/whatsapp/send-otp', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer app-token' },
+        body: JSON.stringify({ phone: '+996555123456' }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(runWhatsAppSendOtpRoute).toHaveBeenCalledWith({ supabase: { kind: 'bearer-client' }, phone: '+996555123456' });
+    expect(createSupabaseServerClient).not.toHaveBeenCalled();
+  });
+});

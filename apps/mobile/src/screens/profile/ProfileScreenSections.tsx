@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
+    RefreshControl,
     ScrollView,
     Switch,
     Text,
@@ -14,6 +15,7 @@ import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
 import { LanguageSwitcher, useLanguage } from '../../i18n';
+import { MessengerConnectionsCard } from './MessengerConnections';
 import { PushNotificationsSwitch } from './PushNotificationsSwitch';
 import { styles } from './profileScreenStyles';
 
@@ -35,6 +37,15 @@ type Props = {
     onDeleteAccount: () => void;
     isSaving: boolean;
     isSigningOut: boolean;
+    /** B5: WhatsApp notifications only for a confirmed number. Absent: treated as confirmed (old callers). */
+    whatsappVerified?: boolean;
+    whatsappPhone?: string | null;
+    onWhatsAppVerified?: () => void;
+    telegramLinked?: boolean;
+    telegramUsername?: string | null;
+    onLinkTelegram?: () => void;
+    isRefreshing?: boolean;
+    onRefresh?: () => void;
 };
 
 export function ProfileScreenSections({
@@ -55,6 +66,14 @@ export function ProfileScreenSections({
     onSignOut,
     isSaving,
     isSigningOut,
+    whatsappVerified = true,
+    whatsappPhone = null,
+    onWhatsAppVerified,
+    telegramLinked = false,
+    telegramUsername = null,
+    onLinkTelegram,
+    isRefreshing = false,
+    onRefresh,
 }: Props) {
     const phoneInputRef = useRef<TextInput>(null);
     const { t } = useLanguage();
@@ -71,6 +90,11 @@ export function ProfileScreenSections({
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
             automaticallyAdjustKeyboardInsets
+            refreshControl={
+                onRefresh ? (
+                    <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />
+                ) : undefined
+            }
         >
             <View style={styles.header}>
                 <Text style={styles.title}>{t('cabinet.profile.title')}</Text>
@@ -102,7 +126,7 @@ export function ProfileScreenSections({
 
                 {email ? (
                     <View style={styles.emailContainer}>
-                        <Text style={styles.label}>Email</Text>
+                        <Text style={styles.label}>{t('cabinet.profile.email.label')}</Text>
                         <Text style={styles.emailValue}>{email}</Text>
                         <Text style={styles.emailHint}>{t('cabinet.profile.email.hint')}</Text>
                     </View>
@@ -128,11 +152,18 @@ export function ProfileScreenSections({
                 <View style={styles.switchRow}>
                     <View style={styles.switchLabelContainer}>
                         <Text style={styles.switchLabel}>{t('cabinet.profile.notifications.whatsapp')}</Text>
-                        <Text style={styles.switchHint}>{t('cabinet.profile.notifications.whatsappHint')}</Text>
+                        <Text style={styles.switchHint}>
+                            {whatsappVerified
+                                ? t('cabinet.profile.notifications.whatsappHint')
+                                : t('cabinet.profile.notifications.whatsappNotVerified')}
+                        </Text>
                     </View>
                     <Switch
-                        value={notifyWhatsApp}
+                        value={whatsappVerified && notifyWhatsApp}
                         onValueChange={onNotifyWhatsAppChange}
+                        disabled={!whatsappVerified}
+                        accessibilityState={{ disabled: !whatsappVerified }}
+                        testID="profile-whatsapp-switch"
                         trackColor={{ false: colors.border.strong, true: colors.accent.indigo }}
                         thumbColor={colors.text.light}
                     />
@@ -140,6 +171,18 @@ export function ProfileScreenSections({
 
                 <PushNotificationsSwitch userId={userId} />
             </Card>
+
+            {onWhatsAppVerified && onLinkTelegram ? (
+                <MessengerConnectionsCard
+                    verified={whatsappVerified}
+                    whatsappPhone={whatsappPhone}
+                    fallbackPhone={phone.trim() || null}
+                    onVerified={onWhatsAppVerified}
+                    telegramLinked={telegramLinked}
+                    telegramUsername={telegramUsername}
+                    onLinkTelegram={onLinkTelegram}
+                />
+            ) : null}
 
             <Card style={styles.card}>
                 <Text style={styles.sectionTitle}>{t('common.language.title')}</Text>

@@ -8,14 +8,10 @@ import { useLanguage, type Translate } from '../i18n';
 import { apiRequest } from '../lib/api';
 import { acknowledgeBookingRequest, getBookingRequestKey } from '../lib/bookingRequest';
 import { supabase } from '../lib/supabase';
+import type { BookingRequestPayload } from '../screens/booking/bookingSelection';
 
-export type ConfirmBookingParams = {
-    biz_id: string;
-    branch_id: string;
-    service_id: string;
-    staff_id: string;
-    start_at: string;
-};
+/** One service as service_id, several as services[] (C3, same body as the website). */
+export type ConfirmBookingParams = BookingRequestPayload;
 
 export type ConfirmBookingResponse = {
     booking_id: string;
@@ -82,6 +78,7 @@ export function useConfirmBooking(options: UseConfirmBookingOptions = {}) {
             // once, as cancellation already does (MOB-04).
             void queryClient.invalidateQueries({ queryKey: ['bookings'] });
             void queryClient.invalidateQueries({ queryKey: ['slots'] });
+            void queryClient.invalidateQueries({ queryKey: ['client-day-bookings'] });
             onSuccess?.(data.booking_id);
         },
         onError: (error: Error) => {

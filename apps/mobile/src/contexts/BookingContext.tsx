@@ -18,6 +18,7 @@ export type Service = {
 type Staff = {
     id: string;
     full_name: string;
+    /** The home branch; a master may work at another branch on a given day (C5). */
     branch_id: string;
     rating_score: number | null;
     avatar_url: string | null;
@@ -54,7 +55,11 @@ type BookingData = {
     staff: Staff[];
     promotions: Promotion[];
     branchId: string;
+    /** The selected services in the order they were chosen; several make one complex visit (C3). */
+    serviceIds: string[];
+    /** The first selected service (serviceIds[0] or ''), for single-service readers. */
     serviceId: string;
+    /** A master's id or ANY_STAFF (screens/booking/bookingSelection.ts). */
     staffId: string;
     selectedDate: string;
     selectedSlot: Slot | null;
@@ -69,7 +74,10 @@ type BookingContextType = {
     setStaff: (staff: Staff[]) => void;
     setPromotions: (promotions: Promotion[]) => void;
     setBranchId: (id: string) => void;
+    /** Selects exactly this service. */
     setServiceId: (id: string) => void;
+    /** Adds the service to the selection, or removes it when it is already selected. */
+    toggleServiceId: (id: string) => void;
     setStaffId: (id: string) => void;
     setSelectedDate: (date: string) => void;
     setSelectedSlot: (slot: Slot | null) => void;
@@ -83,6 +91,7 @@ const initialState: BookingData = {
     staff: [],
     promotions: [],
     branchId: '',
+    serviceIds: [],
     serviceId: '',
     staffId: '',
     selectedDate: '',
@@ -94,6 +103,8 @@ const BookingContext = createContext<BookingContextType | undefined>(undefined);
 /**
  * `ownerId` is the signed-in user (RootNavigator). The provider sits above the signed-in/out
  * switch, so a draft would otherwise survive into the next account on the device (R25-05).
+ * A guest draft (no owner) is kept when the guest signs in from the confirm step ("sign in
+ * instead", C1): it holds no account data. Leaving a signed-in account always drops the draft.
  */
 export function BookingProvider({ children, ownerId = null }: { children: ReactNode; ownerId?: string | null }) {
     const [bookingData, setBookingData] = useState<BookingData>(initialState);
@@ -101,7 +112,7 @@ export function BookingProvider({ children, ownerId = null }: { children: ReactN
     if (draftOwnerId !== ownerId) {
         // Reset during render, so the next account never renders the previous draft.
         setDraftOwnerId(ownerId);
-        setBookingData(initialState);
+        if (draftOwnerId !== null) setBookingData(initialState);
     }
 
     const hydrateInitialData = useCallback(
@@ -137,11 +148,27 @@ export function BookingProvider({ children, ownerId = null }: { children: ReactN
     }, []);
 
     const setBranchId = useCallback((id: string) => {
-        setBookingData((prev) => ({ ...prev, branchId: id, serviceId: '', staffId: '', selectedSlot: null }));
+        setBookingData((prev) => ({
+            ...prev,
+            branchId: id,
+            serviceIds: [],
+            serviceId: '',
+            staffId: '',
+            selectedSlot: null,
+        }));
     }, []);
 
     const setServiceId = useCallback((id: string) => {
-        setBookingData((prev) => ({ ...prev, serviceId: id, selectedSlot: null }));
+        setBookingData((prev) => ({ ...prev, serviceIds: id ? [id] : [], serviceId: id, selectedSlot: null }));
+    }, []);
+
+    const toggleServiceId = useCallback((id: string) => {
+        setBookingData((prev) => {
+            const serviceIds = prev.serviceIds.includes(id)
+                ? prev.serviceIds.filter((serviceId) => serviceId !== id)
+                : [...prev.serviceIds, id];
+            return { ...prev, serviceIds, serviceId: serviceIds[0] ?? '', selectedSlot: null };
+        });
     }, []);
 
     const setStaffId = useCallback((id: string) => {
@@ -172,6 +199,7 @@ export function BookingProvider({ children, ownerId = null }: { children: ReactN
                 setPromotions,
                 setBranchId,
                 setServiceId,
+                toggleServiceId,
                 setStaffId,
                 setSelectedDate,
                 setSelectedSlot,
@@ -190,4 +218,3 @@ export function useBooking() {
     }
     return context;
 }
-

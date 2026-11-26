@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { KeyboardAvoidingView, Platform, View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,12 +8,15 @@ import { formatTimeSlot } from '@shared-client/formatters';
 import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import { colors } from '../../constants/colors';
 import Card from '../../components/ui/Card';
+import EmptyState from '../../components/ui/EmptyState';
+import FeedbackBanner from '../../components/ui/FeedbackBanner';
 import OfflineBanner from '../../components/ui/OfflineBanner';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
 import { translatePlural, useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
+import BookingGuestForm from './BookingGuestForm';
 import { useBookingStep6Confirm } from './useBookingStep6Confirm';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -24,16 +27,55 @@ export default function BookingStep6Confirm() {
     const navigation = useNavigation<NavigationProp>();
     const {
         bookingData,
-        selectedService,
+        selectedServices,
+        totalDurationMin,
         selectedStaff,
+        isAnyStaff,
         dateLabel,
         priceLabel,
+        promotionNotes,
         handleCreateBooking,
         isOffline,
         isPending,
+        isGuest,
+        guestContacts,
+        updateGuestContacts,
+        guestError,
+        handleCreateGuestBooking,
+        guestBookingId,
+        finishGuestBooking,
+        signInInstead,
     } = useBookingStep6Confirm(navigation);
     const { t } = useLanguage();
     const tz = resolveBusinessTimeZone(bookingData.business?.tz);
+    const isMultiple = selectedServices.length > 1;
+
+    if (guestBookingId) {
+        return (
+            <LinearGradient
+                colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientContainer}
+            >
+                <View style={[styles.container, styles.section]}>
+                    <EmptyState
+                        icon="checkmark-circle-outline"
+                        title={t('booking.guest.successTitle')}
+                        message={t('booking.guest.successMessage')}
+                        action={
+                            <Button
+                                title={t('booking.guest.done')}
+                                onPress={finishGuestBooking}
+                                variant="primary"
+                                fullWidth
+                            />
+                        }
+                    />
+                </View>
+            </LinearGradient>
+        );
+    }
 
     return (
         <LinearGradient
@@ -42,7 +84,17 @@ export default function BookingStep6Confirm() {
             end={{ x: 1, y: 1 }}
             style={styles.gradientContainer}
         >
-            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <KeyboardAvoidingView
+                style={styles.container}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+                automaticallyAdjustKeyboardInsets
+            >
                 <BookingProgressIndicator currentStep={6} />
                 <View style={styles.header}>
                     <View style={styles.headerRow}>
@@ -67,11 +119,17 @@ export default function BookingStep6Confirm() {
                         <View style={styles.summaryRow}>
                             <Ionicons name="cut-outline" size={24} color="#6366f1" />
                             <View style={styles.summaryContent}>
-                                <Text style={styles.summaryLabel}>{t('booking.step6.service')}</Text>
-                                <Text style={styles.summaryValue}>{selectedService?.name_ru}</Text>
-                                {selectedService?.duration_min && (
+                                <Text style={styles.summaryLabel}>
+                                    {isMultiple ? t('booking.step6.services') : t('booking.step6.service')}
+                                </Text>
+                                {selectedServices.map((service) => (
+                                    <Text key={service.id} style={isMultiple ? styles.summaryItem : styles.summaryValue}>
+                                        {service.name_ru}
+                                    </Text>
+                                ))}
+                                {totalDurationMin > 0 && (
                                     <Text style={styles.summaryHint}>
-                                        {translatePlural(t, 'booking.duration.minutesLong', selectedService.duration_min)}
+                                        {translatePlural(t, 'booking.duration.minutesLong', totalDurationMin)}
                                     </Text>
                                 )}
                                 {priceLabel && <Text style={styles.summaryPrice}>{priceLabel}</Text>}
@@ -83,6 +141,9 @@ export default function BookingStep6Confirm() {
                             <View style={styles.summaryContent}>
                                 <Text style={styles.summaryLabel}>{t('booking.step6.staff')}</Text>
                                 <Text style={styles.summaryValue}>{selectedStaff?.full_name}</Text>
+                                {isAnyStaff ? (
+                                    <Text style={styles.summaryHint}>{t('booking.step6.anyMasterAssigned')}</Text>
+                                ) : null}
                             </View>
                         </View>
                         <View style={styles.summaryDivider} />
@@ -100,6 +161,27 @@ export default function BookingStep6Confirm() {
                         </View>
                     </Card>
 
+                    {promotionNotes.length > 0 ? (
+                        <FeedbackBanner
+                            variant="success"
+                            title={t('booking.step6.promotionTitle')}
+                            message={promotionNotes.join(' · ')}
+                            style={styles.promotion}
+                        />
+                    ) : null}
+
+                    {isGuest ? (
+                        <BookingGuestForm
+                            contacts={guestContacts}
+                            onChange={updateGuestContacts}
+                            error={guestError}
+                            onSubmit={handleCreateGuestBooking}
+                            onSignIn={signInInstead}
+                            submitting={isPending}
+                            disabled={isPending || !bookingData.selectedSlot || isOffline}
+                        />
+                    ) : null}
+
                     <View style={styles.buttonContainer}>
                         <Button
                             title={t('booking.nav.back')}
@@ -107,17 +189,20 @@ export default function BookingStep6Confirm() {
                             variant="outline"
                             style={styles.backButton}
                         />
-                        <Button
-                            title={t('booking.book')}
-                            onPress={handleCreateBooking}
-                            loading={isPending}
-                            disabled={isPending || !bookingData.selectedSlot || isOffline}
-                            variant="primary"
-                            style={styles.nextButton}
-                        />
+                        {isGuest === false ? (
+                            <Button
+                                title={t('booking.book')}
+                                onPress={handleCreateBooking}
+                                loading={isPending}
+                                disabled={isPending || !bookingData.selectedSlot || isOffline}
+                                variant="primary"
+                                style={styles.nextButton}
+                            />
+                        ) : null}
                     </View>
                 </View>
             </ScrollView>
+            </KeyboardAvoidingView>
         </LinearGradient>
     );
 }
@@ -149,10 +234,6 @@ const styles = StyleSheet.create({
         marginBottom: 4,
         flex: 1,
     },
-    subtitle: {
-        fontSize: 16,
-        color: colors.text.secondary,
-    },
     section: {
         padding: 20,
     },
@@ -180,6 +261,12 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.text.primary,
     },
+    summaryItem: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.text.primary,
+        marginBottom: 2,
+    },
     summaryHint: {
         fontSize: 14,
         color: colors.text.secondary,
@@ -195,6 +282,9 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: colors.border.dark,
         marginVertical: 4,
+    },
+    promotion: {
+        marginBottom: 20,
     },
     buttonContainer: {
         marginTop: 0,

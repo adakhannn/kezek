@@ -14,22 +14,28 @@ import { useLanguage } from '../../i18n';
 import { trackMobileEvent } from '../../lib/analytics';
 import { RootStackParamList } from '../../navigation/types';
 import { formatBookingPrice } from './bookingFormat';
+import BookingLoadError from './BookingLoadError';
+import { pickSelectedServices, summarizeServices } from './bookingSelection';
 import { useBookingStep2Services } from './useBookingStep2Services';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function BookingStep2Service() {
     const navigation = useNavigation<NavigationProp>();
-    const { bookingData, setServices, setServiceId } = useBooking();
+    const { bookingData, setServices, setServiceId, toggleServiceId } = useBooking();
     const { t } = useLanguage();
-    const { servicesData, isLoading } = useBookingStep2Services({
+    const { servicesData, isLoading, hasError, isRetrying, retry } = useBookingStep2Services({
         bookingData,
         setServices,
         setServiceId,
     });
+    const selectedServices = pickSelectedServices(servicesData ?? [], bookingData.serviceIds);
+    const total = summarizeServices(selectedServices);
+    const totalPrice = formatBookingPrice(total, t, { compact: true });
 
+    // Several services make one visit with one master (C3, web ServiceSelector).
     const handleSelectService = (serviceId: string) => {
-        setServiceId(serviceId);
+        toggleServiceId(serviceId);
         if (bookingData.business?.id) {
             trackMobileEvent({
                 eventType: 'booking_flow_step',
@@ -41,7 +47,7 @@ export default function BookingStep2Service() {
     };
 
     const handleNext = () => {
-        if (bookingData.serviceId) {
+        if (selectedServices.length > 0) {
             navigation.navigate('BookingStep3Staff');
         }
     };
@@ -50,6 +56,20 @@ export default function BookingStep2Service() {
         return (
             <View style={styles.container}>
                 <LoadingSpinner message={t('booking.step2.loading')} />
+            </View>
+        );
+    }
+
+    if (hasError) {
+        return (
+            <View style={styles.container}>
+                <BookingProgressIndicator currentStep={2} />
+                <View style={styles.header}>
+                    <Text style={styles.title}>{bookingData.business?.name}</Text>
+                </View>
+                <View style={styles.section}>
+                    <BookingLoadError title={t('booking.error.loadServices')} onRetry={retry} retrying={isRetrying} />
+                </View>
             </View>
         );
     }
@@ -90,15 +110,20 @@ export default function BookingStep2Service() {
                 </View>
 
                 <View style={styles.section}>
+                    {servicesData.length > 1 ? (
+                        <Text style={styles.hint}>{t('booking.step2.multiHint')}</Text>
+                    ) : null}
                     <View style={styles.optionsList}>
                         {servicesData.map((service) => {
                             const price = formatBookingPrice(service, t, { compact: true });
-                            const isSelected = bookingData.serviceId === service.id;
+                            const isSelected = bookingData.serviceIds.includes(service.id);
                             return (
                                 <MotionPressable
                                     key={service.id}
                                     style={[styles.serviceCard, isSelected && styles.serviceCardSelected]}
                                     onPress={() => handleSelectService(service.id)}
+                                    accessibilityRole="checkbox"
+                                    accessibilityState={{ checked: isSelected }}
                                 >
                                     {isSelected ? (
                                         <LinearGradient
@@ -145,6 +170,24 @@ export default function BookingStep2Service() {
                         })}
                     </View>
 
+                    {selectedServices.length > 1 ? (
+                        <View style={styles.totalRow} accessibilityLiveRegion="polite">
+                            <Text style={styles.totalLabel}>
+                                {t('booking.step2.selectedCount', { count: selectedServices.length })}
+                            </Text>
+                            <Text style={styles.totalValue}>
+                                {[
+                                    total.durationMin > 0
+                                        ? t('booking.duration.minutes', { minutes: total.durationMin })
+                                        : null,
+                                    totalPrice,
+                                ]
+                                    .filter(Boolean)
+                                    .join(', ')}
+                            </Text>
+                        </View>
+                    ) : null}
+
                     <View style={styles.buttonContainer}>
                         <Button
                             title={t('booking.nav.back')}
@@ -155,7 +198,7 @@ export default function BookingStep2Service() {
                         <Button
                             title={t('booking.nav.next')}
                             onPress={handleNext}
-                            disabled={!bookingData.serviceId}
+                            disabled={selectedServices.length === 0}
                             variant="primary"
                             style={styles.nextButton}
                         />
@@ -191,6 +234,30 @@ const styles = StyleSheet.create({
     },
     optionsList: {
         gap: 8,
+    },
+    hint: {
+        fontSize: 13,
+        color: colors.text.secondary,
+        marginBottom: 12,
+    },
+    totalRow: {
+        marginTop: 16,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 12,
+    },
+    totalLabel: {
+        fontSize: 13,
+        fontWeight: '500',
+        color: colors.text.secondary,
+    },
+    totalValue: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.text.primary,
+        flexShrink: 1,
+        textAlign: 'right',
     },
     serviceCard: {
         borderRadius: 8,

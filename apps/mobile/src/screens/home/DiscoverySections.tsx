@@ -10,14 +10,18 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import MotionPressable from '../../components/ui/MotionPressable';
 import RatingBadge from '../../components/ui/RatingBadge';
 import { colors } from '../../constants/colors';
-import { useLanguage, type MobileI18nKey, type Translate } from '../../i18n';
+import { translatePlural, useLanguage, type MobileI18nKey, type Translate } from '../../i18n';
+import { formatRatingDisplayValue } from '@shared-client/rating';
 import { formatPhone } from '../../utils/format';
 
+import { categoryLabel } from './homeDiscovery';
 import { styles } from './homeScreenStyles';
 import type { HomeBusiness, NearbyBranch, NearbyStatus } from './types';
 
 type CategoriesSectionProps = {
   categories: string[];
+  /** slug -> name; a slug without a name is shown as it is. */
+  categoryLabels?: Record<string, string>;
   selectedCategory: string | null;
   onSelectCategory: (category: string | null) => void;
 };
@@ -32,11 +36,17 @@ type BusinessListSectionProps = {
   onRetry: () => void;
   onClearFilters: () => void;
   onOpenBusiness: (slug: string, previewName?: string) => void;
+  onBookBusiness?: (slug: string, previewName?: string) => void;
+  categoryLabels?: Record<string, string>;
 };
 
 type BusinessCardProps = {
   business: HomeBusiness;
+  /** The card opens the business page (C2). */
   onOpenBusiness: (slug: string, previewName?: string) => void;
+  /** Its button goes straight to the booking flow; without it the button opens the page too. */
+  onBookBusiness?: (slug: string, previewName?: string) => void;
+  categoryLabels?: Record<string, string>;
 };
 
 type NearbySectionProps = {
@@ -50,6 +60,7 @@ type NearbySectionProps = {
 
 export function CategoriesSection({
   categories,
+  categoryLabels = NO_LABELS,
   selectedCategory,
   onSelectCategory,
 }: CategoriesSectionProps) {
@@ -67,7 +78,7 @@ export function CategoriesSection({
         {categories.map((category) => (
           <CategoryChip
             key={category}
-            label={category}
+            label={categoryLabel(categoryLabels, category)}
             isActive={selectedCategory === category}
             onPress={() => onSelectCategory(category)}
           />
@@ -263,6 +274,8 @@ export function BusinessListSection({
   onRetry,
   onClearFilters,
   onOpenBusiness,
+  onBookBusiness,
+  categoryLabels,
 }: BusinessListSectionProps) {
   const { t } = useLanguage();
 
@@ -310,6 +323,8 @@ export function BusinessListSection({
           key={business.id}
           business={business}
           onOpenBusiness={onOpenBusiness}
+          onBookBusiness={onBookBusiness}
+          categoryLabels={categoryLabels}
         />
       ))}
     </View>
@@ -319,10 +334,13 @@ export function BusinessListSection({
 export const BusinessCard = React.memo(function BusinessCard({
   business,
   onOpenBusiness,
+  onBookBusiness,
+  categoryLabels = NO_LABELS,
 }: BusinessCardProps) {
   const { t } = useLanguage();
   const openBusiness = () => onOpenBusiness(business.slug, business.name);
-  const businessAccessibilityLabel = buildBusinessAccessibilityLabel(business, t);
+  const bookBusiness = () => (onBookBusiness ?? onOpenBusiness)(business.slug, business.name);
+  const businessAccessibilityLabel = buildBusinessAccessibilityLabel(business, t, categoryLabels);
 
   return (
     <MotionPressable
@@ -330,7 +348,7 @@ export const BusinessCard = React.memo(function BusinessCard({
       scale="firm"
       accessibilityRole="button"
       accessibilityLabel={businessAccessibilityLabel}
-      accessibilityHint={t('booking.home.openBusinessHint')}
+      accessibilityHint={t('discovery.home.openBusinessHint')}
     >
       <Card style={styles.businessCard} variant="muted">
         <View style={styles.businessHeader}>
@@ -338,6 +356,13 @@ export const BusinessCard = React.memo(function BusinessCard({
             <Text style={styles.businessName}>{business.name}</Text>
             <RatingBadge rating={business.rating_score ?? null} size="small" />
           </View>
+          {business.promotions_count ? (
+            <View style={styles.businessPromotionsBadge}>
+              <Text style={styles.businessPromotionsText}>
+                {translatePlural(t, 'discovery.home.promotions', business.promotions_count)}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {business.address ? (
@@ -370,7 +395,7 @@ export const BusinessCard = React.memo(function BusinessCard({
           <View style={styles.businessCategories}>
             {business.categories.map((category) => (
               <View key={category} style={styles.businessCategoryTag}>
-                <Text style={styles.businessCategoryText}>{category}</Text>
+                <Text style={styles.businessCategoryText}>{categoryLabel(categoryLabels, category)}</Text>
               </View>
             ))}
           </View>
@@ -379,10 +404,11 @@ export const BusinessCard = React.memo(function BusinessCard({
         <View style={styles.businessFooter}>
           <Button
             title={t('booking.book')}
-            onPress={openBusiness}
+            onPress={bookBusiness}
             trailingIcon={<Ionicons name="arrow-forward" size={16} color={colors.text.light} />}
             fullWidth
             accessibilityLabel={t('booking.home.bookAt', { name: business.name })}
+            accessibilityHint={t('discovery.home.bookHint')}
           />
         </View>
       </Card>
@@ -390,11 +416,19 @@ export const BusinessCard = React.memo(function BusinessCard({
   );
 });
 
-function buildBusinessAccessibilityLabel(business: HomeBusiness, t: Translate): string {
+const NO_LABELS: Record<string, string> = {};
+
+function buildBusinessAccessibilityLabel(
+  business: HomeBusiness,
+  t: Translate,
+  categoryLabels: Record<string, string> = NO_LABELS,
+): string {
   const parts = [business.name];
 
   if (business.categories?.length) {
-    parts.push(t('booking.home.a11y.categories', { list: business.categories.join(', ') }));
+    parts.push(t('booking.home.a11y.categories', {
+      list: business.categories.map((category) => categoryLabel(categoryLabels, category)).join(', '),
+    }));
   }
 
   if (business.address) {
@@ -406,7 +440,7 @@ function buildBusinessAccessibilityLabel(business: HomeBusiness, t: Translate): 
   }
 
   if (typeof business.rating_score === 'number') {
-    parts.push(t('booking.home.a11y.rating', { rating: business.rating_score.toFixed(1) }));
+    parts.push(t('booking.home.a11y.rating', { rating: formatRatingDisplayValue(business.rating_score) }));
   }
 
   return parts.join('. ');

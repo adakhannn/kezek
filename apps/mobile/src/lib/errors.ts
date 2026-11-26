@@ -33,6 +33,12 @@ function getStatus(error: unknown): number | undefined {
     return match ? Number(match[1]) : undefined;
 }
 
+/** The HTTP status of an API error (ApiError.status) only; undefined for a lost connection or a timeout. */
+export function getApiErrorStatus(error: unknown): number | undefined {
+    const status = asErrorLike(error)?.status;
+    return typeof status === 'number' ? status : undefined;
+}
+
 function hasCyrillic(value: string): boolean {
     return /[А-Яа-яЁё]/.test(value);
 }

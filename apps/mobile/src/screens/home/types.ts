@@ -6,6 +6,8 @@ export type HomeBusiness = {
     phones: string[] | null;
     categories: string[] | null;
     rating_score: number | null;
+    /** Active promotions of the business, as the web card badge; missing until counted. */
+    promotions_count?: number;
 };
 
 export type HomeBooking = {

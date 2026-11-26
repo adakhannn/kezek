@@ -3,10 +3,17 @@ import { POST as DECLINE } from '@/app/api/staff-invitations/[id]/decline/route'
 import { GET } from '@/app/api/staff-invitations/route';
 import { createMockRequest, createTableMock, expectErrorResponse, expectSuccessResponse } from '../testHelpers';
 
-import { createSupabaseClients } from '@/lib/supabaseHelpers';
+import { createClient } from '@supabase/supabase-js';
+
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 jest.mock('@/lib/supabaseHelpers', () => ({
-    createSupabaseClients: jest.fn(),
+    createSupabaseServerClient: jest.fn(),
+    createSupabaseAdminClient: jest.fn(),
+}));
+
+jest.mock('@supabase/supabase-js', () => ({
+    createClient: jest.fn(),
 }));
 
 // API-06: the invited person lists, accepts and declines only their own invitations.
@@ -18,13 +25,14 @@ describe('/api/staff-invitations', () => {
 
     function signIn(id: string | null, tables: Parameters<typeof createTableMock>[0] = {}) {
         admin = createTableMock(tables);
-        (createSupabaseClients as jest.Mock).mockResolvedValue({
-            supabase: { auth: { getUser: jest.fn().mockResolvedValue({ data: { user: id ? { id } : null }, error: null }) } },
-            admin,
+        (createSupabaseServerClient as jest.Mock).mockResolvedValue({
+            auth: { getUser: jest.fn().mockResolvedValue({ data: { user: id ? { id } : null }, error: null }) },
         });
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(admin);
     }
 
-    const request = (path: string, method = 'POST') => createMockRequest(`http://localhost/api/staff-invitations${path}`, { method });
+    const request = (path: string, method = 'POST', headers?: Record<string, string>) =>
+        createMockRequest(`http://localhost/api/staff-invitations${path}`, { method, headers });
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -41,6 +49,40 @@ describe('/api/staff-invitations', () => {
             await expectErrorResponse(res, 401, 'auth');
             expect(admin.queries).toHaveLength(0);
             expect(admin.rpc).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('mobile Bearer token (C13)', () => {
+        test('the app user lists and accepts their invitations with the Bearer token, without a cookie session', async () => {
+            signIn(null, { staff_invitations: { data: [] } });
+            const bearerGetUser = jest.fn().mockResolvedValue({ data: { user: { id: userId } }, error: null });
+            (createClient as jest.Mock).mockReturnValue({ auth: { getUser: bearerGetUser } });
+
+            const list = await expectSuccessResponse(await GET(request('', 'GET', { Authorization: 'Bearer app-token' })), 200);
+            expect(list.invitations).toEqual([]);
+            expect(createClient).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.any(String),
+                expect.objectContaining({ global: { headers: { Authorization: 'Bearer app-token' } } }),
+            );
+            expect(createSupabaseServerClient).not.toHaveBeenCalled();
+
+            admin.rpc.mockResolvedValue({ data: { status: 'accepted', staff_id: 'card-1', biz_id: 'biz-1', is_active: true }, error: null });
+            await expectSuccessResponse(
+                await ACCEPT(request(`/${invitationId}/accept`, 'POST', { Authorization: 'Bearer app-token' }), context),
+                200,
+            );
+            expect(admin.rpc).toHaveBeenCalledWith('accept_staff_invitation', { p_invitation_id: invitationId, p_user_id: userId });
+        });
+
+        test('an invalid Bearer token is 401 and does not fall back to a cookie session', async () => {
+            signIn(userId);
+            (createClient as jest.Mock).mockReturnValue({
+                auth: { getUser: jest.fn().mockResolvedValue({ data: { user: null }, error: { message: 'bad jwt' } }) },
+            });
+            await expectErrorResponse(await DECLINE(request(`/${invitationId}/decline`, 'POST', { Authorization: 'Bearer bad' }), context), 401, 'auth');
+            expect(admin.rpc).not.toHaveBeenCalled();
+            expect(createSupabaseServerClient).not.toHaveBeenCalled();
         });
     });
 

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { useBusinessWithBranches } from '../../hooks/useBusinessWithBranches';
+import { isBusinessNotFoundError, useBusinessWithBranches } from '../../hooks/useBusinessWithBranches';
 
 type Branch = {
     id: string;
@@ -29,9 +29,13 @@ export function useBookingStep1Business({
     slug,
     hydrateInitialData,
 }: UseBookingStep1BusinessParams) {
-    const { data: businessData, isFetching, isLoading } = useBusinessWithBranches(
-        slug,
-    ) as { data: BusinessWithBranchesResult | undefined; isFetching: boolean; isLoading: boolean };
+    const { data: businessData, isFetching, isLoading, error, refetch } = useBusinessWithBranches(slug) as {
+        data: BusinessWithBranchesResult | undefined;
+        isFetching: boolean;
+        isLoading: boolean;
+        error?: unknown;
+        refetch?: () => unknown;
+    };
     const currentBusinessData = businessData?.business.slug === slug ? businessData : undefined;
 
     useEffect(() => {
@@ -42,8 +46,17 @@ export function useBookingStep1Business({
         hydrateInitialData(currentBusinessData);
     }, [currentBusinessData, hydrateInitialData]);
 
+    const failed = !currentBusinessData && !!error;
     return {
         businessData: currentBusinessData,
-        isLoading: isLoading || (!currentBusinessData && isFetching),
+        isLoading: isLoading || (!currentBusinessData && !failed && isFetching),
+        /** The business does not exist or is not approved. */
+        isNotFound: failed && isBusinessNotFoundError(error),
+        /** Loading failed for another reason (network, server): shown with a retry (B4). */
+        hasError: failed && !isBusinessNotFoundError(error),
+        isRetrying: failed && isFetching,
+        retry: () => {
+            void refetch?.();
+        },
     };
 }

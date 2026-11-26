@@ -24,4 +24,8 @@ export const navEn: Record<keyof typeof navRu, string> = {
     'nav.shifts': 'Shifts and statistics',
     'nav.shiftQuick': 'My shift',
     'nav.checkingAccess': 'Checking access...',
+    'nav.businessPage': 'About the business',
+    'nav.eyebrow.booking': 'Booking',
+    'nav.eyebrow.discovery': 'Discovery',
+    'nav.eyebrow.workspace': 'Workspace',
 };

@@ -22,8 +22,8 @@
 | `POST /api/services/create` | Контекст управления бизнесом | `normal` |
 | `POST /api/services/[id]/update` | Контекст управления бизнесом | `normal` |
 | `POST /api/services/[id]/delete` | Контекст управления бизнесом | Нет wrapper |
-| `POST /api/reviews/create` | Cookie-сессия, собственная бронь | `normal` |
-| `POST /api/reviews/update` | Cookie-сессия, собственный отзыв | `normal` |
+| `POST /api/reviews/create` | Bearer мобильного приложения или cookie-сессия, собственная бронь | `normal` |
+| `POST /api/reviews/update` | Bearer мобильного приложения или cookie-сессия, собственный отзыв | `normal` |
 | `POST /api/profile/update` | Cookie-сессия | `normal` |
 | `POST /api/profile/locale` | Bearer мобильного приложения или cookie-сессия | `normal` |
 | `POST /api/user/update-phone` | Cookie-сессия | `auth` |
@@ -364,7 +364,7 @@ Browser сохраняет только request ID под хешем actor/actio
 
 Источники: [route](../../apps/web/src/app/api/reviews/create/route.ts) → [HTTP](../../apps/web/src/lib/reviewCreateHttpService.ts) → [service и ReviewCreateBody](../../apps/web/src/lib/reviewCreateService.ts).
 
-Доступ: cookie-сессия, бронь должна принадлежать пользователю (`client_id`). Limiter `normal`. Тело: обязательные `booking_id` и `rating`; необязательный `comment: string | null`. `rating` — целое число от 1 до 5, иначе `400 / validation` до запроса к БД; UUID брони отдельно не проверяется. Новый отзыв принимается только для **своего оплаченного визита, который уже начался** (`status = paid`, `start_at <= now()`); то же правило держит политика `reviews_insert_self` (`public.can_review`, DB-13). `client_id` и `created_at` выставляет БД.
+Доступ: Bearer мобильного приложения (C9, 26 ноября 2026; [createRequestSupabaseClient](../../apps/web/src/lib/requestAuthContext.ts)) или cookie-сессия; бронь должна принадлежать пользователю (`client_id`). Limiter `normal`. Тело: обязательные `booking_id` и `rating`; необязательный `comment: string | null`. `rating` — целое число от 1 до 5, иначе `400 / validation` до запроса к БД; UUID брони отдельно не проверяется. Новый отзыв принимается только для **своего оплаченного визита, который уже начался** (`status = paid`, `start_at <= now()`); то же правило держит политика `reviews_insert_self` (`public.can_review`, DB-13). `client_id` и `created_at` выставляет БД.
 
 ```json
 {
@@ -393,7 +393,7 @@ Browser сохраняет только request ID под хешем actor/actio
 
 Источники: [route](../../apps/web/src/app/api/reviews/update/route.ts) → [HTTP](../../apps/web/src/lib/reviewUpdateHttpService.ts) → [service и ReviewUpdateBody](../../apps/web/src/lib/reviewUpdateService.ts).
 
-Доступ: cookie-сессия и принадлежность существующего отзыва пользователю; limiter `normal`. Тело требует **`review_id` и `rating`** (целое 1–5, иначе `400 / validation`); срок правки не ограничен, `booking_id`, `client_id` и `created_at` клиент не меняет (`REVIEW_FIELD_READ_ONLY`), удалять отзывы клиентам нельзя; `comment` необязателен и при отсутствии/`null` очищается. `booking_id` не заменяет `review_id`. Полной runtime-схемы UUID/рейтинга/комментария здесь также нет.
+Доступ: Bearer мобильного приложения или cookie-сессия (C9) и принадлежность существующего отзыва пользователю; limiter `normal`. Тело требует **`review_id` и `rating`** (целое 1–5, иначе `400 / validation`); срок правки не ограничен, `booking_id`, `client_id` и `created_at` клиент не меняет (`REVIEW_FIELD_READ_ONLY`), удалять отзывы клиентам нельзя; `comment` необязателен и при отсутствии/`null` очищается. `booking_id` не заменяет `review_id`. Полной runtime-схемы UUID/рейтинга/комментария здесь также нет.
 
 ```json
 {

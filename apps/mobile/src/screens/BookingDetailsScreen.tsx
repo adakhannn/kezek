@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import { useConfirm } from '../contexts/ConfirmContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -11,6 +12,7 @@ import { RootStackParamList } from '../navigation/types';
 import { BookingDetailsSections } from './bookingDetails/BookingDetailsSections';
 import { RescheduleSheet } from './bookingDetails/RescheduleSheet';
 import { useBookingDetailsData } from './bookingDetails/useBookingDetailsData';
+import { ReviewSheet } from './cabinet/ReviewSheet';
 
 type BookingDetailsRouteParams = {
     id: string;
@@ -27,9 +29,15 @@ export default function BookingDetailsScreen() {
     const { t } = useLanguage();
     const bookingId = route.params?.id;
     const [rescheduleOpen, setRescheduleOpen] = useState(false);
+    const [reviewOpen, setReviewOpen] = useState(false);
     const {
         booking,
         isLoading,
+        failure,
+        isRetrying,
+        retry,
+        offlineSavedAt,
+        isStaffView,
         cancelBooking,
         isCancelling,
         primaryPhone,
@@ -38,9 +46,13 @@ export default function BookingDetailsScreen() {
         isRescheduling,
         canReschedule,
         rescheduleTarget,
+        canReview,
         startedNotice,
         benefitRescheduleNotice,
         timelineSteps,
+        canShowMap,
+        openMap,
+        openDirections,
         openCall,
         openWhatsApp,
     } = useBookingDetailsData({
@@ -93,7 +105,25 @@ export default function BookingDetailsScreen() {
     }
 
     if (!booking) {
-        return <EmptyState title={t('cabinet.details.notFound')} />;
+        // B4: "not found" only when the server says so; a lost connection or a server error
+        // offers a retry instead of telling the client the booking is gone.
+        if (failure === 'not_found') {
+            return (
+                <EmptyState
+                    icon="search-outline"
+                    title={t('cabinet.details.notFound')}
+                    message={t('cabinet.details.notFoundMessage')}
+                />
+            );
+        }
+        return (
+            <EmptyState
+                icon="cloud-offline-outline"
+                title={t('cabinet.details.loadError.title')}
+                message={t('cabinet.details.loadError.message')}
+                action={<Button title={t('cabinet.ui.retry')} onPress={retry} variant="outline" loading={isRetrying} fullWidth />}
+            />
+        );
     }
 
     return (
@@ -112,6 +142,14 @@ export default function BookingDetailsScreen() {
                 onReschedule={() => setRescheduleOpen(true)}
                 onCall={openCall}
                 onWhatsApp={openWhatsApp}
+                isStaffView={isStaffView}
+                offlineSavedAt={offlineSavedAt}
+                onRetry={retry}
+                canReview={canReview}
+                onReview={() => setReviewOpen(true)}
+                canShowMap={canShowMap}
+                onShowMap={openMap}
+                onDirections={openDirections}
             />
             {rescheduleOpen && rescheduleTarget ? (
                 <RescheduleSheet
@@ -123,7 +161,14 @@ export default function BookingDetailsScreen() {
                     onConfirm={rescheduleBooking}
                 />
             ) : null}
+            {reviewOpen ? (
+                <ReviewSheet
+                    visible={reviewOpen}
+                    bookingId={booking.id}
+                    existingReview={booking.review ?? null}
+                    onClose={() => setReviewOpen(false)}
+                />
+            ) : null}
         </>
     );
 }
-

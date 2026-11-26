@@ -361,7 +361,7 @@ Manager-операции ниже используют manager wrapper. К ук�
 
 | Часть | Контракт |
 | --- | --- |
-| Доступ/вход | Cookie user; query status=all отключает фильтр, любое другое/отсутствующее значение возвращает неистёкшие с remaining_visits>0; limiter отсутствует |
+| Доступ/вход | Bearer мобильного приложения (C10, 26 ноября 2026) или cookie user; query status=all отключает фильтр, любое другое/отсутствующее значение возвращает неистёкшие с remaining_visits>0; limiter отсутствует |
 | Успех | `data: { packages }`, поля id,plan_id,plan_name_ru/ky/en,remaining_visits,plan_visit_count,valid_until,purchased_at,created_at; сортировка valid_until по возрастанию |
 | Ошибки | 401 auth; 500 server при основном запросе; ошибки чтения имён планов не проверяются и дают null |
 | Ограничения | client_id всегда user.id; данные всех его пакетов без пагинации. Сегодня вычисляется на каждом запросе в настроенной TZ (`NEXT_PUBLIC_TZ`, default Asia/Bishkek); переход полуночи проверен в одном процессе. Индивидуальная TZ каждого бизнеса здесь не выбирается |

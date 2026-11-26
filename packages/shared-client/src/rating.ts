@@ -132,3 +132,15 @@ export function isActiveStaffDay(metrics: StaffDayActivityLike): boolean {
     );
 }
 
+
+/**
+ * The rating as the public pages show it, on a five-star scale with one decimal: a stored 0–100
+ * score is divided by 20 (50 → "2.5"), a value already on the 0–5 scale is kept. The same rule
+ * as the web `formatRatingDisplayValue` (apps/web/src/components/RatingDisplay.tsx).
+ */
+export function formatRatingDisplayValue(score: number): string {
+    const normalizedScore = score > 5 ? score / 20 : score;
+    const safeScore = Math.min(5, Math.max(0, normalizedScore));
+
+    return safeScore.toFixed(1);
+}

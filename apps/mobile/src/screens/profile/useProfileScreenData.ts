@@ -10,7 +10,7 @@ import { getErrorMessage } from '../../lib/errors';
 import { TimeoutError } from '../../lib/fetchWithTimeout';
 import { countPendingShiftOperations, signOutConfirmationText, signOutSafely } from '../../lib/signOut';
 import { supabase } from '../../lib/supabase';
-import { ACCOUNT_DELETION_WEB_PATH, openWebAsCurrentUser, webPageUrl } from '../../lib/webLinks';
+import { ACCOUNT_DELETION_WEB_PATH, TELEGRAM_LINK_WEB_PATH, openWebAsCurrentUser, webPageUrl } from '../../lib/webLinks';
 import type { Profile } from './types';
 
 const PHONE_PATTERN = /^\+?[0-9\s()-]{7,20}$/;
@@ -64,7 +64,9 @@ export function useProfileScreenData() {
             const { data, error } = await withProfileTimeout(
                 supabase
                     .from('profiles')
-                    .select('id, full_name, phone, notify_email, notify_whatsapp, notify_sms, notify_telegram')
+                    .select(
+                        'id, full_name, phone, notify_email, notify_whatsapp, notify_sms, notify_telegram, whatsapp_phone, whatsapp_verified, telegram_id, telegram_username, telegram_verified',
+                    )
                     .eq('id', userQuery.data.id)
                     .maybeSingle(),
                 'Profile data request timed out',
@@ -82,6 +84,7 @@ export function useProfileScreenData() {
                     phone: userQuery.data.phone ?? null,
                     notify_email: true,
                     notify_whatsapp: true,
+                    whatsapp_verified: false,
                 } as Profile;
             }
 
@@ -115,7 +118,7 @@ export function useProfileScreenData() {
                         full_name: fullName.trim() || null,
                         phone: phone.trim() || null,
                         notify_email: notifyEmail,
-                        notify_whatsapp: notifyWhatsApp,
+                        notify_whatsapp: whatsappVerified && notifyWhatsApp,
                         notify_sms: profileQuery.data?.notify_sms ?? true,
                         notify_telegram: profileQuery.data?.notify_telegram ?? true,
                     }),
@@ -158,6 +161,24 @@ export function useProfileScreenData() {
         }
 
         updateProfileMutation.mutate();
+    };
+
+    // B5: WhatsApp notifications need a confirmed number; the switch is off and locked until then.
+    const whatsappVerified = !!profileQuery.data?.whatsapp_verified;
+    // C12: linked as the web profile decides it (verified profile id, or the sign-in metadata).
+    const metadata = (userQuery.data?.user_metadata ?? {}) as { telegram_id?: unknown; telegram_username?: unknown };
+    const telegramLinked =
+        (!!profileQuery.data?.telegram_id && !!profileQuery.data?.telegram_verified) || !!metadata.telegram_id;
+    const telegramUsername =
+        profileQuery.data?.telegram_username ||
+        (typeof metadata.telegram_username === 'string' ? metadata.telegram_username : null);
+
+    const linkTelegram = async () => {
+        try {
+            await openWebAsCurrentUser(TELEGRAM_LINK_WEB_PATH);
+        } catch {
+            showToast(t('cabinet.profile.account.openError'), 'error');
+        }
     };
 
     const openWebPage = async (path: '/privacy' | '/terms') => {
@@ -229,8 +250,17 @@ export function useProfileScreenData() {
         setPhone,
         notifyEmail,
         setNotifyEmail,
-        notifyWhatsApp,
+        notifyWhatsApp: whatsappVerified && notifyWhatsApp,
         setNotifyWhatsApp,
+        whatsappVerified,
+        whatsappPhone: profileQuery.data?.whatsapp_phone ?? null,
+        onWhatsAppVerified: () => {
+            void queryClient.invalidateQueries({ queryKey: ['profile', userQuery.data?.id] });
+        },
+        telegramLinked,
+        telegramUsername,
+        linkTelegram: () => void linkTelegram(),
+        isRefreshing: userQuery.isRefetching || profileQuery.isRefetching,
         saveProfile,
         confirmSignOut,
         openPrivacy: () => void openWebPage('/privacy'),

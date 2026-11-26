@@ -15,6 +15,8 @@ import RatingBadge from '../../components/ui/RatingBadge';
 import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
+import BookingLoadError from './BookingLoadError';
+import { ANY_STAFF } from './bookingSelection';
 import { useBookingStep3Staff } from './useBookingStep3Staff';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -23,7 +25,7 @@ export default function BookingStep3Staff() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setStaff, setStaffId } = useBooking();
     const { t } = useLanguage();
-    const { staffData, isLoading } = useBookingStep3Staff({
+    const { staffData, isLoading, hasError, isRetrying, retry } = useBookingStep3Staff({
         bookingData,
         setStaff,
         setStaffId,
@@ -51,6 +53,20 @@ export default function BookingStep3Staff() {
         return (
             <View style={styles.container}>
                 <LoadingSpinner message={t('booking.step3.loading')} />
+            </View>
+        );
+    }
+
+    if (hasError) {
+        return (
+            <View style={styles.container}>
+                <BookingProgressIndicator currentStep={3} />
+                <View style={styles.header}>
+                    <Text style={styles.title}>{bookingData.business?.name}</Text>
+                </View>
+                <View style={styles.section}>
+                    <BookingLoadError title={t('booking.error.loadStaff')} onRetry={retry} retrying={isRetrying} />
+                </View>
             </View>
         );
     }
@@ -95,6 +111,26 @@ export default function BookingStep3Staff() {
 
                 <View style={styles.section}>
                     <View style={styles.optionsList}>
+                        {/* "Any master" (C4): the times of every master; the chosen time names the master. */}
+                        <MotionPressable
+                            key={ANY_STAFF}
+                            style={styles.chipContainer}
+                            onPress={() => handleSelectStaff(ANY_STAFF)}
+                            accessibilityHint={t('booking.step3.anyMasterHint')}
+                            accessibilityState={{ selected: bookingData.staffId === ANY_STAFF }}
+                        >
+                            <View style={bookingData.staffId === ANY_STAFF ? styles.chipAnySelected : styles.chip}>
+                                <View style={styles.chipContent}>
+                                    <Text
+                                        style={
+                                            bookingData.staffId === ANY_STAFF ? styles.chipTextSelected : styles.chipText
+                                        }
+                                    >
+                                        {t('booking.step3.anyMaster')}
+                                    </Text>
+                                </View>
+                            </View>
+                        </MotionPressable>
                         {staffData.map((staff) => {
                             const isSelected = bookingData.staffId === staff.id;
                             return (
@@ -196,6 +232,15 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         borderWidth: 1,
         borderColor: colors.primary.from,
+    },
+    chipAnySelected: {
+        minHeight: MIN_TOUCH_TARGET,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: colors.primary.from,
+        backgroundColor: 'rgba(79, 70, 229, 0.12)',
     },
     chipText: {
         fontSize: 12,

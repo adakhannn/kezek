@@ -24,4 +24,8 @@ export const navKy: Record<keyof typeof navRu, string> = {
     'nav.shifts': 'Сменалар жана статистика',
     'nav.shiftQuick': 'Менин сменам',
     'nav.checkingAccess': 'Кирүү укугун текшерип жатабыз...',
+    'nav.businessPage': 'Бизнес жөнүндө',
+    'nav.eyebrow.booking': 'Жазылуу',
+    'nav.eyebrow.discovery': 'Каталог',
+    'nav.eyebrow.workspace': 'Иш',
 };

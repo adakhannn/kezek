@@ -5,6 +5,8 @@ import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import type { DbClient } from '@/lib/supabaseTypes';
+import type { Database } from '@/types/supabase';
 
 export type RequestAuthContext = {
     supabase: SupabaseClient;
@@ -87,4 +89,20 @@ export async function resolveOptionalRequestUser(req: Request): Promise<User | n
     } catch {
         return null;
     }
+}
+
+/**
+ * The Supabase client acting as the caller, without deciding the 401 (services that check the user
+ * themselves answer it). A mobile Bearer token is used when present, the web session cookie
+ * otherwise, so the same route serves the website and the app (C9, C10, C13, B5).
+ */
+export async function createRequestSupabaseClient(req: Request): Promise<DbClient> {
+    const header = req.headers.get('Authorization') ?? '';
+    if (header.startsWith('Bearer ') && header.length > 'Bearer '.length) {
+        return createClient<Database>(getSupabaseUrl(), getSupabaseAnonKey(), {
+            global: { headers: { Authorization: header } },
+            auth: { persistSession: false, autoRefreshToken: false },
+        });
+    }
+    return createSupabaseServerClient();
 }

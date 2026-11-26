@@ -5,17 +5,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../i18n';
 import { apiRequest } from '../../lib/api';
+import { branchDirectionsUrl, branchMapUrl, canShowOnMap } from '../../lib/branchMap';
 import { getErrorMessage } from '../../lib/errors';
 import { rescheduleBookingRequest } from '../../lib/bookingReschedule';
 import { logError } from '../../lib/log';
 import { supabase } from '../../lib/supabase';
-import { buildTimelineSteps, type BookingDetails } from './types';
+import { BookingDetailsLoadError, loadBookingDetails, type BookingDetailsFailure } from './bookingDetailsLoad';
+import { buildTimelineSteps } from './types';
 import { canCancel as canCancelBooking, clientBookingActions, type BookingStatus } from '@core-domain/booking';
-
-type ApiEnvelope<T> = {
-    ok?: boolean;
-    data?: T;
-};
 
 type Options = {
     bookingId?: string;
@@ -23,12 +20,15 @@ type Options = {
     onRescheduled?: () => void;
 };
 
-function unwrapBookingDetails(payload: BookingDetails | ApiEnvelope<BookingDetails>): BookingDetails {
-    if (payload && typeof payload === 'object' && 'data' in payload && payload.data) {
-        return payload.data;
+async function currentUserId(): Promise<string | null> {
+    try {
+        const {
+            data: { session },
+        } = await supabase.auth.getSession();
+        return session?.user?.id ?? null;
+    } catch {
+        return null;
     }
-
-    return payload as BookingDetails;
 }
 
 export function useBookingDetailsData({ bookingId, onCancelled, onRescheduled }: Options) {
@@ -40,14 +40,11 @@ export function useBookingDetailsData({ bookingId, onCancelled, onRescheduled }:
         queryKey: ['booking', bookingId],
         queryFn: async () => {
             if (!bookingId) {
-                throw new Error('Не указан идентификатор бронирования');
+                throw new BookingDetailsLoadError('not_found', new Error(t('cabinet.details.missingId')));
             }
 
             try {
-                const payload = await apiRequest<BookingDetails | ApiEnvelope<BookingDetails>>(`/mobile/bookings/${bookingId}`, {
-                    method: 'GET',
-                });
-                return unwrapBookingDetails(payload);
+                return await loadBookingDetails({ bookingId, userId: await currentUserId() });
             } catch (error: unknown) {
                 logError('BookingDetailsScreen', 'Error fetching booking via API', error);
                 throw error;
@@ -80,10 +77,7 @@ export function useBookingDetailsData({ bookingId, onCancelled, onRescheduled }:
         mutationFn: async (startAt: string) => {
             if (!bookingId) throw new Error(t('cabinet.details.rescheduleError'));
             // The request identity belongs to this account, as for booking creation.
-            const {
-                data: { session },
-            } = await supabase.auth.getSession();
-            const userId = session?.user?.id;
+            const userId = await currentUserId();
             if (!userId) throw new Error(t('cabinet.error.sessionExpired'));
             return rescheduleBookingRequest(userId, bookingId, startAt);
         },
@@ -102,10 +96,16 @@ export function useBookingDetailsData({ bookingId, onCancelled, onRescheduled }:
         },
     });
 
-    const booking = bookingQuery.data?.id === bookingId ? bookingQuery.data : undefined;
+    const result = bookingQuery.data;
+    const booking = result?.booking.id === bookingId ? result?.booking : undefined;
+    const offlineSavedAt = booking ? result?.offlineSavedAt ?? null : null;
+    const isOffline = !!offlineSavedAt;
+    // B1: a master or manager opened the booking from a push; the client's actions are not theirs.
+    const isStaffView = !!booking?.viewer_role && booking.viewer_role !== 'client';
+    const clientActionsAllowed = !!booking && !isStaffView && !isOffline;
     const primaryPhone = booking?.business?.phones?.[0] || null;
     // R25-10: the client's cancel and reschedule end at the start; then only the business changes it.
-    const ownActions = booking
+    const ownActions = clientActionsAllowed && booking
         ? clientBookingActions({
               status: booking.status,
               startAt: booking.start_at,
@@ -127,12 +127,22 @@ export function useBookingDetailsData({ bookingId, onCancelled, onRescheduled }:
         [booking?.biz_id, booking?.branch_id, booking?.staff_id, booking?.start_at, booking?.end_at],
     );
     const canReschedule = !!ownActions?.canReschedule && !!rescheduleTarget;
+    const canReview = clientActionsAllowed && (!!booking?.can_review || (!!booking?.review && booking.status === 'paid'));
     const timelineSteps = useMemo(
-        () => buildTimelineSteps(booking?.status ?? 'created'),
-        [booking?.status],
+        () => buildTimelineSteps(booking?.status ?? 'created', !!booking?.promotion),
+        [booking?.status, booking?.promotion],
     );
+    const loadError = bookingQuery.error;
+    const failure: BookingDetailsFailure | null = booking
+        ? null
+        : loadError instanceof BookingDetailsLoadError
+          ? loadError.kind
+          : loadError
+            ? 'error'
+            : null;
 
-    const openPhoneUrl = async (url: string, errorMessage: string) => {
+    const openUrl = async (url: string | null, errorMessage: string) => {
+        if (!url) return;
         try {
             await Linking.openURL(url);
         } catch {
@@ -140,30 +150,47 @@ export function useBookingDetailsData({ bookingId, onCancelled, onRescheduled }:
         }
     };
 
+    const branchPlace = booking?.branch
+        ? { lat: booking.branch.lat, lon: booking.branch.lon, address: booking.branch.address, name: booking.branch.name }
+        : null;
+
     return {
         booking,
-        isLoading: bookingQuery.isLoading || (!booking && bookingQuery.isFetching),
+        isLoading: bookingQuery.isLoading || (!booking && !failure && bookingQuery.isFetching),
+        failure,
+        isRetrying: bookingQuery.isFetching,
+        retry: () => void bookingQuery.refetch(),
+        offlineSavedAt,
+        isStaffView,
         cancelBooking: () => cancelMutation.mutate(),
         isCancelling: cancelMutation.isPending,
         rescheduleBooking: (startAt: string) => rescheduleMutation.mutate(startAt),
         isRescheduling: rescheduleMutation.isPending,
         canReschedule,
         rescheduleTarget,
+        canReview,
         startedNotice: !!ownActions?.started,
         benefitRescheduleNotice: !!ownActions?.rescheduleNeedsBusiness,
         primaryPhone,
         canCancel,
         timelineSteps,
+        canShowMap: canShowOnMap(branchPlace),
+        openMap: () => {
+            if (branchPlace) void openUrl(branchMapUrl(branchPlace), t('cabinet.details.mapError'));
+        },
+        openDirections: () => {
+            if (branchPlace) void openUrl(branchDirectionsUrl(branchPlace), t('cabinet.details.mapError'));
+        },
         openCall: () => {
             if (!primaryPhone) return;
             const digits = primaryPhone.replace(/[^\d+]/g, '');
-            void openPhoneUrl(`tel:${digits}`, t('cabinet.details.callError'));
+            void openUrl(`tel:${digits}`, t('cabinet.details.callError'));
         },
         openWhatsApp: () => {
             if (!primaryPhone) return;
             const digits = primaryPhone.replace(/[^\d]/g, '');
             if (!digits) return;
-            void openPhoneUrl(`https://wa.me/${digits}`, t('cabinet.details.whatsappError'));
+            void openUrl(`https://wa.me/${digits}`, t('cabinet.details.whatsappError'));
         },
     };
 }

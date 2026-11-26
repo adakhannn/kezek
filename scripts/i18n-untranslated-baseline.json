@@ -1,7 +1,6 @@
 {
   "apps/mobile/src/screens/auth/WhatsAppScreen.tsx": 2,
   "apps/mobile/src/screens/booking/useBookingStep5Slots.ts": 3,
-  "apps/mobile/src/screens/bookingDetails/useBookingDetailsData.ts": 1,
   "apps/mobile/src/screens/shiftQuick/offlineStorage.ts": 1,
   "src/app/_components/i18n/LanguageSwitcher.tsx": 2,
   "src/app/admin/api/analytics/conversion-funnel/route.ts": 5,

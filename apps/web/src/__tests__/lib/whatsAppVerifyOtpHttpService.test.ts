@@ -76,3 +76,29 @@ describe('whatsAppVerifyOtpHttpService', () => {
     expect(body.data.message).toBe('verified');
   });
 });
+
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => ({ kind: 'bearer-client' })),
+}));
+
+describe('whatsAppVerifyOtpHttpService with the mobile Bearer token (B5)', () => {
+  test('the code is checked for the token user', async () => {
+    jest.clearAllMocks();
+    (createSupabaseAdminClient as jest.Mock).mockReturnValue({ from: jest.fn() });
+    (runWhatsAppVerifyOtpRoute as jest.Mock).mockResolvedValue({ ok: true, data: { message: 'verified' } });
+
+    const response = await runWhatsAppVerifyOtpHttp(
+      new Request('http://localhost/api/whatsapp/verify-otp', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', Authorization: 'Bearer app-token' },
+        body: JSON.stringify({ code: '123456' }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(runWhatsAppVerifyOtpRoute).toHaveBeenCalledWith(
+      expect.objectContaining({ supabase: { kind: 'bearer-client' }, code: '123456' }),
+    );
+    expect(createSupabaseServerClient).not.toHaveBeenCalled();
+  });
+});

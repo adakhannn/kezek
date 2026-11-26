@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
-import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { createRequestSupabaseClient } from '@/lib/requestAuthContext';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 import { findWhatsAppOwnerByPhone } from '@/lib/whatsAppIdentityOwnershipService';
 import { runWhatsAppVerifyOtpRoute } from '@/lib/whatsAppVerifyOtpRouteService';
 
@@ -18,7 +19,7 @@ export async function runWhatsAppVerifyOtpHttp(req: Request): Promise<NextRespon
 
   const admin = createSupabaseAdminClient();
   const result = await runWhatsAppVerifyOtpRoute({
-    supabase: await createSupabaseServerClient(),
+    supabase: await createRequestSupabaseClient(req),
     admin,
     code,
     findAuthOwnerByPhone: (phone) => findWhatsAppOwnerByPhone(admin, phone),

@@ -56,9 +56,14 @@ export function RescheduleSheet({ visible, target, timeZone, isSubmitting, onClo
                                     style={[styles.dayChip, active && styles.chipSelected]}
                                     onPress={() => { setDay(value); setSelected(null); }}
                                     accessibilityState={{ selected: active }}
+                                    accessibilityLabel={`${label.weekday}, ${label.dayMonth}`}
                                 >
                                     <Text style={[styles.dayWeekday, active && styles.chipTextSelected]}>{label.weekday}</Text>
                                     <Text style={[styles.dayNumber, active && styles.chipTextSelected]}>{label.day}</Text>
+                                    {/* The two weeks can cross a month: the chip names it. */}
+                                    <Text style={[styles.dayMonth, active && styles.chipTextSelected]} numberOfLines={1}>
+                                        {label.month}
+                                    </Text>
                                 </MotionPressable>
                             );
                         })}
@@ -142,6 +147,7 @@ const styles = StyleSheet.create({
     },
     dayWeekday: { fontSize: 12, color: colors.text.secondary },
     dayNumber: { fontSize: 16, fontWeight: '600', color: colors.text.primary },
+    dayMonth: { fontSize: 11, color: colors.text.secondary },
     slotsScroll: { maxHeight: 260 },
     slotsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingVertical: 4 },
     slotChip: {

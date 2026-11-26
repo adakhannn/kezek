@@ -143,4 +143,31 @@ export const styles = StyleSheet.create({
     contactButton: {
         flex: 1,
     },
+    serviceLine: {
+        fontSize: 15,
+        color: '#111827',
+        marginTop: 2,
+    },
+    benefitLine: {
+        fontSize: 15,
+        color: '#111827',
+        fontWeight: '500',
+        marginTop: 2,
+    },
+    mapRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginTop: 8,
+    },
+    mapButton: {
+        flex: 1,
+    },
+    reviewText: {
+        fontSize: 15,
+        color: '#374151',
+        marginTop: 4,
+    },
+    banner: {
+        marginBottom: 12,
+    },
 });

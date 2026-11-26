@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { useLanguage } from '../i18n';
 import { countPendingShiftOperations, signOutConfirmationText, signOutSafely } from '../lib/signOut';
 import type { CabinetStackParamList, RootStackParamList } from '../navigation/types';
 import { CabinetScreenSections } from './cabinet/CabinetScreenSections';
+import { ReviewSheet } from './cabinet/ReviewSheet';
+import type { Booking } from './cabinet/types';
 import { useCabinetScreenData } from './cabinet/useCabinetScreenData';
 
 type CabinetScreenNavigationProp = NativeStackNavigationProp<CabinetStackParamList, 'CabinetMain'>;
@@ -19,7 +21,9 @@ export default function CabinetScreen() {
     const navigation = useNavigation<CabinetScreenNavigationProp>();
     const rootNavigation = navigation as unknown as RootNavigationProp;
     const [isSigningOut, setIsSigningOut] = useState(false);
+    const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
     const { t } = useLanguage();
+    const { confirm } = useConfirm();
 
     const {
         user,
@@ -34,26 +38,31 @@ export default function CabinetScreen() {
         upcomingBookings,
         pastBookings,
         onRefresh,
+        hasMoreBookings,
+        isFetchingMore,
+        loadMoreFailed,
+        loadMore,
     } = useCabinetScreenData();
 
+    // The same confirmation as in Profile (ConfirmContext), with the pending-shift warning.
     const handleSignOut = async () => {
         const pending = await countPendingShiftOperations();
         const text = signOutConfirmationText(pending, t);
-        Alert.alert(pending === 0 ? t('cabinet.signOutTitle') : text.title, text.message, [
-            { text: t('cabinet.ui.cancel'), style: 'cancel' },
-            {
-                text: text.confirmLabel,
-                style: 'destructive',
-                onPress: async () => {
-                    setIsSigningOut(true);
-                    try {
-                        await signOutSafely();
-                    } finally {
-                        setIsSigningOut(false);
-                    }
-                },
-            },
-        ]);
+        const shouldSignOut = await confirm({
+            title: pending === 0 ? t('cabinet.signOutTitle') : text.title,
+            message: text.message,
+            confirmLabel: text.confirmLabel,
+            cancelLabel: t('cabinet.ui.cancel'),
+            variant: 'danger',
+        });
+        if (!shouldSignOut) return;
+
+        setIsSigningOut(true);
+        try {
+            await signOutSafely();
+        } finally {
+            setIsSigningOut(false);
+        }
     };
 
     if (isLoading && !bookings) {
@@ -68,7 +77,7 @@ export default function CabinetScreen() {
                 action={
                     <Button
                         title={isSigningOut ? t('cabinet.ui.signingOut') : t('cabinet.noUser.signOut')}
-                        onPress={handleSignOut}
+                        onPress={() => void handleSignOut()}
                         variant="danger"
                         loading={isSigningOut}
                         fullWidth
@@ -79,22 +88,37 @@ export default function CabinetScreen() {
     }
 
     return (
-        <CabinetScreenSections
-            userLabel={user.email || user.phone || t('cabinet.userFallback')}
-            activeTab={activeTab}
-            isOfflineData={isOfflineData}
-            hasBookingsError={hasBookingsError}
-            lastSyncAt={lastSyncAt}
-            upcomingBookings={upcomingBookings}
-            pastBookings={pastBookings}
-            refreshing={refreshing}
-            onTabChange={setActiveTab}
-            onRefresh={onRefresh}
-            onBookingPress={(bookingId) => rootNavigation.navigate('BookingDetails', { id: bookingId })}
-            onProfilePress={() => navigation.navigate('Profile')}
-            onSignOut={handleSignOut}
-            isSigningOut={isSigningOut}
-        />
+        <>
+            <CabinetScreenSections
+                userId={user.id}
+                userLabel={user.email || user.phone || t('cabinet.userFallback')}
+                activeTab={activeTab}
+                isOfflineData={isOfflineData}
+                hasBookingsError={hasBookingsError}
+                lastSyncAt={lastSyncAt}
+                upcomingBookings={upcomingBookings}
+                pastBookings={pastBookings}
+                refreshing={refreshing}
+                onTabChange={setActiveTab}
+                onRefresh={onRefresh}
+                onBookingPress={(bookingId) => rootNavigation.navigate('BookingDetails', { id: bookingId })}
+                onProfilePress={() => navigation.navigate('Profile')}
+                onSignOut={() => void handleSignOut()}
+                isSigningOut={isSigningOut}
+                hasMoreBookings={hasMoreBookings}
+                isFetchingMore={isFetchingMore}
+                loadMoreFailed={loadMoreFailed}
+                onLoadMore={loadMore}
+                onReview={setReviewBooking}
+            />
+            {reviewBooking ? (
+                <ReviewSheet
+                    visible
+                    bookingId={reviewBooking.id}
+                    existingReview={reviewBooking.review ?? null}
+                    onClose={() => setReviewBooking(null)}
+                />
+            ) : null}
+        </>
     );
 }
-

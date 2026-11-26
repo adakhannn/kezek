@@ -39,3 +39,29 @@ describe('reviewCreateHttpService', () => {
     expect(body.data.id).toBe('review-id');
   });
 });
+
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => ({ kind: 'bearer-client' })),
+}));
+
+describe('reviewCreateHttpService with the mobile Bearer token (C9)', () => {
+  test('the review is written as the token user, not through the cookie session', async () => {
+    jest.clearAllMocks();
+    (createOrUpdateReview as jest.Mock).mockResolvedValue({ ok: true, data: { id: 'r-1', updated: false } });
+
+    const response = await runReviewCreateHttp(
+      new Request('http://localhost/api/reviews/create', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', Authorization: 'Bearer app-token' },
+        body: JSON.stringify({ booking_id: 'booking-id', rating: 4 }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(createOrUpdateReview).toHaveBeenCalledWith({
+      supabase: { kind: 'bearer-client' },
+      body: { booking_id: 'booking-id', rating: 4 },
+    });
+    expect(createSupabaseServerClient).not.toHaveBeenCalled();
+  });
+});

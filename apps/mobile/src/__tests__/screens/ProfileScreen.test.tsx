@@ -85,6 +85,11 @@ describe('ProfileScreen', () => {
                     notify_whatsapp: true,
                     notify_sms: false,
                     notify_telegram: true,
+                    whatsapp_phone: '+996555000111',
+                    whatsapp_verified: true,
+                    telegram_id: null,
+                    telegram_username: null,
+                    telegram_verified: false,
                 },
                 error: null,
             }),
@@ -267,5 +272,110 @@ describe('ProfileScreen', () => {
         } finally {
             jest.useRealTimers();
         }
+    });
+
+    function unverifiedProfile(extra: Record<string, unknown> = {}) {
+        profileQuery.maybeSingle.mockResolvedValue({
+            data: {
+                id: 'test-user-id',
+                full_name: 'Test User',
+                phone: '+996555000111',
+                notify_email: true,
+                notify_whatsapp: true,
+                notify_sms: false,
+                notify_telegram: true,
+                whatsapp_phone: null,
+                whatsapp_verified: false,
+                ...extra,
+            },
+            error: null,
+        });
+    }
+
+    test('labels the e-mail through the dictionary', async () => {
+        renderWithProviders(<ProfileScreen />);
+        expect(await screen.findByText('test@example.com')).toBeTruthy();
+        expect(screen.getByText('Email')).toBeTruthy();
+    });
+
+    // B5: WhatsApp notifications need a confirmed number, as on the website.
+    test('an unconfirmed WhatsApp number locks the switch off, explains why and saves it off', async () => {
+        unverifiedProfile();
+        renderWithProviders(<ProfileScreen />);
+
+        const whatsappSwitch = await screen.findByTestId('profile-whatsapp-switch');
+        expect(whatsappSwitch.props.value).toBe(false);
+        expect(whatsappSwitch.props.disabled).toBe(true);
+        expect(screen.getByText('Сначала подтвердите номер WhatsApp ниже: без этого уведомления в WhatsApp не приходят.')).toBeTruthy();
+
+        fireEvent.press(screen.getByText('Сохранить'));
+        await waitFor(() => expect(savedBody()).toEqual(expect.objectContaining({ notify_whatsapp: false })));
+    });
+
+    test('confirms the WhatsApp number with a code through the web endpoints', async () => {
+        unverifiedProfile();
+        renderWithProviders(<ProfileScreen />);
+
+        fireEvent.press(await screen.findByText('Подтвердить номер'));
+        fireEvent.changeText(screen.getByTestId('whatsapp-phone-input'), '+996 555 123 456');
+        fireEvent.press(screen.getByText('Отправить код'));
+
+        await waitFor(() =>
+            expect(mockedApiRequest).toHaveBeenCalledWith('/whatsapp/send-otp', {
+                method: 'POST',
+                body: JSON.stringify({ phone: '+996 555 123 456' }),
+            }),
+        );
+        expect(mockShowToast).toHaveBeenCalledWith('Код отправлен на WhatsApp', 'success');
+
+        const reads = profileQuery.maybeSingle.mock.calls.length;
+        fireEvent.changeText(await screen.findByTestId('whatsapp-code-input'), '12a3456');
+        fireEvent.press(screen.getByText('Подтвердить'));
+
+        await waitFor(() =>
+            expect(mockedApiRequest).toHaveBeenCalledWith('/whatsapp/verify-otp', {
+                method: 'POST',
+                body: JSON.stringify({ code: '123456' }),
+            }),
+        );
+        expect(mockShowToast).toHaveBeenCalledWith('Номер WhatsApp подтверждён', 'success');
+        // The profile is read again: the switch unlocks with the server's whatsapp_verified.
+        await waitFor(() => expect(profileQuery.maybeSingle.mock.calls.length).toBeGreaterThan(reads));
+    });
+
+    test('a short code is refused before any request', async () => {
+        unverifiedProfile();
+        renderWithProviders(<ProfileScreen />);
+
+        fireEvent.press(await screen.findByText('Подтвердить номер'));
+        fireEvent.press(screen.getByText('Отправить код'));
+        fireEvent.changeText(await screen.findByTestId('whatsapp-code-input'), '123');
+        fireEvent.press(screen.getByText('Подтвердить'));
+
+        expect(await screen.findByText('Введите 6-значный код')).toBeTruthy();
+        expect(mockedApiRequest).not.toHaveBeenCalledWith('/whatsapp/verify-otp', expect.anything());
+    });
+
+    // C12: Telegram state and linking on the website.
+    test('shows the linked Telegram account', async () => {
+        unverifiedProfile({ telegram_id: 42, telegram_username: 'aida', telegram_verified: true });
+        renderWithProviders(<ProfileScreen />);
+
+        expect(await screen.findByText('Подключён: @aida')).toBeTruthy();
+        expect(screen.queryByText('Привязать Telegram')).toBeNull();
+    });
+
+    test('links Telegram on the web profile, signed in through the handoff', async () => {
+        const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+        mockedApiRequest.mockImplementation(async (endpoint: string) =>
+            endpoint === '/auth/web-handoff' ? { ok: true, url: 'https://kezek.vercel.app/auth/handoff?code=x' } : { ok: true });
+        renderWithProviders(<ProfileScreen />);
+
+        fireEvent.press(await screen.findByText('Привязать Telegram'));
+
+        await waitFor(() => expect(openURL).toHaveBeenCalledWith('https://kezek.vercel.app/auth/handoff?code=x'));
+        const handoff = mockedApiRequest.mock.calls.find(([endpoint]) => endpoint === '/auth/web-handoff');
+        expect(JSON.parse(handoff?.[1].body as string)).toEqual({ next: '/cabinet/profile#telegram-connection' });
+        openURL.mockRestore();
     });
 });

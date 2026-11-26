@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 
 import MainNavigator from '../../navigation/MainNavigator';
+import { NavigationSessionProvider, type NavigationSession } from '../../navigation/NavigationSessionContext';
 import { useUserRole } from '../../hooks/useUserRole';
 import { createTestQueryClient } from '../testQueryClient';
 
@@ -62,10 +63,16 @@ describe('MainNavigator', () => {
         });
     });
 
-    const renderWithProviders = (component: React.ReactElement) => {
+    const signedIn: NavigationSession = { session: { user: { id: 'user-1' } } as NavigationSession['session'], hasSession: true };
+
+    const renderWithProviders = (component: React.ReactElement, session = signedIn) => {
         const queryClient = createTestQueryClient();
 
-        return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
+        return render(
+            <QueryClientProvider client={queryClient}>
+                <NavigationSessionProvider value={session}>{component}</NavigationSessionProvider>
+            </QueryClientProvider>,
+        );
     };
 
     test('renders main tab entries', () => {
@@ -75,6 +82,15 @@ describe('MainNavigator', () => {
         expect(screen.getByText('Cabinet')).toBeTruthy();
         expect(screen.getByText('Dashboard')).toBeTruthy();
         expect(screen.getByText('Staff')).toBeTruthy();
+    });
+
+    test('signed out: Home and the Cabinet tab (its sign-in entry), no role tabs (C1)', () => {
+        renderWithProviders(<MainNavigator />, { session: null, hasSession: false });
+
+        expect(screen.getByText('Home')).toBeTruthy();
+        expect(screen.getByText('Cabinet')).toBeTruthy();
+        expect(screen.queryByText('Dashboard')).toBeNull();
+        expect(screen.queryByText('Staff')).toBeNull();
     });
 
     test('uses history back behavior for Android tab navigation', () => {

@@ -9,7 +9,7 @@ export async function POST(req: Request, context: unknown) {
     return withRateLimit(
         req,
         routeRateLimit('api/staff-invitations/accept', RateLimitConfigs.normal),
-        () => withErrorHandler('StaffInvitationAccept', () => runAcceptStaffInvitationHttp(context)),
+        () => withErrorHandler('StaffInvitationAccept', () => runAcceptStaffInvitationHttp(req, context)),
         '/api/staff-invitations/[id]/accept',
     );
 }

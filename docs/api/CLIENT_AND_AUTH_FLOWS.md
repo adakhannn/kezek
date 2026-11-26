@@ -257,7 +257,7 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 | Errors | 500 internal query error; общий mapper; 429 |
 | Limiter / effects | `public/shared`; читает approved businesses, фильтрует search по name/address и category, сортирует name и применяет range. Записи не изменяет |
 
-Для всех трёх mobile booking methods auth — Bearer (при наличии непустого префикса `Bearer `) либо cookie fallback. Неверный переданный Bearer не переключается на действующую cookie. Чтение/изменение дополнительно ограничены `client_id = user.id`. Источники общие: [HTTP](../../apps/web/src/lib/mobileBookingsHttpService.ts), [auth resolver](../../apps/web/src/lib/mobileBookingAuthService.ts), [service](../../apps/web/src/lib/mobileBookingsService.ts), DTO в [shared types](../../packages/shared-client/src/types.ts).
+Для всех трёх mobile booking methods auth — Bearer (при наличии непустого префикса `Bearer `) либо cookie fallback. Неверный переданный Bearer не переключается на действующую cookie. Список и отмена ограничены `client_id = user.id`; детали — правилом читателя ниже (B1, 26 ноября 2026). Источники общие: [HTTP](../../apps/web/src/lib/mobileBookingsHttpService.ts), [auth resolver](../../apps/web/src/lib/mobileBookingAuthService.ts), [service](../../apps/web/src/lib/mobileBookingsService.ts), DTO в [shared types](../../packages/shared-client/src/types.ts).
 
 <!-- api-contract: GET /api/mobile/bookings -->
 ### GET `/api/mobile/bookings`
@@ -266,9 +266,9 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 
 | Аспект | Контракт |
 | --- | --- |
-| Input / output | Тело/query не используются. `S(ClientBookingListItemDto[])`: id/start_at/end_at/status и nullable вложенные service(name_ru), staff(full_name), branch(name/address), business(name/slug/tz). `tz` — зона бизнеса (`businesses.tz`, проверена `resolveBusinessTimeZone`; NULL/неизвестная → Asia/Bishkek), добавлена для ARCH-11; клиент без поля показывает Asia/Bishkek |
+| Input / output | Тело не используется. Query `limit` (целое 1..100, иначе 50) и `offset` (целое ≥ 0, иначе 0) — страница истории (B11). `S(ClientBookingListItemDto[])` плюс поле ответа `page: {offset, limit, has_more, next_offset}` (`next_offset` null на последней странице). Элемент: id/start_at/end_at/status и nullable вложенные service(name_ru), staff(full_name), branch(name/address), business(name/slug/tz). `tz` — зона бизнеса (`businesses.tz`, проверена `resolveBusinessTimeZone`; NULL/неизвестная → Asia/Bishkek), добавлена для ARCH-11; клиент без поля показывает Asia/Bishkek. Дополнительно (C11, необязательные для старых клиентов): `services` (все услуги `booking_services` по `order_index`, только если они есть), `promotion` `{title, discount_percent, final_amount}` из `promotion_applied`, `package` `{name, final_amount}` из `subscription_applied`, `review` `{id, rating, comment}` и `can_review` (оплачено, визит начался, отзыва нет — правило `POST /api/reviews/create`) |
 | Auth / errors | Auth выше; 401 auth, 500 internal при query, 429 |
-| Limiter / effects | `normal/shared`; читает максимум **50** собственных броней, start_at descending. Параметров следующей страницы нет; это не полная история |
+| Limiter / effects | `normal/shared`; читает собственные брони страницами, start_at и id descending (одна лишняя строка определяет `has_more`). Без параметров — первые 50, как раньше. Offset-пагинация: новая бронь между запросами сдвигает страницы, клиент убирает повторы по id |
 
 <!-- api-contract: GET /api/mobile/bookings/[id] -->
 ### GET `/api/mobile/bookings/[id]`
@@ -277,9 +277,9 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 
 | Аспект | Контракт |
 | --- | --- |
-| Input / output | `[id]` UUID; `S(ClientBookingDetailsDto)`, поля list + service duration_min/price_from/price_to, business phones и tz (как в списке), `biz_id`/`branch_id`/`staff_id` (слоты переноса) и `benefit_applied` (акция или абонемент: переносит бизнес). Связанные объекты nullable |
-| Auth / errors | Auth выше; 401 auth, 400 validation UUID, 404 not_found при отсутствующей/чужой брони, 500 internal query, 429 |
-| Limiter / effects | `normal/shared`; только чтение выбранной собственной брони |
+| Input / output | `[id]` UUID; `S(ClientBookingDetailsDto)`, поля list (включая `services`, `promotion`, `package`) + service duration_min/price_from/price_to, business phones и tz (как в списке), branch `lat`/`lon` (карта и маршрут), `biz_id`/`branch_id`/`staff_id` (слоты переноса), `benefit_applied` (акция или абонемент: переносит бизнес) и `viewer_role`: `client`, `staff` или `manager`. Клиенту — `review` и `can_review`; сотруднику и менеджеру — `client_name` (как на экранах сотрудника), `can_review: false`, без отзыва и без контактов клиента. Связанные объекты nullable |
+| Auth / errors | Auth выше. Читают (B1): клиент брони; её собственный активный мастер (`staff.user_id`, `is_active` не false) — push о подтверждении и отмене открывает этот экран; владелец, admin или manager бизнеса ([managerAccessToBusiness](../../apps/web/src/lib/businessManagerAccess.ts), service role). RLS уже ограничивает чтение этими же ролями; явная проверка не даёт более широкой политике расширить endpoint. Всем остальным — 404 not_found (существование не раскрывается). 401 auth, 400 validation UUID, 500 internal при ошибке query или чтения ролей, 429 |
+| Limiter / effects | `normal/shared`; только чтение. Отмена (POST) по-прежнему только для `client_id = user.id` |
 
 <!-- api-contract: POST /api/mobile/bookings/[id] -->
 ### POST `/api/mobile/bookings/[id]`

@@ -33,6 +33,7 @@ describe('plural forms', () => {
         expect(bases).toEqual([
             'booking.duration.minutesLong',
             'cabinet.signOut.pending.message',
+            'discovery.home.promotions',
             'staff.shiftQuick.operationsQueued',
             'staff.shifts.clientsCount',
         ]);

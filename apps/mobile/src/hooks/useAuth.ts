@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
+import { fetchCurrentUser } from '../lib/currentUser';
 
 /**
  * Хук для проверки авторизации пользователя
@@ -7,11 +7,7 @@ import { supabase } from '../lib/supabase';
 export function useAuth() {
     const { data: user, isLoading, error } = useQuery({
         queryKey: ['user'],
-        queryFn: async () => {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (error) throw error;
-            return user;
-        },
+        queryFn: fetchCurrentUser,
         staleTime: 5 * 60 * 1000, // 5 минут
     });
 

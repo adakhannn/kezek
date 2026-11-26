@@ -5,7 +5,10 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import BookingDetailsScreen from '../../screens/BookingDetailsScreen';
 import * as SecureStore from 'expo-secure-store';
 
+import { Linking } from 'react-native';
+
 import { apiRequest } from '../../lib/api';
+import { loadOfflineBookings } from '../../lib/offlineBookingsStorage';
 import { supabase } from '../../lib/supabase';
 import { createTestQueryClient } from '../testQueryClient';
 
@@ -29,6 +32,15 @@ jest.mock('@react-navigation/native', () => ({
 jest.mock('../../lib/api', () => ({
     apiRequest: jest.fn(),
 }));
+
+jest.mock('../../lib/offlineBookingsStorage', () => ({
+    loadOfflineBookings: jest.fn().mockResolvedValue(null),
+    saveOfflineBookings: jest.fn(),
+}));
+
+function apiError(message: string, status?: number) {
+    return Object.assign(new Error(message), { status });
+}
 
 describe('BookingDetailsScreen', () => {
     const mockedApiRequest = apiRequest as jest.MockedFunction<typeof apiRequest>;
@@ -146,14 +158,206 @@ describe('BookingDetailsScreen', () => {
         });
     });
 
-    test('shows not-found state when deep-linked booking id cannot be loaded', async () => {
+    test('shows not-found state when the server answers 404', async () => {
         mockRouteId = 'missing-booking-id';
-        mockedApiRequest.mockRejectedValue(new Error('booking not found'));
+        mockedApiRequest.mockRejectedValue(apiError('Бронирование не найдено', 404));
 
         renderWithProviders(<BookingDetailsScreen />);
 
         expect(await screen.findByText('Бронирование не найдено')).toBeTruthy();
+        expect(screen.getByText('Запись удалена или относится к другому аккаунту.')).toBeTruthy();
         expect(screen.queryByText('Тестовая услуга')).toBeNull();
+        expect(screen.queryByText('Повторить')).toBeNull();
+    });
+
+    // B4: a lost connection is not "not found".
+    test('a network error offers a retry instead of not found, and the retry loads the booking', async () => {
+        mockedApiRequest.mockRejectedValueOnce(apiError('Нет подключения к интернету'));
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Не удалось загрузить запись')).toBeTruthy();
+        expect(screen.queryByText('Бронирование не найдено')).toBeNull();
+
+        fireEvent.press(screen.getByText('Повторить'));
+        expect(await screen.findByText('Тестовая услуга')).toBeTruthy();
+    });
+
+    test('a server error (500) is a retryable load error', async () => {
+        mockedApiRequest.mockRejectedValue(apiError('Ошибка сервера', 500));
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Не удалось загрузить запись')).toBeTruthy();
+    });
+
+    test('offline: the cabinet copy stands in, with a banner and no actions', async () => {
+        jest.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session: { user: { id: 'user-1' } } }, error: null } as never);
+        jest.mocked(loadOfflineBookings).mockResolvedValueOnce({
+            userId: 'user-1',
+            updatedAt: '2026-11-20T08:00:00Z',
+            items: [{
+                id: 'test-booking-id', status: 'confirmed', start_at: '2099-01-01T10:00:00Z', end_at: '2099-01-01T11:00:00Z',
+                service_name: 'Стрижка из кэша', staff_name: 'Мастер', branch_name: 'Филиал', business_name: 'Бизнес', created_at: 'x',
+            }],
+        });
+        mockedApiRequest.mockRejectedValue(apiError('Нет подключения к интернету'));
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Стрижка из кэша')).toBeTruthy();
+        expect(jest.mocked(loadOfflineBookings)).toHaveBeenCalledWith('user-1');
+        expect(screen.getByText('Нет подключения')).toBeTruthy();
+        expect(screen.queryByText('Отменить бронирование')).toBeNull();
+        expect(screen.queryByText('Перенести запись')).toBeNull();
+    });
+
+    test('a 404 never falls back to the offline copy', async () => {
+        jest.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session: { user: { id: 'user-1' } } }, error: null } as never);
+        jest.mocked(loadOfflineBookings).mockClear();
+        mockedApiRequest.mockRejectedValue(apiError('not found', 404));
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Бронирование не найдено')).toBeTruthy();
+        expect(jest.mocked(loadOfflineBookings)).not.toHaveBeenCalled();
+    });
+
+    // B1: a master opens the booking from a push.
+    test('the staff view shows the client and hides cancel, reschedule, review and repeat', async () => {
+        mockedApiRequest.mockResolvedValue({
+            ok: true,
+            data: {
+                id: 'test-booking-id', start_at: '2099-01-01T10:00:00Z', end_at: '2099-01-01T11:00:00Z', status: 'confirmed',
+                viewer_role: 'staff', client_name: 'Айда', can_review: false,
+                biz_id: 'biz-1', branch_id: 'branch-1', staff_id: 'staff-1', benefit_applied: false,
+                service: { name_ru: 'Тестовая услуга', duration_min: 60, price_from: null, price_to: null },
+                staff: { full_name: 'Тестовый мастер' },
+                business: { name: 'Тестовый бизнес', slug: 'test-business', phones: ['+996555000111'] },
+                branch: { name: 'Главный филиал', address: null },
+            },
+        } as never);
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Айда')).toBeTruthy();
+        expect(screen.getByTestId('booking-staff-view-notice')).toBeTruthy();
+        expect(screen.queryByText('Отменить бронирование')).toBeNull();
+        expect(screen.queryByText('Перенести запись')).toBeNull();
+        expect(screen.queryByText('Оставить отзыв')).toBeNull();
+        expect(screen.queryByText('Повторить запись')).toBeNull();
+    });
+
+    // C11: complex booking, benefit, map.
+    test('shows all services, the promotion with the final amount, and opens directions to the branch', async () => {
+        const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+        mockedApiRequest.mockResolvedValue({
+            ok: true,
+            data: {
+                id: 'test-booking-id', start_at: '2099-01-01T10:00:00Z', end_at: '2099-01-01T11:00:00Z', status: 'paid',
+                viewer_role: 'client', benefit_applied: true,
+                service: { name_ru: 'Стрижка', duration_min: 45, price_from: null, price_to: null },
+                services: [
+                    { name_ru: 'Стрижка', duration_min: 45 },
+                    { name_ru: 'Укладка', duration_min: 15 },
+                ],
+                promotion: { title: 'Счастливые часы', discount_percent: 20, final_amount: 800 },
+                package: null,
+                staff: { full_name: 'Тестовый мастер' },
+                business: { name: 'Тестовый бизнес', slug: 'test-business', phones: [] },
+                branch: { name: 'Главный филиал', address: 'Чуй 1', lat: 42.87, lon: 74.59 },
+            },
+        } as never);
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Стрижка + Укладка')).toBeTruthy();
+        expect(screen.getByText('Укладка · 15 мин.')).toBeTruthy();
+        expect(screen.getByText('Акция: Счастливые часы · Скидка 20%')).toBeTruthy();
+        expect(screen.getByText('Итого: 800 сом')).toBeTruthy();
+        // B6: the promo step shows for a promotion and is done once paid.
+        expect(screen.getByText('Промо применено')).toBeTruthy();
+
+        fireEvent.press(screen.getByText('Маршрут'));
+        await waitFor(() => expect(openURL).toHaveBeenCalledWith(expect.stringContaining('42.87%2C74.59')));
+        openURL.mockRestore();
+    });
+
+    test('a booking without a promotion has no dead promo step', async () => {
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Тестовая услуга')).toBeTruthy();
+        expect(screen.queryByText('Промо применено')).toBeNull();
+    });
+
+    test('paid with a package says so', async () => {
+        mockedApiRequest.mockResolvedValue({
+            ok: true,
+            data: {
+                id: 'test-booking-id', start_at: '2020-01-01T10:00:00Z', end_at: '2020-01-01T11:00:00Z', status: 'paid',
+                viewer_role: 'client', benefit_applied: true, package: { name: '10 визитов', final_amount: null }, promotion: null,
+                service: null, staff: null, business: { name: 'Тестовый бизнес', slug: 'test-business', phones: [] }, branch: null,
+            },
+        } as never);
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Оплачено пакетом «10 визитов»')).toBeTruthy();
+    });
+
+    // C9: review of a past paid visit.
+    test('leaves a review of a past paid visit through /api/reviews/create', async () => {
+        const details = {
+            id: 'test-booking-id', start_at: '2020-01-01T10:00:00Z', end_at: '2020-01-01T11:00:00Z', status: 'paid',
+            viewer_role: 'client', can_review: true, review: null,
+            service: { name_ru: 'Тестовая услуга', duration_min: 60, price_from: null, price_to: null },
+            staff: null, business: { name: 'Тестовый бизнес', slug: 'test-business', phones: [] }, branch: null,
+        };
+        mockedApiRequest.mockImplementation(async (endpoint: string) =>
+            (endpoint === '/reviews/create' ? { ok: true, data: { id: 'review-1', updated: false } } : { ok: true, data: details }) as never);
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        fireEvent.press(await screen.findByText('Оставить отзыв'));
+        expect(await screen.findByTestId('review-sheet')).toBeTruthy();
+        fireEvent.press(screen.getByTestId('review-star-4'));
+        fireEvent.changeText(screen.getByTestId('review-comment'), '  Отлично  ');
+        fireEvent.press(screen.getByText('Отправить отзыв'));
+
+        await waitFor(() =>
+            expect(mockedApiRequest).toHaveBeenCalledWith('/reviews/create', {
+                method: 'POST',
+                body: JSON.stringify({ booking_id: 'test-booking-id', rating: 4, comment: 'Отлично' }),
+            }),
+        );
+        await waitFor(() => expect(screen.queryByTestId('review-sheet')).toBeNull());
+    });
+
+    test('edits the own review through /api/reviews/update and explains a refusal', async () => {
+        const details = {
+            id: 'test-booking-id', start_at: '2020-01-01T10:00:00Z', end_at: '2020-01-01T11:00:00Z', status: 'paid',
+            viewer_role: 'client', can_review: false, review: { id: 'review-1', rating: 3, comment: 'ok' },
+            service: { name_ru: 'Тестовая услуга', duration_min: 60, price_from: null, price_to: null },
+            staff: null, business: { name: 'Тестовый бизнес', slug: 'test-business', phones: [] }, branch: null,
+        };
+        mockedApiRequest.mockImplementation(async (endpoint: string) => {
+            if (endpoint === '/reviews/update') throw apiError('forbidden', 403);
+            return { ok: true, data: details } as never;
+        });
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Ваш отзыв: 3 из 5')).toBeTruthy();
+        fireEvent.press(screen.getByText('Редактировать отзыв'));
+        fireEvent.press(await screen.findByText('Сохранить отзыв'));
+
+        await waitFor(() =>
+            expect(mockedApiRequest).toHaveBeenCalledWith('/reviews/update', {
+                method: 'POST',
+                body: JSON.stringify({ review_id: 'review-1', rating: 3, comment: 'ok' }),
+            }),
+        );
+        expect(await screen.findByText('Отзыв можно оставить только после визита')).toBeTruthy();
     });
     // R25-10: the client's own actions end at the start of the visit.
     test('a started booking offers no cancel or reschedule and says why', async () => {

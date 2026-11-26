@@ -11,12 +11,18 @@ import {
     mainTabScreenOptions,
     renderTabIcon,
 } from './mainNavigatorConfig';
+import { useNavigationSession } from './NavigationSessionContext';
+import { withSessionGate } from './SessionGate';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+const GuardedDashboardScreen = withSessionGate(DashboardScreen, 'workspace');
+const GuardedStaffScreen = withSessionGate(StaffScreen, 'workspace');
+
 export default function MainNavigator() {
     const { isOwner, isStaff } = useUserRole();
+    const { hasSession } = useNavigationSession();
     const { t } = useLanguage();
 
     return (
@@ -42,10 +48,10 @@ export default function MainNavigator() {
                     tabBarIcon: renderTabIcon('person'),
                 }}
             />
-            {isOwner ? (
+            {hasSession && isOwner ? (
                 <Tab.Screen
                     name="Dashboard"
-                    component={DashboardScreen}
+                    component={GuardedDashboardScreen}
                     options={{
                         title: t('nav.business'),
                         headerTitle: createNavigationHeaderTitle(t('nav.business')),
@@ -55,10 +61,10 @@ export default function MainNavigator() {
                     }}
                 />
             ) : null}
-            {isStaff ? (
+            {hasSession && isStaff ? (
                 <Tab.Screen
                     name="Staff"
-                    component={StaffScreen}
+                    component={GuardedStaffScreen}
                     options={{
                         title: t('nav.staff'),
                         headerTitle: createNavigationHeaderTitle(t('nav.staff')),

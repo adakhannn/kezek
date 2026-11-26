@@ -23,4 +23,8 @@ export const navRu = {
     'nav.shifts': 'Смены и статистика',
     'nav.shiftQuick': 'Моя смена',
     'nav.checkingAccess': 'Проверяем доступ...',
+    'nav.businessPage': 'О бизнесе',
+    'nav.eyebrow.booking': 'Запись',
+    'nav.eyebrow.discovery': 'Каталог',
+    'nav.eyebrow.workspace': 'Работа',
 } as const;

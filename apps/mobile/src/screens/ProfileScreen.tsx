@@ -20,6 +20,13 @@ export default function ProfileScreen() {
     setNotifyEmail,
     notifyWhatsApp,
     setNotifyWhatsApp,
+    whatsappVerified,
+    whatsappPhone,
+    onWhatsAppVerified,
+    telegramLinked,
+    telegramUsername,
+    linkTelegram,
+    isRefreshing,
     saveProfile,
     confirmSignOut,
     openPrivacy,
@@ -63,6 +70,14 @@ export default function ProfileScreen() {
       onDeleteAccount={deleteAccount}
       isSaving={isSaving}
       isSigningOut={isSigningOut}
+      whatsappVerified={whatsappVerified}
+      whatsappPhone={whatsappPhone}
+      onWhatsAppVerified={onWhatsAppVerified}
+      telegramLinked={telegramLinked}
+      telegramUsername={telegramUsername}
+      onLinkTelegram={linkTelegram}
+      isRefreshing={isRefreshing}
+      onRefresh={() => void retryLoad()}
     />
   );
 }

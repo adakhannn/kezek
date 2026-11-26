@@ -41,3 +41,6 @@ export function webPageUrl(path: '/privacy' | '/terms' | '/data-deletion'): stri
 
 /** The web profile section where a signed-in user deletes their account. */
 export const ACCOUNT_DELETION_WEB_PATH = '/cabinet/profile#account-deletion';
+
+/** The web profile row where Telegram is linked (login widget or bot link, C12). */
+export const TELEGRAM_LINK_WEB_PATH = '/cabinet/profile#telegram-connection';

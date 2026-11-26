@@ -330,6 +330,21 @@ export const styles = StyleSheet.create({
         gap: colors.layout.space2,
         flexWrap: 'wrap',
     },
+    businessPromotionsBadge: {
+        alignSelf: 'flex-start',
+        marginTop: colors.layout.space2,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: colors.status.success,
+        backgroundColor: colors.feedback.successSurface,
+        paddingHorizontal: colors.layout.space3,
+        paddingVertical: colors.layout.space1,
+    },
+    businessPromotionsText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: colors.text.primary,
+    },
     businessName: {
         ...typography.sectionTitle,
         color: colors.text.primary,

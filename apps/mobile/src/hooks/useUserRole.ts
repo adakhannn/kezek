@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { logWarn } from '../lib/log';
+import { fetchCurrentUser } from '../lib/currentUser';
 import { supabase } from '../lib/supabase';
 
 type UserRole = {
@@ -14,11 +15,7 @@ type UserRole = {
 export function useUserRole() {
     const userQuery = useQuery({
         queryKey: ['user'],
-        queryFn: async () => {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (error) throw error;
-            return user;
-        },
+        queryFn: fetchCurrentUser,
     });
     const user = userQuery.data;
 

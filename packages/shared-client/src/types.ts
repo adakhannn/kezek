@@ -150,8 +150,60 @@ export type PublicBusinessDto = {
     rating_score: number | null;
 };
 
+/** One service of a booking (booking_services, in booking order). */
+export type ClientBookingServiceDto = {
+    name_ru: string;
+    name_ky?: string | null;
+    name_en?: string | null;
+    duration_min: number | null;
+};
+
+/** A promotion applied to the booking (bookings.promotion_applied, written by booking commands). */
+export type ClientBookingPromotionDto = {
+    title: string | null;
+    discount_percent: number | null;
+    /** Amount after the promotion, in som; null when the command did not record it. */
+    final_amount: number | null;
+};
+
+/** The visit is paid with a visit package (bookings.subscription_applied). */
+export type ClientBookingPackageDto = {
+    name: string | null;
+    final_amount: number | null;
+};
+
+/** The client's own review of the visit. */
+export type ClientBookingReviewDto = {
+    id: string;
+    rating: number;
+    comment: string | null;
+};
+
+/** Paging of GET /api/mobile/bookings (offset-based, newest start first). */
+export type ClientBookingsPageDto = {
+    offset: number;
+    limit: number;
+    has_more: boolean;
+    next_offset: number | null;
+};
+
+/**
+ * Additive fields of the cabinet list and details (C11). All are absent from older servers, so
+ * every reader treats a missing field as "unknown" and keeps the old rendering.
+ */
+export type ClientBookingExtrasDto = {
+    /** All services of a multi-service booking, in order; absent or empty for older rows. */
+    services?: ClientBookingServiceDto[];
+    promotion?: ClientBookingPromotionDto | null;
+    package?: ClientBookingPackageDto | null;
+    /** The client's review; only in the client's own view. */
+    review?: ClientBookingReviewDto | null;
+    /** The client may leave a review now (own booking, paid, visit started, no review yet). */
+    can_review?: boolean;
+};
+
 /** Элемент списка броней в мобильном/веб-кабинете клиента */
-export type ClientBookingListItemDto = {
+export type ClientBookingListItemDto = ClientBookingExtrasDto & {
     id: string;
     start_at: string;
     end_at: string;
@@ -174,8 +226,14 @@ export type ClientBookingListItemDto = {
     } | null;
 };
 
+/**
+ * Who reads the booking details (B1): the client, the booking's own active master, or an owner,
+ * admin or manager of the business. Staff viewers get no client-only actions and no review.
+ */
+export type BookingDetailsViewerRole = 'client' | 'staff' | 'manager';
+
 /** DTO деталей бронирования для мобильного приложения */
-export type ClientBookingDetailsDto = {
+export type ClientBookingDetailsDto = ClientBookingExtrasDto & {
     id: string;
     start_at: string;
     end_at: string;
@@ -192,6 +250,9 @@ export type ClientBookingDetailsDto = {
     branch: {
         name: string;
         address: string | null;
+        /** Branch coordinates for the map and directions; absent from older servers. */
+        lat?: number | null;
+        lon?: number | null;
     } | null;
     business: {
         name: string;
@@ -206,5 +267,9 @@ export type ClientBookingDetailsDto = {
     staff_id?: string;
     /** A promotion or package is applied: the business, not the client, reschedules it. Absent from older servers. */
     benefit_applied?: boolean;
+    /** Absent from older servers, which served only the client. */
+    viewer_role?: BookingDetailsViewerRole;
+    /** The client's name, as the staff screens show it; only for staff viewers. */
+    client_name?: string | null;
 };
 

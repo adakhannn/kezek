@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
+import { formatRatingDisplayValue } from '@shared-client/rating';
 
 type RatingBadgeProps = {
-    /** Rating 0-100 or null when it has not been initialized yet. */
+    /** Rating 0-100 or null when it has not been initialized yet; shown on the 0-5 scale, as on the web. */
     rating: number | null;
     size?: 'small' | 'medium';
 };
@@ -44,7 +45,7 @@ export default function RatingBadge({ rating, size = 'medium' }: RatingBadgeProp
                 accessible={false}
                 importantForAccessibility="no"
             />
-            <Text style={[styles.rating, isLow && styles.ratingLow, { fontSize }]}>{value.toFixed(1)}</Text>
+            <Text style={[styles.rating, isLow && styles.ratingLow, { fontSize }]}>{formatRatingDisplayValue(value)}</Text>
         </View>
     );
 }

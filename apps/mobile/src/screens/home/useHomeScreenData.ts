@@ -2,18 +2,20 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { apiRequest } from '../../lib/api';
-import { supabase } from '../../lib/supabase';
+import { fetchCurrentUser } from '../../lib/currentUser';
 import { logDebug } from '../../lib/log';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { trackMobileEvent } from '../../lib/analytics';
 import type { ClientBookingListItemDto, PublicBusinessDto } from '@shared-client/types';
 
 import type { HomeBooking, HomeBusiness, RecentPlace } from './types';
+import { fetchBusinessPromotionCounts, fetchPublicCategories, mergeCategorySlugs } from './homeDiscovery';
 import { useNearbyBranches } from './useNearbyBranches';
 
 const NETWORK_ERROR_RE = /network request failed|failed to fetch|network/i;
 const SEARCH_DEBOUNCE_MS = 300;
 const BUSINESSES_PAGE_SIZE = 20;
+const EMPTY_LABELS: Record<string, string> = {};
 
 type ApiEnvelope<T> = {
     ok?: boolean;
@@ -92,20 +94,10 @@ export function useHomeScreenData() {
         return () => clearTimeout(timer);
     }, [search]);
 
+    // null while browsing signed out (C1): the home screen then shows only the catalog.
     const { data: user } = useQuery({
         queryKey: ['user'],
-        queryFn: async () => {
-            const {
-                data: { user },
-                error,
-            } = await supabase.auth.getUser();
-
-            if (error) {
-                throw error;
-            }
-
-            return user;
-        },
+        queryFn: fetchCurrentUser,
     });
 
     const {
@@ -159,7 +151,7 @@ export function useHomeScreenData() {
         },
     });
 
-    const businesses = useMemo(() => {
+    const loadedBusinesses = useMemo(() => {
         const uniqueBusinesses = new Map<string, HomeBusiness>();
 
         businessPages?.pages.forEach((page) => {
@@ -168,6 +160,31 @@ export function useHomeScreenData() {
 
         return Array.from(uniqueBusinesses.values());
     }, [businessPages]);
+
+    // The promotions badge of a card, counted as the web home page does (active branches only).
+    const businessIds = useMemo(() => loadedBusinesses.map((business) => business.id).sort(), [loadedBusinesses]);
+    const { data: promotionCounts } = useQuery({
+        queryKey: ['home-promotion-counts', businessIds],
+        queryFn: () => fetchBusinessPromotionCounts(businessIds),
+        enabled: businessIds.length > 0,
+    });
+
+    const businesses = useMemo(
+        () =>
+            promotionCounts
+                ? loadedBusinesses.map((business) => ({ ...business, promotions_count: promotionCounts[business.id] ?? 0 }))
+                : loadedBusinesses,
+        [loadedBusinesses, promotionCounts],
+    );
+
+    // Every public category, not only those of the filtered results (B3): a chip stays after it
+    // is picked. Labels come from the categories table, like the web home page.
+    const { data: publicCategories } = useQuery({
+        queryKey: ['public-categories'],
+        queryFn: fetchPublicCategories,
+        staleTime: 30 * 60 * 1000,
+    });
+    const [seenCategorySlugs, setSeenCategorySlugs] = useState<string[]>([]);
 
     const { data: bookings = [] } = useQuery<HomeBooking[]>({
         queryKey: ['home-bookings', user?.id],
@@ -255,15 +272,21 @@ export function useHomeScreenData() {
         return places.slice(0, 3);
     }, [bookings]);
 
-    const availableCategories = useMemo(() => {
-        const categories = new Set<string>();
-
-        businesses.forEach((business) => {
-            business.categories?.forEach((category) => categories.add(category));
+    useEffect(() => {
+        setSeenCategorySlugs((previous) => {
+            const next = mergeCategorySlugs(previous, loadedBusinesses.flatMap((business) => business.categories ?? []));
+            return next.length === previous.length ? previous : next;
         });
+    }, [loadedBusinesses]);
 
-        return Array.from(categories).sort();
-    }, [businesses]);
+    const categoryLabels = publicCategories?.labels ?? EMPTY_LABELS;
+
+    const availableCategories = useMemo(
+        () =>
+            mergeCategorySlugs(publicCategories?.slugs ?? [], seenCategorySlugs, selectedCategory ? [selectedCategory] : [])
+                .sort((a, b) => (categoryLabels[a] ?? a).localeCompare(categoryLabels[b] ?? b)),
+        [categoryLabels, publicCategories?.slugs, seenCategorySlugs, selectedCategory],
+    );
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -287,6 +310,7 @@ export function useHomeScreenData() {
         upcomingBookings,
         recentPlaces,
         availableCategories,
+        categoryLabels,
         isBusinessesLoading,
         businessesError,
         showOfflineBanner: isOffline || hasNetworkError,

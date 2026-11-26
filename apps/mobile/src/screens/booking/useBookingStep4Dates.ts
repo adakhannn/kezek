@@ -6,7 +6,7 @@ import { useLanguage } from '../../i18n';
 import { formatBookingDateLabel } from './bookingFormat';
 
 /** Dates are days of the business calendar: `timeZone` is businesses.tz (NULL means Asia/Bishkek, ARCH-11). */
-const DATE_COUNT = 30;
+export const DATE_COUNT = 30;
 
 export function useBookingStep4Dates(timeZone?: string | null) {
     const { locale } = useLanguage();

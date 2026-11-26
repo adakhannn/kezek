@@ -46,6 +46,7 @@ export default function HomeScreen() {
         upcomingBookings,
         recentPlaces,
         availableCategories,
+        categoryLabels,
         isBusinessesLoading,
         businessesError,
         showOfflineBanner,
@@ -63,7 +64,13 @@ export default function HomeScreen() {
 
     const rootNavigation = navigation as unknown as RootNavigation;
 
+    // A card, a recent place or a nearby branch opens the business page (C2); the card's button
+    // goes straight to the booking flow. Both work signed out (C1).
     const handleBusinessPress = useCallback((slug: string, previewName?: string) => {
+        rootNavigation.navigate('Business', { slug, previewName });
+    }, [rootNavigation]);
+
+    const handleBookPress = useCallback((slug: string, previewName?: string) => {
         rootNavigation.navigate('Booking', { slug, previewName });
     }, [rootNavigation]);
 
@@ -115,12 +122,14 @@ export default function HomeScreen() {
 
             <CategoriesSection
                 categories={availableCategories}
+                categoryLabels={categoryLabels}
                 selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
             />
         </>
     ), [
         availableCategories,
+        categoryLabels,
         clearSearch,
         handleBusinessPress,
         handleOpenAllBookings,
@@ -151,6 +160,8 @@ export default function HomeScreen() {
             onRetry={retryBusinesses}
             onClearFilters={clearSearch}
             onOpenBusiness={handleBusinessPress}
+            onBookBusiness={handleBookPress}
+            categoryLabels={categoryLabels}
         />
     );
 
@@ -175,6 +186,8 @@ export default function HomeScreen() {
                         <BusinessCard
                             business={item}
                             onOpenBusiness={handleBusinessPress}
+                            onBookBusiness={handleBookPress}
+                            categoryLabels={categoryLabels}
                         />
                     </View>
                 )}

@@ -14,6 +14,16 @@ jest.mock('@/lib/mobileBookingsService', () => ({
     listMobileBookings: jest.fn(),
     getMobileBookingDetails: jest.fn(),
     cancelMobileBooking: jest.fn(),
+    parseMobileBookingsPage: jest.requireActual('@/lib/mobileBookingsService').parseMobileBookingsPage,
+}));
+
+jest.mock('@/lib/businessManagerAccess', () => ({
+    managerAccessToBusiness: jest.fn(),
+}));
+
+jest.mock('@/lib/supabaseHelpers', () => ({
+    createSupabaseServerClient: jest.fn(),
+    createSupabaseAdminClient: jest.fn(() => ({ kind: 'admin' })),
 }));
 
 jest.mock('@/lib/routeParams', () => ({

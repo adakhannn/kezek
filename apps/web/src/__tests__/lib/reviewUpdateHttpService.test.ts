@@ -70,3 +70,29 @@ describe('reviewUpdateHttpService', () => {
         expect(body.error).toBe('validation');
     });
 });
+
+jest.mock('@supabase/supabase-js', () => ({
+    createClient: jest.fn(() => ({ kind: 'bearer-client' })),
+}));
+
+describe('reviewUpdateHttpService with the mobile Bearer token (C9)', () => {
+    test('the update runs as the token user', async () => {
+        jest.clearAllMocks();
+        (runReviewUpdate as jest.Mock).mockResolvedValue({ ok: true, payload: { id: 'review-id' } });
+
+        const response = await runReviewUpdateHttp(
+            new Request('http://localhost/api/reviews/update', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json', Authorization: 'Bearer app-token' },
+                body: JSON.stringify({ review_id: 'review-id', rating: 3 }),
+            }),
+        );
+
+        expect(response.status).toBe(200);
+        expect(runReviewUpdate).toHaveBeenCalledWith({
+            supabase: { kind: 'bearer-client' },
+            body: { review_id: 'review-id', rating: 3 },
+        });
+        expect(createSupabaseServerClient).not.toHaveBeenCalled();
+    });
+});

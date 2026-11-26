@@ -7,10 +7,11 @@ import {
 } from '../testHelpers';
 
 jest.mock('@/lib/supabaseHelpers', () => ({
-  createSupabaseClients: jest.fn(),
+  createSupabaseServerClient: jest.fn(),
+  createSupabaseAdminClient: jest.fn(),
 }));
 
-import { createSupabaseClients } from '@/lib/supabaseHelpers';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 describe('/api/me/visit-packages', () => {
   const supabase = createMockSupabase();
@@ -21,28 +22,24 @@ describe('/api/me/visit-packages', () => {
   });
 
   test('returns 401 when user is not authenticated', async () => {
-    (createSupabaseClients as jest.Mock).mockResolvedValue({
-      supabase: {
-        auth: {
-          getUser: jest.fn().mockResolvedValue({ data: { user: null } }),
-        },
+    (createSupabaseServerClient as jest.Mock).mockResolvedValue({
+      auth: {
+        getUser: jest.fn().mockResolvedValue({ data: { user: null } }),
       },
-      admin,
     });
+    (createSupabaseAdminClient as jest.Mock).mockReturnValue(admin);
 
     const res = await GET(createMockRequest('http://localhost/api/me/visit-packages', { method: 'GET' }));
     await expectErrorResponse(res, 401, 'auth');
   });
 
   test('returns active visit packages for current user', async () => {
-    (createSupabaseClients as jest.Mock).mockResolvedValue({
-      supabase: {
-        auth: {
-          getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }),
-        },
+    (createSupabaseServerClient as jest.Mock).mockResolvedValue({
+      auth: {
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }),
       },
-      admin,
     });
+    (createSupabaseAdminClient as jest.Mock).mockReturnValue(admin);
 
     admin.from
       .mockReturnValueOnce({
