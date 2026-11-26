@@ -26,7 +26,12 @@ export type ManageMenuItem = {
  * (/dashboard/*). Each section adds its own entry here and registers its screens in
  * navigation/RootNavigatorScreens.tsx.
  */
-export const MANAGE_MENU: ManageMenuItem[] = [];
+export const MANAGE_MENU: ManageMenuItem[] = [
+    { key: 'services', icon: 'list', label: 'catalog.dashboard.nav.services', route: 'ManageServices' },
+    { key: 'branches', icon: 'business', label: 'catalog.dashboard.nav.branches', route: 'ManageBranches' },
+    // /dashboard/settings: the owner (or a super admin) only.
+    { key: 'settings', icon: 'settings', label: 'catalog.dashboard.nav.settings', route: 'ManageSettings', roles: ['owner'] },
+];
 
 export function manageMenuFor(role: Business['role']): ManageMenuItem[] {
     return MANAGE_MENU.filter((item) => !item.roles || (role ? item.roles.includes(role) : false));

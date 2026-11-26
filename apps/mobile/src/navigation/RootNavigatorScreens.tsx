@@ -12,6 +12,13 @@ import BookingStep4Date from '../screens/booking/BookingStep4Date';
 import BookingStep5Time from '../screens/booking/BookingStep5Time';
 import BookingStep6Confirm from '../screens/booking/BookingStep6Confirm';
 import BusinessScreen from '../screens/business/BusinessScreen';
+import BranchEditScreen from '../screens/manage/catalog/BranchEditScreen';
+import BranchesScreen from '../screens/manage/catalog/BranchesScreen';
+import BranchPromotionsScreen from '../screens/manage/catalog/BranchPromotionsScreen';
+import BranchScheduleScreen from '../screens/manage/catalog/BranchScheduleScreen';
+import BusinessSettingsScreen from '../screens/manage/catalog/BusinessSettingsScreen';
+import ServiceEditScreen from '../screens/manage/catalog/ServiceEditScreen';
+import ServicesScreen from '../screens/manage/catalog/ServicesScreen';
 import MapScreen from '../screens/MapScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
 import ShiftQuickScreen from '../screens/ShiftQuickScreen';
@@ -36,6 +43,14 @@ const GuardedBookingDetailsScreen = withSessionGate(BookingDetailsScreen, 'booki
 const GuardedShiftsScreen = withSessionGate(withStaffRouteGuard(ShiftsScreen), 'workspace');
 const GuardedShiftQuickScreen = withSessionGate(withStaffRouteGuard(ShiftQuickScreen), 'workspace');
 const GuardedStaffScheduleScreen = withSessionGate(withStaffRouteGuard(StaffScheduleScreen), 'workspace');
+// Business management (the website's /dashboard/services, /branches, /settings); the server checks the role.
+const GuardedServicesScreen = withSessionGate(ServicesScreen, 'workspace');
+const GuardedServiceEditScreen = withSessionGate(ServiceEditScreen, 'workspace');
+const GuardedBranchesScreen = withSessionGate(BranchesScreen, 'workspace');
+const GuardedBranchEditScreen = withSessionGate(BranchEditScreen, 'workspace');
+const GuardedBranchScheduleScreen = withSessionGate(BranchScheduleScreen, 'workspace');
+const GuardedBranchPromotionsScreen = withSessionGate(BranchPromotionsScreen, 'workspace');
+const GuardedBusinessSettingsScreen = withSessionGate(BusinessSettingsScreen, 'workspace');
 
 export const rootStackScreenOptions: NativeStackNavigationOptions =
     detailStackScreenOptions;
@@ -163,6 +178,69 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                     ...detailStackScreenOptions,
                     title: t('staff.schedule.title'),
                     headerTitle: createNavigationHeaderTitle(t('staff.schedule.title'), t('nav.eyebrow.workspace')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageServices"
+                component={GuardedServicesScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('catalog.dashboard.nav.services'),
+                    headerTitle: createNavigationHeaderTitle(t('catalog.dashboard.nav.services'), t('nav.eyebrow.workspace')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageServiceEdit"
+                component={GuardedServiceEditScreen}
+                options={({ route }) => ({
+                    ...detailStackScreenOptions,
+                    title: t(route.params.serviceId ? 'catalog.services.edit.title' : 'catalog.services.form.titleNew'),
+                    headerTitle: createNavigationHeaderTitle(t(route.params.serviceId ? 'catalog.services.edit.title' : 'catalog.services.form.titleNew'), t('nav.eyebrow.workspace')),
+                })}
+            />
+            <Stack.Screen
+                name="ManageBranches"
+                component={GuardedBranchesScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('catalog.dashboard.nav.branches'),
+                    headerTitle: createNavigationHeaderTitle(t('catalog.dashboard.nav.branches'), t('nav.eyebrow.workspace')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageBranchEdit"
+                component={GuardedBranchEditScreen}
+                options={({ route }) => ({
+                    ...detailStackScreenOptions,
+                    title: t(route.params.branchId ? 'catalog.branches.edit.title' : 'catalog.branches.new.title'),
+                    headerTitle: createNavigationHeaderTitle(t(route.params.branchId ? 'catalog.branches.edit.title' : 'catalog.branches.new.title'), t('nav.eyebrow.workspace')),
+                })}
+            />
+            <Stack.Screen
+                name="ManageBranchSchedule"
+                component={GuardedBranchScheduleScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('catalog.branches.schedule.title'),
+                    headerTitle: createNavigationHeaderTitle(t('catalog.branches.schedule.title'), t('nav.eyebrow.workspace')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageBranchPromotions"
+                component={GuardedBranchPromotionsScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('catalog.branches.promotions.title'),
+                    headerTitle: createNavigationHeaderTitle(t('catalog.branches.promotions.title'), t('nav.eyebrow.workspace')),
+                }}
+            />
+            <Stack.Screen
+                name="ManageSettings"
+                component={GuardedBusinessSettingsScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('catalog.dashboard.nav.settings'),
+                    headerTitle: createNavigationHeaderTitle(t('catalog.dashboard.nav.settings'), t('nav.eyebrow.workspace')),
                 }}
             />
         </>

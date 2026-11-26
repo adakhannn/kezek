@@ -1,5 +1,7 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
+import type { ManageRouteParams } from '../screens/manage/manageMenu';
+
 export type RootStackParamList = {
     /** Signed out only: the sign-in flow, opened over the screen that asked for it (C1). */
     Auth: NavigatorScreenParams<AuthStackParamList> | undefined;
@@ -19,6 +21,16 @@ export type RootStackParamList = {
     ShiftQuick: undefined;
     /** The master's own working hours, this week and next (S3). */
     StaffSchedule: undefined;
+    /** Business management (screens/manage/catalog): the website's /dashboard/services, /branches, /settings. */
+    ManageServices: ManageRouteParams;
+    /** No serviceId: a new service. */
+    ManageServiceEdit: ManageRouteParams & { serviceId?: string };
+    ManageBranches: ManageRouteParams;
+    /** No branchId: a new branch. */
+    ManageBranchEdit: ManageRouteParams & { branchId?: string };
+    ManageBranchSchedule: ManageRouteParams & { branchId: string; branchName?: string };
+    ManageBranchPromotions: ManageRouteParams & { branchId: string; branchName?: string; bizSlug?: string | null };
+    ManageSettings: ManageRouteParams;
 };
 
 export type MainTabParamList = {
