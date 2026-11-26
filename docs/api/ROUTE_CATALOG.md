@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **191 route-файлов, 235 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **194 route-файлов, 238 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 564 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `46fefe126e4bcbd88c64b7ed153521213acff88da071a19f4cbb220857492dbd`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 571 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `998fdb34d0b0aed58c3d5895eeaa264db62e528d2c2e694542978a678daf278a`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -143,9 +143,12 @@
 | `/api/dashboard/staff/[id]/finance/audit-log` | GET | [route](../../apps/web/src/app/api/dashboard/staff/[id]/finance/audit-log/route.ts) | [runStaffFinanceAuditLogHttp](../../apps/web/src/lib/staffFinanceAuditLogHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/staff/[id]/finance` | GET | [route](../../apps/web/src/app/api/dashboard/staff/[id]/finance/route.ts) | [runDeprecatedStaffFinanceHttp](../../apps/web/src/lib/deprecatedStaffFinanceHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/dashboard/staff/[id]/finance/stats` | GET | [route](../../apps/web/src/app/api/dashboard/staff/[id]/finance/stats/route.ts) | [runStaffFinanceStatsHttp](../../apps/web/src/lib/staffFinanceStatsHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
+| `/api/dashboard/staff/[id]` | GET | [route](../../apps/web/src/app/api/dashboard/staff/[id]/route.ts) | [runDashboardStaffDetailHttp](../../apps/web/src/lib/dashboardStaffReadHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
+| `/api/dashboard/staff/[id]/schedule-context` | GET | [route](../../apps/web/src/app/api/dashboard/staff/[id]/schedule-context/route.ts) | [runDashboardStaffScheduleContextHttp](../../apps/web/src/lib/dashboardStaffReadHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/dashboard/staff/[id]/shift/close` | POST | [route](../../apps/web/src/app/api/dashboard/staff/[id]/shift/close/route.ts) | [runDashboardStaffShiftCloseHttp](../../apps/web/src/lib/dashboardStaffShiftCloseHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/staff/[id]/shift/open` | POST | [route](../../apps/web/src/app/api/dashboard/staff/[id]/shift/open/route.ts) | [runDashboardStaffShiftOpenHttp](../../apps/web/src/lib/dashboardStaffShiftOpenHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/dashboard/staff/finance/all` | GET | [route](../../apps/web/src/app/api/dashboard/staff/finance/all/route.ts) | [runFinanceAllDashboardHttp](../../apps/web/src/lib/financeAllDashboardHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
+| `/api/dashboard/staff` | GET | [route](../../apps/web/src/app/api/dashboard/staff/route.ts) | [runDashboardStaffListHttp](../../apps/web/src/lib/dashboardStaffReadHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/dashboard/visit-package-plans/[id]` | PATCH | [route](../../apps/web/src/app/api/dashboard/visit-package-plans/[id]/route.ts) | [runVisitPackagePlanPatchHttp](../../apps/web/src/lib/visitPackagePlanPatchHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/visit-package-plans` | GET, POST | [route](../../apps/web/src/app/api/dashboard/visit-package-plans/route.ts) | [runCreateVisitPackagePlanHttp, runListVisitPackagePlansHttp](../../apps/web/src/lib/visitPackagePlansHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/visit-packages` | GET | [route](../../apps/web/src/app/api/dashboard/visit-packages/route.ts) | [runListVisitPackagesHttp](../../apps/web/src/lib/visitPackagesHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
