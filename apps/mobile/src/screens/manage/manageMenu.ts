@@ -26,7 +26,10 @@ export type ManageMenuItem = {
  * (/dashboard/*). Each section adds its own entry here and registers its screens in
  * navigation/RootNavigatorScreens.tsx.
  */
-export const MANAGE_MENU: ManageMenuItem[] = [];
+export const MANAGE_MENU: ManageMenuItem[] = [
+    // /dashboard/staff: every managing role (getBizContextForManagers).
+    { key: 'staff', icon: 'people', label: 'manageStaff.menu.staff', route: 'ManageStaff' },
+];
 
 export function manageMenuFor(role: Business['role']): ManageMenuItem[] {
     return MANAGE_MENU.filter((item) => !item.roles || (role ? item.roles.includes(role) : false));
