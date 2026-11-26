@@ -34,6 +34,8 @@ describe('plural forms', () => {
             'booking.duration.minutesLong',
             'cabinet.signOut.pending.message',
             'discovery.home.promotions',
+            'ops.applications.approved.scheduled',
+            'ops.finance.staffStats.shiftCount',
             'staff.shiftQuick.operationsQueued',
             'staff.shifts.clientsCount',
         ]);

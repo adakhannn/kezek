@@ -16,6 +16,14 @@ import MapScreen from '../screens/MapScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
 import ShiftQuickScreen from '../screens/ShiftQuickScreen';
 import StaffScheduleScreen from '../screens/StaffScheduleScreen';
+import ManageAnalyticsScreen from '../screens/manage/analytics/ManageAnalyticsScreen';
+import ManageBookingsScreen from '../screens/manage/bookings/ManageBookingsScreen';
+import ManageFinanceScreen from '../screens/manage/finance/ManageFinanceScreen';
+import ManageFinanceStaffScreen from '../screens/manage/finance/ManageFinanceStaffScreen';
+import ManageOverviewScreen from '../screens/manage/overview/ManageOverviewScreen';
+import ManageRoleApplicationsScreen from '../screens/manage/roleApplications/ManageRoleApplicationsScreen';
+import ManageVisitPackagePlanScreen from '../screens/manage/visitPackages/ManageVisitPackagePlanScreen';
+import ManageVisitPackagesScreen from '../screens/manage/visitPackages/ManageVisitPackagesScreen';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import {
@@ -36,6 +44,18 @@ const GuardedBookingDetailsScreen = withSessionGate(BookingDetailsScreen, 'booki
 const GuardedShiftsScreen = withSessionGate(withStaffRouteGuard(ShiftsScreen), 'workspace');
 const GuardedShiftQuickScreen = withSessionGate(withStaffRouteGuard(ShiftQuickScreen), 'workspace');
 const GuardedStaffScheduleScreen = withSessionGate(withStaffRouteGuard(StaffScheduleScreen), 'workspace');
+
+/** The business management screens (owner, admin, manager; the server checks the role). */
+const MANAGE_OPS_SCREENS = [
+    { name: 'ManageOverview', component: withSessionGate(ManageOverviewScreen, 'workspace'), title: 'ops.menu.overview' },
+    { name: 'ManageBookings', component: withSessionGate(ManageBookingsScreen, 'workspace'), title: 'ops.menu.bookings' },
+    { name: 'ManageAnalytics', component: withSessionGate(ManageAnalyticsScreen, 'workspace'), title: 'ops.menu.analytics' },
+    { name: 'ManageFinance', component: withSessionGate(ManageFinanceScreen, 'workspace'), title: 'ops.menu.finance' },
+    { name: 'ManageFinanceStaff', component: withSessionGate(ManageFinanceStaffScreen, 'workspace'), title: 'ops.menu.financeStaff' },
+    { name: 'ManageVisitPackages', component: withSessionGate(ManageVisitPackagesScreen, 'workspace'), title: 'ops.menu.visitPackages' },
+    { name: 'ManageVisitPackagePlan', component: withSessionGate(ManageVisitPackagePlanScreen, 'workspace'), title: 'ops.menu.visitPackagePlan' },
+    { name: 'ManageRoleApplications', component: withSessionGate(ManageRoleApplicationsScreen, 'workspace'), title: 'ops.menu.roleApplications' },
+] as const;
 
 export const rootStackScreenOptions: NativeStackNavigationOptions =
     detailStackScreenOptions;
@@ -165,6 +185,18 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                     headerTitle: createNavigationHeaderTitle(t('staff.schedule.title'), t('nav.eyebrow.workspace')),
                 }}
             />
+            {MANAGE_OPS_SCREENS.map((screen) => (
+                <Stack.Screen
+                    key={screen.name}
+                    name={screen.name}
+                    component={screen.component}
+                    options={{
+                        ...detailStackScreenOptions,
+                        title: t(screen.title),
+                        headerTitle: createNavigationHeaderTitle(t(screen.title), t('ops.menu.eyebrow')),
+                    }}
+                />
+            ))}
         </>
     );
 }

@@ -7,6 +7,7 @@ import { navEn } from './nav.en';
 import { pushEn } from './push.en';
 import { discoveryEn } from './discovery.en';
 import { managerEn } from './manager.en';
+import { manageOpsEn } from './manageOps.en';
 import type { Dictionary } from './ru';
 
 export const en: Dictionary = {
@@ -19,4 +20,5 @@ export const en: Dictionary = {
     ...pushEn,
     ...discoveryEn,
     ...managerEn,
+    ...manageOpsEn,
 };

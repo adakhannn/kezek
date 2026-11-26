@@ -13,6 +13,10 @@ export type ManageRoute = {
 }[keyof RootStackParamList];
 
 export type ManageMenuItem = {
+    /**
+     * The website section in camelCase (/dashboard/role-applications → 'roleApplications'); the
+     * overview screen links to 'staff', 'services' and 'branches' by this key.
+     */
     key: string;
     icon: keyof typeof Ionicons.glyphMap;
     label: MobileI18nKey;
@@ -26,7 +30,14 @@ export type ManageMenuItem = {
  * (/dashboard/*). Each section adds its own entry here and registers its screens in
  * navigation/RootNavigatorScreens.tsx.
  */
-export const MANAGE_MENU: ManageMenuItem[] = [];
+export const MANAGE_MENU: ManageMenuItem[] = [
+    { key: 'overview', icon: 'speedometer', label: 'ops.menu.overview', route: 'ManageOverview' },
+    { key: 'bookings', icon: 'calendar', label: 'ops.menu.bookings', route: 'ManageBookings' },
+    { key: 'finance', icon: 'wallet', label: 'ops.menu.finance', route: 'ManageFinance' },
+    { key: 'analytics', icon: 'stats-chart', label: 'ops.menu.analytics', route: 'ManageAnalytics' },
+    { key: 'roleApplications', icon: 'person-add', label: 'ops.menu.roleApplications', route: 'ManageRoleApplications' },
+    { key: 'visitPackages', icon: 'pricetags', label: 'ops.menu.visitPackages', route: 'ManageVisitPackages' },
+];
 
 export function manageMenuFor(role: Business['role']): ManageMenuItem[] {
     return MANAGE_MENU.filter((item) => !item.roles || (role ? item.roles.includes(role) : false));
