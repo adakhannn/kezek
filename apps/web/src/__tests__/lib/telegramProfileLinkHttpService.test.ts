@@ -32,6 +32,20 @@ describe('profile link HTTP trust boundary', () => {
         expect((await runTelegramProfileLinkHttp(req({ action: 'create' }, 'https://evil.test'))).status).toBe(403);
         expect(createSupabaseServerClient).not.toHaveBeenCalled();
     });
+    const post = (headers: Record<string, string>) => new Request('https://example.com/api/auth/telegram/profile-link', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify({ action: 'create' }),
+    });
+    test('accepts the mobile app: a Bearer token and no Origin', async () => {
+        (createProfileLink as jest.Mock).mockResolvedValue({ token, expiresAt: 'x', botDeepLink: 'https://t.me/test_bot?start=x' });
+        expect((await runTelegramProfileLinkHttp(post({ authorization: 'Bearer app-token' }))).status).toBe(200);
+        expect(createProfileLink).toHaveBeenCalledWith('session-owner', 'test_bot');
+    });
+    test('a Bearer token does not excuse a foreign browser Origin', async () => {
+        expect((await runTelegramProfileLinkHttp(post({ origin: 'https://evil.test', authorization: 'Bearer x' }))).status).toBe(403);
+    });
+    test('neither Origin nor a Bearer token is refused', async () => {
+        expect((await runTelegramProfileLinkHttp(post({}))).status).toBe(403);
+    });
     test('requires an authenticated session', async () => {
         (createSupabaseServerClient as jest.Mock).mockResolvedValue({ auth: { getUser: async () => ({ data: { user: null } }) } });
         expect((await runTelegramProfileLinkHttp(req({ action: 'create' }))).status).toBe(401);

@@ -7,6 +7,7 @@ import { navKy } from './nav.ky';
 import { pushKy } from './push.ky';
 import { discoveryKy } from './discovery.ky';
 import { managerKy } from './manager.ky';
+import { parityKy } from './parity.ky';
 import type { Dictionary } from './ru';
 
 export const ky: Dictionary = {
@@ -19,4 +20,5 @@ export const ky: Dictionary = {
     ...pushKy,
     ...discoveryKy,
     ...managerKy,
+    ...parityKy,
 };

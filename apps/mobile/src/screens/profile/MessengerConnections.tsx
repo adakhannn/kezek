@@ -10,6 +10,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../i18n';
 import { apiRequest } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
+import type { LoginConnections, SocialProvider } from './profileConnections';
 import { styles as profileStyles } from './profileScreenStyles';
 
 const WHATSAPP_PHONE_PATTERN = /^\+?[0-9\s()-]{7,20}$/;
@@ -21,13 +22,17 @@ type WhatsAppProps = {
     whatsappPhone: string | null;
     fallbackPhone: string | null;
     onVerified: () => void;
+    /** Shown on a confirmed number: unlink WhatsApp as a sign-in and notification channel. */
+    onUnlink?: () => void;
+    unlinking?: boolean;
 };
 
 /**
  * B5: WhatsApp notifications need a number confirmed with a code, as on the website. The same
  * endpoints as the web profile (/api/whatsapp/send-otp, /verify-otp) take the app's Bearer token.
+ * A confirmed number is changed by confirming the new one, as on the website.
  */
-export function WhatsAppConnection({ verified, whatsappPhone, fallbackPhone, onVerified }: WhatsAppProps) {
+export function WhatsAppConnection({ verified, whatsappPhone, fallbackPhone, onVerified, onUnlink, unlinking = false }: WhatsAppProps) {
     const { t } = useLanguage();
     const { showToast } = useToast();
     const [open, setOpen] = useState(false);
@@ -67,32 +72,50 @@ export function WhatsAppConnection({ verified, whatsappPhone, fallbackPhone, onV
     });
 
     const busy = sendCode.isPending || verifyCode.isPending;
+    const openForm = () => {
+        // The profile phone may arrive after this row first rendered.
+        setPhone((current) => (verified ? '' : current || whatsappPhone || fallbackPhone || ''));
+        setCodeSent(false);
+        setCode('');
+        setError(null);
+        setOpen(true);
+    };
 
     return (
         <View style={styles.row} testID="profile-whatsapp-connection">
-            <Text style={profileStyles.switchLabel}>{t('cabinet.profile.whatsapp.title')}</Text>
+            <View style={styles.rowHeader}>
+                <Text style={[profileStyles.switchLabel, styles.rowTitle]}>{t('cabinet.profile.whatsapp.title')}</Text>
+                {verified ? <ConnectedBadge /> : null}
+            </View>
             <Text style={profileStyles.switchHint}>
                 {verified && whatsappPhone
                     ? t('cabinet.profile.whatsapp.verified', { phone: whatsappPhone })
                     : t('cabinet.profile.whatsapp.notVerified')}
             </Text>
 
-            {!verified && !open ? (
-                <Button
-                    title={t('cabinet.profile.whatsapp.verifyNumber')}
-                    onPress={() => {
-                        // The profile phone may arrive after this row first rendered.
-                        setPhone((current) => current || whatsappPhone || fallbackPhone || '');
-                        setOpen(true);
-                    }}
-                    variant="outline"
-                    size="sm"
-                    style={styles.action}
-                />
-            ) : null}
-
-            {!verified && open ? (
+            {!open ? (
+                <View style={styles.actions}>
+                    <Button
+                        title={verified ? t('parity.whatsapp.changeNumber') : t('cabinet.profile.whatsapp.verifyNumber')}
+                        onPress={openForm}
+                        variant="outline"
+                        size="sm"
+                    />
+                    {verified && onUnlink ? (
+                        <Button
+                            title={t('parity.connections.unlink')}
+                            onPress={onUnlink}
+                            variant="ghost"
+                            size="sm"
+                            loading={unlinking}
+                            disabled={unlinking}
+                            accessibilityLabel={t('parity.connections.unlinkA11y', { provider: 'WhatsApp' })}
+                        />
+                    ) : null}
+                </View>
+            ) : (
                 <View style={styles.form}>
+                    {verified ? <Text style={styles.warning}>{t('parity.whatsapp.changeHint')}</Text> : null}
                     <Input
                         label={t('cabinet.profile.whatsapp.phoneLabel')}
                         value={phone}
@@ -132,66 +155,164 @@ export function WhatsAppConnection({ verified, whatsappPhone, fallbackPhone, onV
                             />
                         </>
                     ) : null}
+                    {verified ? (
+                        <Button title={t('cabinet.ui.cancel')} onPress={() => setOpen(false)} variant="ghost" size="sm" disabled={busy} />
+                    ) : null}
                     {error ? (
                         <Text style={styles.error} accessibilityRole="alert">
                             {error}
                         </Text>
                     ) : null}
                 </View>
-            ) : null}
+            )}
         </View>
     );
 }
 
-type TelegramProps = {
+function ConnectedBadge() {
+    const { t } = useLanguage();
+    return (
+        <View style={styles.badge}>
+            <Text style={styles.badgeText}>{t('parity.connections.connected')}</Text>
+        </View>
+    );
+}
+
+type ProviderRowProps = {
+    label: string;
     linked: boolean;
-    username: string | null;
-    onLink: () => void;
+    detail?: string | null;
+    hint?: string;
+    onConnect: () => void;
+    onUnlink: () => void;
+    connecting: boolean;
+    unlinking: boolean;
+    testID: string;
+    connectVariant?: 'primary' | 'outline' | 'authTelegram';
 };
 
-/**
- * C12: the Telegram link state; linking itself runs on the website (Telegram login widget or bot
- * link), opened signed in through the one-time web handoff.
- */
-export function TelegramConnection({ linked, username, onLink }: TelegramProps) {
+function ProviderRow({ label, linked, detail, hint, onConnect, onUnlink, connecting, unlinking, testID, connectVariant = 'outline' }: ProviderRowProps) {
     const { t } = useLanguage();
     return (
-        <View style={styles.row} testID="profile-telegram-connection">
-            <Text style={profileStyles.switchLabel}>{t('cabinet.profile.telegram.title')}</Text>
-            <Text style={profileStyles.switchHint}>
-                {linked
-                    ? username
-                        ? t('cabinet.profile.telegram.linked', { username })
-                        : t('cabinet.profile.telegram.linkedNoUsername')
-                    : t('cabinet.profile.telegram.notLinked')}
-            </Text>
-            {!linked ? (
-                <>
-                    <Button title={t('cabinet.profile.telegram.link')} onPress={onLink} variant="outline" size="sm" style={styles.action} />
-                    <Text style={styles.caption}>{t('cabinet.profile.telegram.linkHint')}</Text>
-                </>
-            ) : null}
+        <View style={styles.row} testID={testID}>
+            <View style={styles.rowHeader}>
+                <Text style={[profileStyles.switchLabel, styles.rowTitle]}>{label}</Text>
+                {linked ? <ConnectedBadge /> : null}
+            </View>
+            {detail ? <Text style={profileStyles.switchHint}>{detail}</Text> : null}
+            <View style={styles.actions}>
+                {linked ? (
+                    <Button
+                        title={t('parity.connections.unlink')}
+                        onPress={onUnlink}
+                        variant="ghost"
+                        size="sm"
+                        loading={unlinking}
+                        disabled={unlinking}
+                        accessibilityLabel={t('parity.connections.unlinkA11y', { provider: label })}
+                    />
+                ) : (
+                    <Button
+                        title={t('parity.connections.connect')}
+                        onPress={onConnect}
+                        variant={connectVariant}
+                        size="sm"
+                        loading={connecting}
+                        disabled={connecting}
+                        accessibilityLabel={t('parity.connections.connectA11y', { provider: label })}
+                    />
+                )}
+            </View>
+            {!linked && hint ? <Text style={styles.caption}>{hint}</Text> : null}
         </View>
     );
 }
 
-type Props = WhatsAppProps & { telegramLinked: boolean; telegramUsername: string | null; onLinkTelegram: () => void };
+type Props = {
+    connections: LoginConnections;
+    telegramUsername: string | null;
+    whatsApp: Omit<WhatsAppProps, 'verified' | 'onUnlink' | 'unlinking'>;
+    onConnect: (provider: Exclude<SocialProvider, 'whatsapp'>) => void;
+    onUnlink: (provider: SocialProvider, label: string) => void;
+    connecting: SocialProvider | null;
+    unlinking: SocialProvider | null;
+};
 
-export function MessengerConnectionsCard({ telegramLinked, telegramUsername, onLinkTelegram, ...whatsApp }: Props) {
+/** The website's "Способы входа": Google, Yandex, Telegram and WhatsApp, linked or not. */
+export function LoginConnectionsCard({ connections, telegramUsername, whatsApp, onConnect, onUnlink, connecting, unlinking }: Props) {
     const { t } = useLanguage();
+    const yandex = t('parity.connections.yandex');
     return (
-        <Card style={profileStyles.card}>
-            <Text style={profileStyles.sectionTitle}>{t('cabinet.profile.connections.title')}</Text>
-            <WhatsAppConnection {...whatsApp} />
-            <TelegramConnection linked={telegramLinked} username={telegramUsername} onLink={onLinkTelegram} />
+        <Card style={profileStyles.card} testID="profile-login-connections">
+            <Text style={[profileStyles.sectionTitle, styles.cardTitle]}>{t('cabinet.profile.connections.title')}</Text>
+            <Text style={[profileStyles.switchHint, styles.cardDescription]}>{t('parity.connections.desc')}</Text>
+            <ProviderRow
+                label="Google"
+                linked={connections.google}
+                onConnect={() => onConnect('google')}
+                onUnlink={() => onUnlink('google', 'Google')}
+                connecting={connecting === 'google'}
+                unlinking={unlinking === 'google'}
+                testID="profile-google-connection"
+            />
+            <ProviderRow
+                label={yandex}
+                linked={connections.yandex}
+                hint={t('parity.connections.yandexWebHint')}
+                onConnect={() => onConnect('yandex')}
+                onUnlink={() => onUnlink('yandex', yandex)}
+                connecting={connecting === 'yandex'}
+                unlinking={unlinking === 'yandex'}
+                testID="profile-yandex-connection"
+            />
+            <ProviderRow
+                label="Telegram"
+                linked={connections.telegram}
+                detail={connections.telegram
+                    ? telegramUsername
+                        ? t('cabinet.profile.telegram.linked', { username: telegramUsername.replace(/^@/, '') })
+                        : t('cabinet.profile.telegram.linkedNoUsername')
+                    : t('cabinet.profile.telegram.notLinked')}
+                hint={t('parity.telegramLink.startHint')}
+                onConnect={() => onConnect('telegram')}
+                onUnlink={() => onUnlink('telegram', 'Telegram')}
+                connecting={connecting === 'telegram'}
+                unlinking={unlinking === 'telegram'}
+                testID="profile-telegram-connection"
+                connectVariant="authTelegram"
+            />
+            <WhatsAppConnection
+                {...whatsApp}
+                verified={connections.whatsapp}
+                onUnlink={() => onUnlink('whatsapp', 'WhatsApp')}
+                unlinking={unlinking === 'whatsapp'}
+            />
+            <Text style={styles.caption}>{t('parity.connections.hint')}</Text>
         </Card>
     );
 }
 
 const styles = StyleSheet.create({
-    row: { paddingVertical: 8, gap: 4 },
-    action: { alignSelf: 'flex-start', marginTop: 4 },
+    cardTitle: { marginBottom: colors.layout.space2 },
+    cardDescription: { marginBottom: colors.layout.space2 },
+    row: {
+        paddingVertical: 10,
+        gap: 4,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border.subtle,
+    },
+    rowHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+    rowTitle: { flex: 1, marginBottom: 0 },
+    actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
     form: { gap: 8, marginTop: 4 },
     error: { fontSize: 14, color: colors.status.danger },
-    caption: { fontSize: 12, color: colors.text.tertiary },
+    warning: { fontSize: 13, color: colors.status.warning },
+    caption: { fontSize: 12, color: colors.text.tertiary, marginTop: 6 },
+    badge: {
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        backgroundColor: colors.feedback.successSurface,
+    },
+    badgeText: { fontSize: 12, fontWeight: '600', color: colors.status.success },
 });
