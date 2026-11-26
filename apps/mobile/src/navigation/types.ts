@@ -64,6 +64,18 @@ export type RootStackParamList = {
     /** A visit package type: new without planId, else edited. */
     ManageVisitPackagePlan: ManageRouteParams & { planId?: string };
     ManageRoleApplications: ManageRouteParams;
+    /** Super-admin screens (the website's /admin/*); every route checks the role on the server. */
+    AdminAnalytics: undefined;
+    AdminSystemAnalytics: undefined;
+    AdminFunnelAnalytics: undefined;
+    AdminSystemHealth: undefined;
+    AdminHealthCheck: undefined;
+    AdminMonitoring: undefined;
+    AdminPerformance: undefined;
+    AdminRatingConfig: undefined;
+    AdminRatingsStatus: undefined;
+    AdminRatingsDebug: undefined;
+    AdminPromotionsDebug: undefined;
 } & AdminParamList;
 
 export type MainTabParamList = {

@@ -1,5 +1,5 @@
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
 }));
 
 jest.mock('@/lib/supabaseService', () => ({
@@ -10,7 +10,7 @@ jest.mock('@/lib/staffAvatarRemoveService', () => ({
     runStaffAvatarRemove: jest.fn(),
 }));
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffContextForRequest } from '@/lib/authBiz';
 import { runStaffAvatarRemoveHttp } from '@/lib/staffAvatarRemoveHttpService';
 import { runStaffAvatarRemove } from '@/lib/staffAvatarRemoveService';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -18,7 +18,7 @@ import { getServiceClient } from '@/lib/supabaseService';
 describe('staffAvatarRemoveHttpService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (getStaffContext as jest.Mock).mockResolvedValue({ staffId: 'staff-id', bizId: 'biz-id' });
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({ staffId: 'staff-id', bizId: 'biz-id' });
         (getServiceClient as jest.Mock).mockReturnValue({ from: jest.fn(), storage: {} });
     });
 
@@ -28,7 +28,8 @@ describe('staffAvatarRemoveHttpService', () => {
             data: { message: 'removed' },
         });
 
-        const response = await runStaffAvatarRemoveHttp();
+        // The app sends a Bearer token: the staff card comes from the request (getStaffContextForRequest).
+        const response = await runStaffAvatarRemoveHttp(new Request('http://localhost/api/staff/avatar/remove', { method: 'POST' }));
         const body = await response.json();
 
         expect(runStaffAvatarRemove).toHaveBeenCalledWith({

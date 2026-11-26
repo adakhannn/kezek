@@ -203,7 +203,10 @@ describe('applications and bookings', () => {
 });
 
 test('the admin menu is a plain list of sections with unique keys and admin routes', () => {
-    expect(ADMIN_MENU.map((item) => item.key)).toEqual(['businesses', 'businessApplications', 'roleApplications', 'users', 'roles', 'categories']);
+    expect(ADMIN_MENU.map((item) => item.key).slice(0, 6)).toEqual(['businesses', 'businessApplications', 'roleApplications', 'users', 'roles', 'categories']);
+    // Analytics, ratings and monitoring follow (screens/admin/ops).
+    expect(ADMIN_MENU.map((item) => item.key)).toEqual(expect.arrayContaining(['analytics', 'systemHealth', 'monitoring', 'ratingConfig']));
+    expect(new Set(ADMIN_MENU.map((item) => item.key)).size).toBe(ADMIN_MENU.length);
     expect(new Set(ADMIN_MENU.map((item) => item.route)).size).toBe(ADMIN_MENU.length);
     ADMIN_MENU.forEach((item) => expect(item.route.startsWith('Admin')).toBe(true));
 });
