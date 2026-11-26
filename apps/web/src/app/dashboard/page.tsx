@@ -1,159 +1,34 @@
-import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
-
 import { DashboardHomeClient } from './components/DashboardHomeClient';
 
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { logError } from '@/lib/log';
-import { loadStaffApplicationSummary } from '@/lib/staffApplicationSummary';
-import { getBusinessTimezone } from '@/lib/time';
+import { loadDashboardHomeData } from '@/lib/dashboardHomeData';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-type FilterValue = string | number | boolean | null;
-
-// Используем более гибкий тип для Supabase клиента из SSR
-// createServerClient возвращает SupabaseClient с правильной типизацией
-type SupabaseServerClient = Awaited<ReturnType<typeof getBizContextForManagers>>['supabase'];
-
-async function count(
-    supabase: SupabaseServerClient,
-    table: 'staff' | 'services' | 'branches',
-    filters: { col: string; eq?: FilterValue; gte?: FilterValue; lte?: FilterValue }[] = []
-): Promise<number | null> {
-    let q = supabase.from(table).select('id', { count: 'exact', head: true });
-    for (const f of filters) {
-        if (f.eq !== undefined && f.eq !== null) q = q.eq(f.col, f.eq);
-        if (f.gte !== undefined && f.gte !== null) q = q.gte(f.col, f.gte);
-        if (f.lte !== undefined && f.lte !== null) q = q.lte(f.col, f.lte);
-    }
-    const { count: c, error } = await q;
-    // FE-08: a failed count is unknown, not 0 (zeros would also trigger the onboarding card).
-    if (error) {
-        logError('DashboardHome', 'Failed to count dashboard records', { table, error });
-        return null;
-    }
-    return c ?? 0;
-}
-
 export default async function DashboardHome() {
-    const { supabase, bizId, business, userId } = await getBizContextForManagers();
-
-    const [
-        [, staffActive, servicesActive, branchesCount],
-        { data: ratingConfig },
-        { data: bizRatingConfig },
-        staffApplications,
-    ] = await Promise.all([
-        Promise.all([
-            // bookingsToday будет пересчитан после получения таймзоны бизнеса
-            Promise.resolve(0),
-            count(supabase, 'staff', [{ col: 'biz_id', eq: bizId }, { col: 'is_active', eq: true }]),
-            count(supabase, 'services', [{ col: 'biz_id', eq: bizId }, { col: 'active', eq: true }]),
-            count(supabase, 'branches', [{ col: 'biz_id', eq: bizId }, { col: 'is_active', eq: true }]),
-        ]),
-        supabase
-            .from('rating_global_config')
-            .select('staff_reviews_weight, staff_productivity_weight, staff_loyalty_weight, staff_discipline_weight, window_days')
-            .eq('is_active', true)
-            .order('valid_from', { ascending: false })
-            .limit(1)
-            .maybeSingle<{
-                staff_reviews_weight: number;
-                staff_productivity_weight: number;
-                staff_loyalty_weight: number;
-                staff_discipline_weight: number;
-                window_days: number;
-            }>(),
-        supabase
-            .from('rating_biz_config')
-            .select(
-                'staff_reviews_weight, staff_productivity_weight, staff_loyalty_weight, staff_discipline_weight, window_days',
-            )
-            .eq('biz_id', bizId)
-            .eq('is_active', true)
-            .order('valid_from', { ascending: false })
-            .limit(1)
-            .maybeSingle<{
-                staff_reviews_weight: number;
-                staff_productivity_weight: number;
-                staff_loyalty_weight: number;
-                staff_discipline_weight: number;
-                window_days: number;
-            }>(),
-        loadStaffApplicationSummary(userId, bizId),
-    ]);
-
-    const biz = business;
-
-    // Используем таймзону бизнеса для расчета диапазона "сегодня"
-    const businessTz = getBusinessTimezone(biz?.tz);
-    const now = new Date();
-    const todayStr = formatInTimeZone(now, businessTz, 'yyyy-MM-dd');
-    // Начало дня в таймзоне бизнеса
-    const startOfDay = fromZonedTime(`${todayStr}T00:00:00`, businessTz);
-    // Конец дня в таймзоне бизнеса
-    const endOfDay = fromZonedTime(`${todayStr}T23:59:59.999`, businessTz);
-    const start = startOfDay.toISOString();
-    const end = endOfDay.toISOString();
-
-    // Пересчитываем bookingsToday с правильным диапазоном дат
-    const { count: bookingsTodayCount, error: bookingsTodayError } = await supabase
-        .from('bookings')
-        .select('id', { count: 'exact', head: true })
-        .eq('biz_id', bizId)
-        .gte('start_at', start)
-        .lte('start_at', end);
-    if (bookingsTodayError) {
-        logError('DashboardHome', 'Failed to count today bookings', { bizId, error: bookingsTodayError });
-    }
-    if (bookingsTodayError || staffActive === null || servicesActive === null || branchesCount === null) {
+    const context = await getBizContextForManagers();
+    // The mobile app reads the same numbers from GET /api/dashboard/overview.
+    const data = await loadDashboardHomeData(context);
+    if (!data) {
         return <LoadFailedNotice page />;
     }
-    const bookingsToday = bookingsTodayCount ?? 0;
-
-    const bizName = biz?.name || null; // Передаем null, чтобы перевести на клиенте
-    const bizCity = biz?.city || null;
-    const bizRatingScore = biz?.rating_score ?? null;
-
-    // Передаем ISO строку, форматирование будет на клиенте с учетом локали
-    const formattedDate = now.toISOString();
-
-    const needOnboarding =
-        bookingsToday === 0 || staffActive === 0 || servicesActive === 0 || branchesCount === 0;
-
-    const effectiveRatingConfig = bizRatingConfig ?? ratingConfig;
-    const ratingConfigScope: 'biz' | 'global' | null = effectiveRatingConfig
-        ? bizRatingConfig
-            ? 'biz'
-            : 'global'
-        : null;
 
     return (
         <DashboardHomeClient
-            staffApplications={staffApplications}
-            bizName={bizName}
-            bizCity={bizCity}
-            formattedDate={formattedDate}
-            bookingsToday={bookingsToday}
-            staffActive={staffActive}
-            servicesActive={servicesActive}
-            branchesCount={branchesCount}
-            needOnboarding={needOnboarding}
-            ratingScore={bizRatingScore}
-            ratingConfigScope={ratingConfigScope}
-            ratingWeights={
-                effectiveRatingConfig
-                    ? {
-                          reviews: Number(effectiveRatingConfig.staff_reviews_weight),
-                          productivity: Number(effectiveRatingConfig.staff_productivity_weight),
-                          loyalty: Number(effectiveRatingConfig.staff_loyalty_weight),
-                          discipline: Number(effectiveRatingConfig.staff_discipline_weight),
-                          windowDays: Number(effectiveRatingConfig.window_days),
-                      }
-                    : null
-            }
+            staffApplications={data.staffApplications}
+            bizName={data.bizName}
+            bizCity={data.bizCity}
+            formattedDate={data.formattedDate}
+            bookingsToday={data.bookingsToday}
+            staffActive={data.staffActive}
+            servicesActive={data.servicesActive}
+            branchesCount={data.branchesCount}
+            needOnboarding={data.needOnboarding}
+            ratingScore={data.ratingScore}
+            ratingConfigScope={data.ratingConfigScope}
+            ratingWeights={data.ratingWeights}
         />
     );
 }

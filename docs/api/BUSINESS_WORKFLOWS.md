@@ -79,6 +79,18 @@ Limiter normal/critical означает вызванный preset. С 2026-11-1
 
 Источники: [route](../../apps/web/src/app/api/dashboard/branches/list/route.ts), [HTTP](../../apps/web/src/lib/dashboardBranchesListHttpService.ts), [service](../../apps/web/src/lib/dashboardBranchesListService.ts).
 
+### GET `/api/dashboard/overview`
+
+<!-- api-contract: GET /api/dashboard/overview -->
+
+| Часть | Контракт |
+| --- | --- |
+| Доступ/вход | `getBizContextForManagers` (cookie или Bearer мобильного приложения), текущий бизнес пользователя; query не читается; limiter отсутствует |
+| Успех | `data` — те же показатели, что рисует `/dashboard`: `bookingsToday` (бизнес-день в `businesses.tz`), `staffActive`, `servicesActive`, `branchesCount`, `needOnboarding`, `staffApplications` (`{ pending }` только владельцу, иначе `null`), `bizName`, `bizCity`, `formattedDate` (ISO момента чтения), `timezone`, `ratingScore`, `ratingConfigScope` (`biz`/`global`/`null`), `ratingWeights` |
+| Ошибки/ограничения | 401/403 контекста; 500 `internal` без сообщения, если любой счётчик не прочитан (FE-08: неизвестное не отдаётся нулём). Только чтение |
+
+Страница и маршрут используют один загрузчик, поэтому числа приложения и сайта совпадают. Источники: [route](../../apps/web/src/app/api/dashboard/overview/route.ts), [loader](../../apps/web/src/lib/dashboardHomeData.ts), [page](../../apps/web/src/app/dashboard/page.tsx).
+
 ### GET `/api/dashboard/analytics/overview`
 
 <!-- api-contract: GET /api/dashboard/analytics/overview -->

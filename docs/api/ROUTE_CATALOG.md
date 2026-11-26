@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **191 route-файлов, 235 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **192 route-файлов, 236 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 564 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `46fefe126e4bcbd88c64b7ed153521213acff88da071a19f4cbb220857492dbd`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 567 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `f79f0563d34ca19d8a10e25713215d15d1961ba4b19fba9cb8e88a5cedd47532`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -139,6 +139,7 @@
 | `/api/dashboard/contact-settings` | POST | [route](../../apps/web/src/app/api/dashboard/contact-settings/route.ts) | Внутри route; читать исходник | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/finance/[id]/stats` | GET | [route](../../apps/web/src/app/api/dashboard/finance/[id]/stats/route.ts) | [re-export](../../apps/web/src/app/api/dashboard/staff/[id]/finance/stats/route.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/finance/all` | GET | [route](../../apps/web/src/app/api/dashboard/finance/all/route.ts) | [re-export](../../apps/web/src/app/api/dashboard/staff/finance/all/route.ts) | [справочник](STAFF_AND_FINANCE.md) |
+| `/api/dashboard/overview` | GET | [route](../../apps/web/src/app/api/dashboard/overview/route.ts) | Внутри route; читать исходник | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/staff-shifts/[id]/update-hours` | POST | [route](../../apps/web/src/app/api/dashboard/staff-shifts/[id]/update-hours/route.ts) | [runDashboardStaffShiftUpdateHoursHttp](../../apps/web/src/lib/dashboardStaffShiftUpdateHoursHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/dashboard/staff/[id]/finance/audit-log` | GET | [route](../../apps/web/src/app/api/dashboard/staff/[id]/finance/audit-log/route.ts) | [runStaffFinanceAuditLogHttp](../../apps/web/src/lib/staffFinanceAuditLogHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/dashboard/staff/[id]/finance` | GET | [route](../../apps/web/src/app/api/dashboard/staff/[id]/finance/route.ts) | [runDeprecatedStaffFinanceHttp](../../apps/web/src/lib/deprecatedStaffFinanceHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |

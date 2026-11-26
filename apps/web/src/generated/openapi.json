@@ -558,7 +558,7 @@
       }
     }
   },
-  "x-explicit-operation-count": 220,
+  "x-explicit-operation-count": 221,
   "x-reviewed-operation-count": 4,
   "paths": {
     "/.well-known/assetlinks.json": {
@@ -3696,6 +3696,25 @@
         "x-next-route": "/api/dashboard/finance/all",
         "x-source-file": "apps/web/src/app/api/dashboard/finance/all/route.ts",
         "x-manual-contract": "docs/api/STAFF_AND_FINANCE.md"
+      }
+    },
+    "/api/dashboard/overview": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/BUSINESS_WORKFLOWS.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/dashboard/overview",
+        "x-source-file": "apps/web/src/app/api/dashboard/overview/route.ts",
+        "x-manual-contract": "docs/api/BUSINESS_WORKFLOWS.md"
       }
     },
     "/api/dashboard/staff-shifts/{id}/update-hours": {
