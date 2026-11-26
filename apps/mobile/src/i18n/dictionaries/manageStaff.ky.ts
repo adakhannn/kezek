@@ -132,7 +132,7 @@ export const manageStaffKy: Record<keyof typeof manageStaffRu, string> = {
     'manageStaff.loadError': 'Маалыматтарды жүктөө мүмкүн болгон жок',
     'manageStaff.menu.staff': 'Кызматкерлер',
     'manageStaff.nav.detail': 'Кызматкер',
-    'manageStaff.nav.eyebrow': 'Бизнести башкаруу',
+    'manageStaff.nav.eyebrow': 'Бизнес кабинети',
     'manageStaff.nav.finance': 'Кызматкердин каржысы',
     'manageStaff.nav.financeStats': 'Каржы статистикасы',
     'manageStaff.nav.list': 'Кызматкерлер',

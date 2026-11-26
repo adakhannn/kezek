@@ -269,7 +269,7 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                 options={{
                     ...detailStackScreenOptions,
                     title: t('catalog.dashboard.nav.services'),
-                    headerTitle: createNavigationHeaderTitle(t('catalog.dashboard.nav.services'), t('nav.eyebrow.workspace')),
+                    headerTitle: createNavigationHeaderTitle(t('catalog.dashboard.nav.services'), t('ops.menu.eyebrow')),
                 }}
             />
             <Stack.Screen
@@ -278,7 +278,7 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                 options={({ route }) => ({
                     ...detailStackScreenOptions,
                     title: t(route.params.serviceId ? 'catalog.services.edit.title' : 'catalog.services.form.titleNew'),
-                    headerTitle: createNavigationHeaderTitle(t(route.params.serviceId ? 'catalog.services.edit.title' : 'catalog.services.form.titleNew'), t('nav.eyebrow.workspace')),
+                    headerTitle: createNavigationHeaderTitle(t(route.params.serviceId ? 'catalog.services.edit.title' : 'catalog.services.form.titleNew'), t('ops.menu.eyebrow')),
                 })}
             />
             <Stack.Screen
@@ -287,7 +287,7 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                 options={{
                     ...detailStackScreenOptions,
                     title: t('catalog.dashboard.nav.branches'),
-                    headerTitle: createNavigationHeaderTitle(t('catalog.dashboard.nav.branches'), t('nav.eyebrow.workspace')),
+                    headerTitle: createNavigationHeaderTitle(t('catalog.dashboard.nav.branches'), t('ops.menu.eyebrow')),
                 }}
             />
             <Stack.Screen
@@ -296,7 +296,7 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                 options={({ route }) => ({
                     ...detailStackScreenOptions,
                     title: t(route.params.branchId ? 'catalog.branches.edit.title' : 'catalog.branches.new.title'),
-                    headerTitle: createNavigationHeaderTitle(t(route.params.branchId ? 'catalog.branches.edit.title' : 'catalog.branches.new.title'), t('nav.eyebrow.workspace')),
+                    headerTitle: createNavigationHeaderTitle(t(route.params.branchId ? 'catalog.branches.edit.title' : 'catalog.branches.new.title'), t('ops.menu.eyebrow')),
                 })}
             />
             <Stack.Screen
@@ -305,7 +305,7 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                 options={{
                     ...detailStackScreenOptions,
                     title: t('catalog.branches.schedule.title'),
-                    headerTitle: createNavigationHeaderTitle(t('catalog.branches.schedule.title'), t('nav.eyebrow.workspace')),
+                    headerTitle: createNavigationHeaderTitle(t('catalog.branches.schedule.title'), t('ops.menu.eyebrow')),
                 }}
             />
             <Stack.Screen
@@ -314,7 +314,7 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                 options={{
                     ...detailStackScreenOptions,
                     title: t('catalog.branches.promotions.title'),
-                    headerTitle: createNavigationHeaderTitle(t('catalog.branches.promotions.title'), t('nav.eyebrow.workspace')),
+                    headerTitle: createNavigationHeaderTitle(t('catalog.branches.promotions.title'), t('ops.menu.eyebrow')),
                 }}
             />
             <Stack.Screen
@@ -323,7 +323,7 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                 options={{
                     ...detailStackScreenOptions,
                     title: t('catalog.dashboard.nav.settings'),
-                    headerTitle: createNavigationHeaderTitle(t('catalog.dashboard.nav.settings'), t('nav.eyebrow.workspace')),
+                    headerTitle: createNavigationHeaderTitle(t('catalog.dashboard.nav.settings'), t('ops.menu.eyebrow')),
                 }}
             />
             <Stack.Screen

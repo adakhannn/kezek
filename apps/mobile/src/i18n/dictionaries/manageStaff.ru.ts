@@ -135,7 +135,7 @@ export const manageStaffRu = {
     'manageStaff.loadError': 'Не удалось загрузить данные',
     'manageStaff.menu.staff': 'Сотрудники',
     'manageStaff.nav.detail': 'Сотрудник',
-    'manageStaff.nav.eyebrow': 'Управление бизнесом',
+    'manageStaff.nav.eyebrow': 'Кабинет бизнеса',
     'manageStaff.nav.finance': 'Финансы сотрудника',
     'manageStaff.nav.financeStats': 'Статистика финансов',
     'manageStaff.nav.list': 'Сотрудники',

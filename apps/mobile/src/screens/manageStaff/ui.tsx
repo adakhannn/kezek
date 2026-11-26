@@ -201,7 +201,7 @@ export function StatTile({ label, value, hint, tone, style }: {
     const color = tone === 'success' ? colors.status.success : tone === 'accent' ? colors.accent.indigo
         : tone === 'warning' ? colors.status.warning : colors.text.primary;
     return (
-        <View style={[ui.tile, style]} accessible accessibilityLabel={`${label}: ${value}${hint ? `, ${hint}` : ''}`}>
+        <View style={[ui.tile, style]} accessible accessibilityLabel={`${label.replace(/:s*$/, "")}: ${value}${hint ? `, ${hint}` : ''}`}>
             <Text style={ui.tileLabel}>{label}</Text>
             <Text style={[ui.tileValue, { color }]}>{value}</Text>
             {hint ? <Text style={ui.tileHint}>{hint}</Text> : null}

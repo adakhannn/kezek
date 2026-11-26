@@ -132,7 +132,7 @@ export const manageStaffEn: Record<keyof typeof manageStaffRu, string> = {
     'manageStaff.loadError': 'Could not load the data',
     'manageStaff.menu.staff': 'Staff',
     'manageStaff.nav.detail': 'Staff member',
-    'manageStaff.nav.eyebrow': 'Business management',
+    'manageStaff.nav.eyebrow': 'Business cabinet',
     'manageStaff.nav.finance': 'Staff finance',
     'manageStaff.nav.financeStats': 'Finance stats',
     'manageStaff.nav.list': 'Staff',
