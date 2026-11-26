@@ -13,6 +13,10 @@ export type ManageRoute = {
 }[keyof RootStackParamList];
 
 export type ManageMenuItem = {
+    /**
+     * The website section in camelCase (/dashboard/role-applications → 'roleApplications'); the
+     * overview screen links to 'staff', 'services' and 'branches' by this key.
+     */
     key: string;
     icon: keyof typeof Ionicons.glyphMap;
     label: MobileI18nKey;
@@ -27,10 +31,16 @@ export type ManageMenuItem = {
  * navigation/RootNavigatorScreens.tsx.
  */
 export const MANAGE_MENU: ManageMenuItem[] = [
+    { key: 'overview', icon: 'speedometer', label: 'ops.menu.overview', route: 'ManageOverview' },
+    { key: 'bookings', icon: 'calendar', label: 'ops.menu.bookings', route: 'ManageBookings' },
     { key: 'services', icon: 'list', label: 'catalog.dashboard.nav.services', route: 'ManageServices' },
     // /dashboard/staff: every managing role (getBizContextForManagers).
     { key: 'staff', icon: 'people', label: 'manageStaff.menu.staff', route: 'ManageStaff' },
     { key: 'branches', icon: 'business', label: 'catalog.dashboard.nav.branches', route: 'ManageBranches' },
+    { key: 'finance', icon: 'wallet', label: 'ops.menu.finance', route: 'ManageFinance' },
+    { key: 'analytics', icon: 'stats-chart', label: 'ops.menu.analytics', route: 'ManageAnalytics' },
+    { key: 'visitPackages', icon: 'pricetags', label: 'ops.menu.visitPackages', route: 'ManageVisitPackages' },
+    { key: 'roleApplications', icon: 'person-add', label: 'ops.menu.roleApplications', route: 'ManageRoleApplications' },
     // /dashboard/settings: the owner (or a super admin) only.
     { key: 'settings', icon: 'settings', label: 'catalog.dashboard.nav.settings', route: 'ManageSettings', roles: ['owner'] },
 ];

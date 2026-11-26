@@ -6,6 +6,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import DashboardScreen from '../../screens/DashboardScreen';
 import { availableManagerActions } from '../../screens/dashboard/managerBookings';
 import { apiRequest } from '../../lib/api';
+import { resetCurrentBusiness } from '../../screens/manage/currentBusiness';
 import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('../../lib/api', () => ({ apiRequest: jest.fn() }));
@@ -180,6 +181,19 @@ describe('DashboardScreen (O1)', () => {
 
         await waitFor(() => expect(alert).toHaveBeenCalled());
         expect(openUrl).not.toHaveBeenCalled();
+    });
+
+    test('the hub lists the management sections; the full bookings open after the business is made current', async () => {
+        resetCurrentBusiness();
+        mockApi({ businesses: [BIZ] });
+        renderScreen();
+
+        for (const key of ['overview', 'bookings', 'finance', 'analytics', 'roleApplications', 'visitPackages']) {
+            expect(await screen.findByTestId(`manage-${key}`)).toBeTruthy();
+        }
+        fireEvent.press(screen.getByText('Все брони: календарь, поиск, QuickDesk'));
+        await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('ManageBookings', { bizId: 'biz-1', bizName: 'Low Fade', tz: 'Asia/Bishkek' }));
+        expect(api).toHaveBeenCalledWith('/me/current-business', expect.objectContaining({ method: 'POST', body: JSON.stringify({ bizId: 'biz-1' }) }));
     });
 });
 

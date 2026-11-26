@@ -123,6 +123,18 @@ export function DashboardScreenSections(props: Props) {
                     </Card>
 
                     <Text style={styles.sectionTitle}>{t('manager.feed.title')}</Text>
+                    {(() => {
+                        // The full bookings section (calendar, list with filters, QuickDesk) of the website.
+                        const allBookings = manageMenuFor(business.role).find((item) => item.key === 'bookings');
+                        return allBookings ? (
+                            <Button
+                                title={t('ops.bookings.openAll')}
+                                onPress={() => props.onOpenManage(allBookings)}
+                                variant="ghost"
+                                size="sm"
+                            />
+                        ) : null;
+                    })()}
                     <SegmentedTabs
                         tabs={[
                             { key: 'today', label: t('manager.feed.tabToday') },

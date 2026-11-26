@@ -52,6 +52,17 @@ export type RootStackParamList = {
     RoleApply: undefined;
     /** Web /business/owner-apply and /business/staff-apply. */
     RoleApplication: { mode: 'owner' | 'staff' };
+    /** Business management: the website's /dashboard home, bookings, analytics, finance, packages, applications. */
+    ManageOverview: ManageRouteParams;
+    ManageBookings: ManageRouteParams;
+    ManageAnalytics: ManageRouteParams;
+    ManageFinance: ManageRouteParams;
+    /** One master's finance stats of the period (the website's /api/dashboard/finance/[id]/stats). */
+    ManageFinanceStaff: ManageRouteParams & { staffId: string; staffName?: string | null };
+    ManageVisitPackages: ManageRouteParams;
+    /** A visit package type: new without planId, else edited. */
+    ManageVisitPackagePlan: ManageRouteParams & { planId?: string };
+    ManageRoleApplications: ManageRouteParams;
 };
 
 export type MainTabParamList = {
