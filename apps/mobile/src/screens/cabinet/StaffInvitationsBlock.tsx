@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import Section from '../../components/ui/Section';
 import { colors } from '../../constants/colors';
+import { space, typeScale } from '../../constants/theme';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useLanguage } from '../../i18n';
 import { apiRequest } from '../../lib/api';
@@ -82,8 +84,11 @@ export function StaffInvitationsBlock({ userId }: { userId: string }) {
     const busyId = decide.isPending ? decide.variables?.id ?? null : null;
 
     return (
-        <Card style={styles.block} testID="staff-invitations-block">
-            <Text style={styles.title}>{t('cabinet.invitations.title')}</Text>
+        <Section
+            title={t('cabinet.invitations.title')}
+            caption={invitations.length > 0 ? t('cabinet.invitations.hint') : undefined}
+            testID="staff-invitations-block"
+        >
             {notice ? (
                 <Text style={notice.kind === 'error' ? styles.error : styles.success} accessibilityRole="alert">
                     {notice.kind === 'error'
@@ -93,9 +98,8 @@ export function StaffInvitationsBlock({ userId }: { userId: string }) {
                           : t(notice.active ? 'cabinet.invitations.accepted' : 'cabinet.invitations.acceptedInactive')}
                 </Text>
             ) : null}
-            {invitations.length > 0 ? <Text style={styles.hint}>{t('cabinet.invitations.hint')}</Text> : null}
             {invitations.map((invitation) => (
-                <View key={invitation.id} style={styles.item} testID={`staff-invitation-${invitation.id}`}>
+                <Card key={invitation.id} variant="plain" padding="md" style={styles.item} testID={`staff-invitation-${invitation.id}`}>
                     <Text style={styles.itemTitle}>{invitation.business_name || t('cabinet.invitations.unknownBusiness')}</Text>
                     {invitation.branch_name ? (
                         <Text style={styles.hint}>{t('cabinet.invitations.branch', { branch: invitation.branch_name })}</Text>
@@ -119,27 +123,18 @@ export function StaffInvitationsBlock({ userId }: { userId: string }) {
                             style={styles.action}
                         />
                     </View>
-                </View>
+                </Card>
             ))}
-        </Card>
+        </Section>
     );
 }
 
 const styles = StyleSheet.create({
-    block: { marginHorizontal: colors.layout.space6, marginBottom: colors.layout.space4 },
-    title: { fontSize: 18, fontWeight: '700', color: colors.text.primary, marginBottom: 4 },
-    hint: { fontSize: 13, color: colors.text.secondary },
-    success: { fontSize: 14, color: colors.status.success, marginVertical: 4 },
-    error: { fontSize: 14, color: colors.status.danger, marginVertical: 4 },
-    item: {
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        borderRadius: 12,
-        padding: 12,
-        marginTop: 8,
-        gap: 4,
-    },
-    itemTitle: { fontSize: 15, fontWeight: '600', color: colors.text.primary },
-    actions: { flexDirection: 'row', gap: 8, marginTop: 4 },
+    hint: { ...typeScale.caption, color: colors.text.secondary },
+    success: { ...typeScale.callout, color: colors.tone.success.fg },
+    error: { ...typeScale.callout, color: colors.tone.danger.fg },
+    item: { gap: space.xs },
+    itemTitle: { ...typeScale.bodyStrong, color: colors.text.primary },
+    actions: { flexDirection: 'row', gap: space.sm, marginTop: space.sm },
     action: { flex: 1 },
 });

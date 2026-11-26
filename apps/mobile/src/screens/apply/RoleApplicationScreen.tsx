@@ -142,7 +142,7 @@ export default function RoleApplicationScreen() {
                 automaticallyAdjustKeyboardInsets
                 testID="role-application-screen"
             >
-                <View style={{ gap: colors.layout.space2 }}>
+                <View style={styles.intro}>
                     <Text style={styles.eyebrow}>{t(`${page}.eyebrow`)}</Text>
                     <Text style={styles.title} accessibilityRole="header">{t(`${page}.title`)}</Text>
                     <Text style={styles.description}>{t(`${page}.description`)}</Text>
@@ -190,7 +190,7 @@ export default function RoleApplicationScreen() {
                 ) : null}
 
                 {mode === 'staff' && hasSession && nameQuery.data === false ? (
-                    <Card style={styles.cardGap}>
+                    <Card variant="plain" padding="md" style={styles.cardGap}>
                         <Text style={styles.hint}>{t('parity.roleApply.form.applicant.missingName')}</Text>
                         <Button
                             title={t('parity.roleApply.form.applicant.edit')}
@@ -201,7 +201,7 @@ export default function RoleApplicationScreen() {
                     </Card>
                 ) : null}
 
-                <Card style={styles.cardGap}>
+                <Card variant="plain" padding="md" style={styles.cardGap}>
                     <Input
                         label={t('parity.roleApply.form.search.label')}
                         placeholder={t('parity.roleApply.form.search.placeholder')}
@@ -255,7 +255,7 @@ export default function RoleApplicationScreen() {
                 </Card>
 
                 {mode === 'owner' ? (
-                    <Card style={styles.cardGap}>
+                    <Card variant="plain" padding="md" style={styles.cardGap}>
                         <Text style={styles.label}>{t('parity.roleApply.form.evidence.label')}</Text>
                         <Text style={styles.hint}>{t('parity.roleApply.form.evidence.helper')}</Text>
                         {EVIDENCE_FIELDS.map(({ key, label }) => (
@@ -273,7 +273,7 @@ export default function RoleApplicationScreen() {
                     </Card>
                 ) : null}
 
-                <Card style={styles.cardGap}>
+                <Card variant="plain" padding="md" style={styles.cardGap}>
                     <Text style={styles.hint}>
                         {t('parity.roleApply.form.role.label')}:{' '}
                         <Text style={styles.benefitTitle}>

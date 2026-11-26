@@ -64,7 +64,7 @@ export function PushNotificationsSwitch({ userId }: { userId: string | undefined
                 value={enabled}
                 disabled={!userId || busy}
                 onValueChange={value => { void onChange(value); }}
-                trackColor={{ false: colors.border.strong, true: colors.accent.indigo }}
+                trackColor={{ false: colors.fill.track, true: colors.accent.primary }}
                 thumbColor={colors.text.light}
             />
         </View>

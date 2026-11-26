@@ -63,7 +63,7 @@ describe('booking flow in Kyrgyz', () => {
     test('step 1 shows the progress and the button in Kyrgyz', async () => {
         renderInKyrgyz(<BookingStep1Branch />);
 
-        expect(await screen.findByText('Кадам 1 / 6', {}, { timeout: 15000 })).toBeTruthy();
+        expect(await screen.findByLabelText('Кадам 1 / 6, Филиал', {}, { timeout: 15000 })).toBeTruthy();
         expect(screen.getByText('Филиал')).toBeTruthy();
         expect(screen.getByText('Улантуу')).toBeTruthy();
         expect(screen.getByText('Main Branch')).toBeTruthy();

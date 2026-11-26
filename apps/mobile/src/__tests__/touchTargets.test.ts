@@ -19,8 +19,8 @@ describe('critical touch target contracts', () => {
         'components/BookingProgressIndicator.tsx',
         'components/ui/FeedbackBanner.tsx',
         'screens/home/homeScreenStyles.ts',
-        'screens/booking/BookingStep1Branch.tsx',
-        'screens/booking/BookingStep3Staff.tsx',
+        // The option rows of the booking steps live in their shared layout.
+        'screens/booking/BookingStepLayout.tsx',
         'screens/booking/BookingStep5Time.tsx',
         'screens/shifts/shiftsScreenStyles.ts',
         'screens/staff/staffScreenStyles.ts',

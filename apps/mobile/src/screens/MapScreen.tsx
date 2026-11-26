@@ -5,8 +5,10 @@ import type { WebViewMessageEvent, WebViewNavigation } from 'react-native-webvie
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 import { colors } from '../constants/colors';
+import { elevation, layout, radii, space, typeScale } from '../constants/theme';
 import { useLanguage } from '../i18n';
 import { RootStackParamList } from '../navigation/types';
 import { getMobileApiUrl } from '../lib/apiUrl';
@@ -139,8 +141,11 @@ export default function MapScreen() {
     if (!mapUrl) {
         return (
             <View style={styles.stateContainer}>
-                <Text style={styles.stateTitle}>{t('booking.map.unavailableTitle')}</Text>
-                <Text style={styles.stateText}>{t('booking.map.noServer')}</Text>
+                <EmptyState
+                    icon="map-outline"
+                    title={t('booking.map.unavailableTitle')}
+                    message={t('booking.map.noServer')}
+                />
             </View>
         );
     }
@@ -176,21 +181,21 @@ export default function MapScreen() {
 
             {isLoading ? (
                 <View style={styles.loadingOverlay} pointerEvents="none">
-                    <ActivityIndicator color={colors.accent.primary} />
-                    <Text style={styles.loadingText}>{t('booking.map.loading')}</Text>
+                    <View style={styles.loadingPill} accessibilityRole="progressbar" accessibilityLabel={t('booking.map.loading')}>
+                        <ActivityIndicator color={colors.tone.accent.fg} />
+                        <Text style={styles.loadingText}>{t('booking.map.loading')}</Text>
+                    </View>
                 </View>
             ) : null}
 
             {hasError ? (
                 <View style={styles.errorOverlay}>
-                    <Text style={styles.stateTitle}>{t('booking.map.loadError')}</Text>
-                    <Text style={styles.stateText}>{t('booking.checkConnection')}</Text>
-                    <Button
-                        title={t('booking.retry')}
-                        onPress={reload}
-                        variant="outline"
-                        fullWidth
-                        accessibilityLabel={t('booking.map.retryLabel')}
+                    <ErrorState
+                        compact
+                        title={t('booking.map.loadError')}
+                        message={t('booking.checkConnection')}
+                        retryLabel={t('booking.retry')}
+                        onRetry={reload}
                     />
                 </View>
             ) : null}
@@ -199,58 +204,38 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background.primary,
-    },
-    webView: {
-        flex: 1,
-        backgroundColor: colors.background.primary,
-    },
+    container: { flex: 1, backgroundColor: colors.surface.page },
+    webView: { flex: 1, backgroundColor: colors.surface.page },
     loadingOverlay: {
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0,
+        ...StyleSheet.absoluteFillObject,
         alignItems: 'center',
         justifyContent: 'center',
-        gap: colors.layout.space3,
         backgroundColor: colors.surface.overlay,
     },
-    loadingText: {
-        color: colors.text.secondary,
-        fontSize: 14,
+    loadingPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: space.md,
+        paddingHorizontal: space.xl,
+        paddingVertical: space.md,
+        borderRadius: radii.pill,
+        backgroundColor: colors.surface.card,
+        ...elevation.floating,
     },
+    loadingText: { ...typeScale.callout, color: colors.text.primary },
     errorOverlay: {
         position: 'absolute',
-        right: colors.layout.space5,
-        bottom: colors.layout.space5,
-        left: colors.layout.space5,
-        padding: colors.layout.space5,
-        borderRadius: colors.layout.radiusLg,
-        borderWidth: 1,
-        borderColor: colors.border.light,
+        right: layout.gutter,
+        bottom: space.xxl,
+        left: layout.gutter,
+        borderRadius: radii.lg,
         backgroundColor: colors.surface.card,
-        gap: colors.layout.space3,
+        ...elevation.floating,
     },
     stateContainer: {
         flex: 1,
-        alignItems: 'center',
         justifyContent: 'center',
-        padding: colors.layout.space6,
-        backgroundColor: colors.background.primary,
-    },
-    stateTitle: {
-        color: colors.text.primary,
-        fontSize: 18,
-        fontWeight: '700',
-        textAlign: 'center',
-    },
-    stateText: {
-        color: colors.text.secondary,
-        fontSize: 14,
-        lineHeight: 20,
-        textAlign: 'center',
+        padding: layout.gutter,
+        backgroundColor: colors.surface.page,
     },
 });

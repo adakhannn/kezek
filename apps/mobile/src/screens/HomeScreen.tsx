@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import { FlatList, RefreshControl, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { colors } from '../constants/colors';
@@ -88,7 +87,7 @@ export default function HomeScreen() {
     }, [rootNavigation]);
 
     const listHeader = useMemo(() => (
-        <>
+        <View style={styles.header}>
             <HomeScreenHeader showOfflineBanner={showOfflineBanner} />
 
             {user ? (
@@ -127,7 +126,7 @@ export default function HomeScreen() {
                 selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
             />
-        </>
+        </View>
     ), [
         availableCategories,
         categoryLabels,
@@ -167,55 +166,55 @@ export default function HomeScreen() {
     );
 
     return (
-        <LinearGradient
-            colors={[
-                colors.background.gradient.from,
-                colors.background.gradient.via,
-                colors.background.gradient.to,
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientContainer}
-        >
-            <FlatList<HomeBusiness>
-                style={styles.container}
-                contentContainerStyle={styles.listContent}
-                data={businesses}
-                keyExtractor={(business) => business.id}
-                renderItem={({ item }) => (
-                    <View style={styles.businessListItem}>
-                        <BusinessCard
-                            business={item}
-                            onOpenBusiness={handleBusinessPress}
-                            onBookBusiness={handleBookPress}
-                            categoryLabels={categoryLabels}
-                        />
+        <FlatList<HomeBusiness>
+            style={styles.list}
+            contentContainerStyle={styles.listContent}
+            data={businesses}
+            keyExtractor={(business) => business.id}
+            renderItem={({ item }) => (
+                <BusinessCard
+                    business={item}
+                    onOpenBusiness={handleBusinessPress}
+                    onBookBusiness={handleBookPress}
+                    categoryLabels={categoryLabels}
+                />
+            )}
+            ItemSeparatorComponent={ItemGap}
+            ListHeaderComponent={listHeader}
+            ListEmptyComponent={listEmpty}
+            ListFooterComponent={
+                isLoadingMoreBusinesses ? (
+                    <View style={styles.listFooter}>
+                        <LoadingSpinner message={t('booking.home.loadingMore')} />
                     </View>
-                )}
-                ListHeaderComponent={listHeader}
-                ListEmptyComponent={listEmpty}
-                ListFooterComponent={
-                    isLoadingMoreBusinesses ? (
-                        <View style={styles.listFooter}>
-                            <LoadingSpinner message={t('booking.home.loadingMore')} />
-                        </View>
-                    ) : hasMoreBusinesses ? null : (
+                ) : hasMoreBusinesses ? null : (
+                    <View style={styles.footerBlock}>
                         <HomeForBusinessCard />
-                    )
-                }
-                onEndReached={hasMoreBusinesses ? loadMoreBusinesses : undefined}
-                onEndReachedThreshold={0.5}
-                initialNumToRender={6}
-                maxToRenderPerBatch={6}
-                updateCellsBatchingPeriod={50}
-                windowSize={5}
-                removeClippedSubviews
-                keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="on-drag"
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-            />
-        </LinearGradient>
+                    </View>
+                )
+            }
+            onEndReached={hasMoreBusinesses ? loadMoreBusinesses : undefined}
+            onEndReachedThreshold={0.5}
+            initialNumToRender={6}
+            maxToRenderPerBatch={6}
+            updateCellsBatchingPeriod={50}
+            windowSize={5}
+            removeClippedSubviews
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            refreshControl={
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    tintColor={colors.accent.indigo}
+                    colors={[colors.accent.indigo]}
+                    progressBackgroundColor={colors.surface.card}
+                />
+            }
+        />
     );
+}
+
+function ItemGap() {
+    return <View style={styles.itemGap} />;
 }

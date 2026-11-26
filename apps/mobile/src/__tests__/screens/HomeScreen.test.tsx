@@ -311,7 +311,8 @@ describe('HomeScreen', () => {
     test('applies a category filter', async () => {
         renderWithProviders(<HomeScreen />);
 
-        fireEvent.press((await screen.findAllByText('hair'))[0]);
+        // The chip, not the card's category tag (the tag only opens the business page).
+        fireEvent.press(await screen.findByTestId('home-categories-hair'));
 
         await waitFor(() => {
             expect(mockedApiRequest).toHaveBeenCalledWith('/mobile/businesses?category=hair&page=1&limit=20');
@@ -343,7 +344,8 @@ describe('HomeScreen', () => {
 
         renderWithProviders(<HomeScreen />);
 
-        fireEvent.press((await screen.findAllByText('hair'))[0]);
+        // The chip, not the card's category tag (the tag only opens the business page).
+        fireEvent.press(await screen.findByTestId('home-categories-hair'));
         const searchInput = await screen.findByTestId('home-search-input');
         fireEvent.changeText(searchInput, 'missing');
 

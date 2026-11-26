@@ -2,212 +2,68 @@ import { StyleSheet } from 'react-native';
 
 import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { colors } from '../../constants/colors';
-import { typography } from '../../constants/typography';
+import { layout, radii, space, typeScale } from '../../constants/theme';
 
+/*
+ * The public business page (docs/mobile/UI_GUIDE.md): a hero card, KPI tiles, then titled
+ * sections on the page with one card level each, and the sticky "Записаться" bar.
+ */
 export const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.surface.page,
-    },
-    content: {
-        padding: colors.layout.space5,
-        paddingBottom: colors.layout.space8 * 3,
-        gap: colors.layout.space4,
-    },
-    centered: {
-        flex: 1,
-        justifyContent: 'center',
-        backgroundColor: colors.surface.page,
-        padding: colors.layout.space5,
-    },
-    previewName: {
-        ...typography.pageTitle,
-        color: colors.text.primary,
-        textAlign: 'center',
-        marginBottom: colors.layout.space4,
-    },
-    hero: {
-        gap: colors.layout.space3,
-    },
-    badges: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: colors.layout.space2,
-    },
-    badge: {
-        borderRadius: 999,
-        borderWidth: 1,
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space1,
-    },
-    badge_accent: {
-        borderColor: colors.accent.indigo,
-        backgroundColor: 'rgba(99, 102, 241, 0.16)',
-    },
-    badge_success: {
-        borderColor: colors.status.success,
-        backgroundColor: colors.feedback.successSurface,
-    },
-    badge_info: {
-        borderColor: colors.status.info,
-        backgroundColor: colors.feedback.infoSurface,
-    },
-    badge_neutral: {
-        borderColor: colors.border.light,
-        backgroundColor: colors.surface.elevated,
-    },
-    badgeText: {
-        ...typography.label,
-        fontSize: 12,
-        color: colors.text.primary,
-    },
-    title: {
-        ...typography.pageTitle,
-        color: colors.text.primary,
-    },
-    metaRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: colors.layout.space2,
-    },
-    metaText: {
-        ...typography.caption,
-        color: colors.text.secondary,
-        flexShrink: 1,
-    },
-    notice: {
-        ...typography.body,
-        color: colors.text.secondary,
-    },
-    bookButton: {
-        marginTop: colors.layout.space2,
-    },
-    section: {
-        gap: colors.layout.space2,
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: colors.layout.space2,
-    },
-    sectionTitle: {
-        ...typography.sectionTitle,
-        color: colors.text.primary,
-    },
-    sectionBody: {
-        marginTop: colors.layout.space2,
-        gap: colors.layout.space3,
-    },
-    count: {
-        ...typography.label,
-        color: colors.text.secondary,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space1,
-    },
-    metrics: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: colors.layout.space3,
-    },
-    metric: {
-        flexGrow: 1,
-        flexBasis: '45%',
-        borderRadius: colors.layout.radiusLg,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-        backgroundColor: colors.surface.elevated,
-        padding: colors.layout.space3,
-    },
-    metricValue: {
-        ...typography.metric,
-        color: colors.text.primary,
-    },
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: colors.layout.space3,
-    },
-    rowEnd: {
-        alignItems: 'flex-end',
-    },
-    flex: {
-        flex: 1,
-        minWidth: 0,
-    },
-    itemTitle: {
-        ...typography.label,
-        color: colors.text.primary,
-    },
-    itemText: {
-        ...typography.caption,
-        color: colors.text.secondary,
-        marginTop: 2,
-    },
-    itemMeta: {
-        ...typography.caption,
-        color: colors.text.tertiary,
-        marginTop: 2,
-    },
-    price: {
-        ...typography.label,
-        color: colors.text.primary,
-    },
-    more: {
-        ...typography.caption,
-        color: colors.text.tertiary,
-        textAlign: 'center',
-    },
-    branch: {
-        borderRadius: colors.layout.radiusLg,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-        backgroundColor: colors.surface.elevated,
-        padding: colors.layout.space3,
-        gap: colors.layout.space3,
-    },
-    chips: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: colors.layout.space2,
-    },
+    loading: { gap: layout.itemGap },
+    flex: { flex: 1, minWidth: 0 },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+    ratingWrap: { alignSelf: 'flex-start' },
+
+    hero: { gap: space.md },
+    heroTop: { flexDirection: 'row', alignItems: 'center', gap: space.lg },
+    heroText: { flex: 1, minWidth: 0, gap: space.xs },
+    title: { ...typeScale.title, color: colors.text.primary },
+    badges: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
+    metaRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.xs },
+    metaText: { ...typeScale.callout, fontWeight: '400', color: colors.text.secondary, flex: 1 },
+    notice: { ...typeScale.callout, fontWeight: '400', color: colors.tone.warning.fg },
+
+    // Contact and directory links: pills that wrap inside their card.
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
     chip: {
         minHeight: MIN_TOUCH_TARGET,
+        maxWidth: '100%',
         flexDirection: 'row',
         alignItems: 'center',
-        gap: colors.layout.space1,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-        paddingHorizontal: colors.layout.space3,
+        gap: space.sm,
+        paddingHorizontal: space.md,
+        borderRadius: radii.pill,
+        backgroundColor: colors.fill.input,
     },
-    chipText: {
-        ...typography.caption,
-        color: colors.text.primary,
-    },
-    promotion: {
+    chipText: { ...typeScale.callout, color: colors.text.primary, flexShrink: 1 },
+
+    sectionLink: { minHeight: MIN_TOUCH_TARGET, justifyContent: 'center', paddingHorizontal: space.xs },
+    sectionLinkText: { ...typeScale.callout, fontWeight: '600', color: colors.tone.accent.fg },
+
+    // Rows inside one ListGroup (promotions, services).
+    row: {
+        minHeight: 56,
         flexDirection: 'row',
-        gap: colors.layout.space3,
-        borderRadius: colors.layout.radiusLg,
-        borderWidth: 1,
-        borderColor: colors.status.success,
-        backgroundColor: colors.feedback.successSurface,
-        padding: colors.layout.space3,
+        alignItems: 'center',
+        gap: space.md,
+        paddingVertical: space.md,
     },
+    rowEnd: { alignItems: 'flex-end', gap: space.xxs, maxWidth: '45%' },
+    itemTitle: { ...typeScale.bodyStrong, color: colors.text.primary },
+    itemText: { ...typeScale.callout, fontWeight: '400', color: colors.text.secondary },
+    itemMeta: { ...typeScale.caption, color: colors.text.tertiary },
+    price: { ...typeScale.bodyStrong, color: colors.text.primary, textAlign: 'right' },
+    more: { ...typeScale.caption, color: colors.text.secondary, textAlign: 'center', paddingVertical: space.md },
     promotionIcon: {
         width: 36,
         height: 36,
-        borderRadius: 18,
+        borderRadius: radii.md,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.feedback.successSurface,
+        backgroundColor: colors.tone.success.bg,
     },
-    promotionIconText: {
-        ...typography.label,
-        color: colors.status.success,
-    },
+
+    // One card per branch: name and rating, address, contacts, links.
+    branch: { gap: space.md },
+    stack: { flex: 1, minWidth: 0, gap: space.xs, alignItems: 'flex-start' },
 });

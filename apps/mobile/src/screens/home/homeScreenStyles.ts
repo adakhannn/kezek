@@ -1,409 +1,122 @@
 import { StyleSheet } from 'react-native';
 
-import { colors } from '../../constants/colors';
 import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
-import { typography } from '../../constants/typography';
+import { colors } from '../../constants/colors';
+import { layout, radii, space, typeScale } from '../../constants/theme';
 
+/*
+ * Home (docs/mobile/UI_GUIDE.md): the page background, the 16dp gutter, sections 24 apart, one
+ * card level. The navigation header says "Главная"; the hero is one welcome line under it.
+ */
 export const styles = StyleSheet.create({
-    gradientContainer: {
-        flex: 1,
-    },
-    container: {
-        flex: 1,
-    },
+    list: { flex: 1, backgroundColor: colors.surface.page },
     listContent: {
-        paddingBottom: colors.layout.space8,
+        paddingHorizontal: layout.gutter,
+        paddingTop: space.lg,
+        paddingBottom: layout.tabBarClearance,
     },
-    businessListItem: {
-        paddingHorizontal: colors.layout.space5,
-        paddingBottom: colors.layout.space4,
-    },
-    listFooter: {
-        paddingVertical: colors.layout.space4,
-    },
-    header: {
-        padding: colors.layout.space6,
-        paddingTop: 32,
-        backgroundColor: colors.background.secondary,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border.dark,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    logo: {
-        marginBottom: 0,
-        width: '100%',
-    },
-    heroSection: {
-        padding: colors.layout.space6,
-        paddingTop: 32,
-        alignItems: 'center',
-    },
-    heroTitle: {
-        ...typography.display,
-        color: colors.text.primary,
-        marginBottom: 12,
-        textAlign: 'center',
-    },
-    heroSubtitle: {
-        color: colors.text.secondary,
-        textAlign: 'center',
-        maxWidth: 320,
-    },
-    offlineBannerWrapper: {
-        marginHorizontal: colors.layout.space5,
-        marginBottom: colors.layout.space3,
-    },
-    searchContainer: {
-        paddingHorizontal: colors.layout.space5,
-        paddingBottom: colors.layout.space4,
-    },
-    searchInputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.background.secondary,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        borderRadius: colors.layout.radiusMd,
-        paddingHorizontal: colors.layout.space4,
-        ...colors.shadow.sm,
-    },
-    searchIcon: {
-        marginRight: 12,
-    },
-    searchInput: {
-        flex: 1,
-        fontSize: 16,
-        color: colors.text.primary,
-        paddingVertical: colors.layout.space3,
-    },
+    header: { gap: layout.sectionGap, marginBottom: space.md },
+    itemGap: { height: layout.itemGap },
+    listFooter: { paddingVertical: space.xxl },
+    footerBlock: { marginTop: layout.sectionGap },
+
+    hero: { gap: space.xs },
+    logo: { alignSelf: 'flex-start', marginLeft: -space.md, marginBottom: space.sm },
+    heroTitle: { ...typeScale.title, color: colors.text.primary },
+    heroSubtitle: { ...typeScale.body, color: colors.text.secondary },
+
     clearButton: {
-        width: MIN_TOUCH_TARGET,
-        height: MIN_TOUCH_TARGET,
+        minWidth: MIN_TOUCH_TARGET,
+        minHeight: MIN_TOUCH_TARGET,
         alignItems: 'center',
         justifyContent: 'center',
+        marginRight: -space.sm,
     },
-    categoriesContainer: {
-        paddingHorizontal: colors.layout.space5,
-        paddingBottom: colors.layout.space5,
-    },
-    categoriesLabel: {
-        ...typography.label,
-        color: colors.text.secondary,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-        marginBottom: colors.layout.space3,
-    },
-    categoriesScroll: {
-        flexDirection: 'row',
-    },
-    categoryChip: {
-        minHeight: MIN_TOUCH_TARGET,
-        marginRight: colors.layout.space2,
-        borderRadius: colors.layout.radiusLg,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        backgroundColor: colors.background.secondary,
-        overflow: 'hidden',
-    },
-    categoryChipActive: {
-        borderColor: 'transparent',
-    },
-    categoryChipGradient: {
-        minHeight: MIN_TOUCH_TARGET,
-        paddingHorizontal: 16,
-        paddingVertical: colors.layout.space2,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    categoryChipText: {
-        minHeight: MIN_TOUCH_TARGET,
-        fontSize: 12,
-        fontWeight: '500',
-        color: colors.text.secondary,
-        paddingHorizontal: 16,
-        paddingVertical: colors.layout.space2,
-        textAlignVertical: 'center',
-    },
-    categoryChipTextActive: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: colors.text.light,
-    },
-    section: {
-        paddingHorizontal: colors.layout.space5,
-        paddingBottom: colors.layout.space4,
-    },
-    sectionHeaderRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: colors.layout.space2,
-    },
-    sectionLinkPressable: {
-        minHeight: MIN_TOUCH_TARGET,
-        borderRadius: colors.layout.radiusSm,
-        justifyContent: 'center',
-    },
-    sectionTitle: {
-        ...typography.sectionTitle,
-        color: colors.text.primary,
-    },
-    bookingCardPressable: {
-        borderRadius: colors.layout.radiusLg,
-    },
-    sectionLink: {
-        fontSize: 13,
-        fontWeight: '500',
-        color: colors.primary.from,
-    },
-    bookingCard: {
-        marginTop: colors.layout.space2,
-    },
+
+    sectionAction: { minHeight: MIN_TOUCH_TARGET, justifyContent: 'center', paddingHorizontal: space.xs },
+    sectionActionText: { ...typeScale.callout, fontWeight: '600', color: colors.tone.accent.fg },
+
+    // Upcoming bookings: rows of one ListGroup.
     bookingRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: colors.layout.space3,
-    },
-    bookingMain: {
-        flex: 1,
-    },
-    bookingBusiness: {
-        fontSize: typography.body.fontSize,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: 2,
-    },
-    bookingBranch: {
-        fontSize: 13,
-        color: colors.text.secondary,
-        marginBottom: 2,
-    },
-    bookingService: {
-        fontSize: 13,
-        color: colors.text.secondary,
-        lineHeight: 18,
-    },
-    bookingMeta: {
-        alignItems: 'flex-end',
-        justifyContent: 'center',
-        gap: colors.layout.space1,
-    },
-    bookingDate: {
-        fontSize: typography.label.fontSize,
-        color: colors.text.secondary,
-    },
-    bookingStatusPill: {
-        paddingHorizontal: colors.layout.space2,
-        paddingVertical: colors.layout.space1,
-        borderRadius: 999,
-        backgroundColor: colors.background.secondary,
-    },
-    bookingStatusText: {
-        fontSize: 11,
-        fontWeight: '500',
-        color: colors.text.secondary,
-    },
-    recentPlacesRow: {
-        paddingTop: colors.layout.space2,
-        paddingBottom: colors.layout.space1,
-        gap: colors.layout.space2,
-    },
-    recentPlaceChip: {
-        minHeight: MIN_TOUCH_TARGET,
+        minHeight: 64,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space2,
-        borderRadius: 999,
-        backgroundColor: colors.background.secondary,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        marginRight: colors.layout.space2,
+        gap: space.md,
+        paddingVertical: space.md,
     },
-    recentPlaceText: {
-        fontSize: 13,
-        fontWeight: '500',
-        color: colors.text.primary,
+    bookingDay: {
+        width: 44,
+        height: 44,
+        borderRadius: radii.md,
+        backgroundColor: colors.tone.accent.bg,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    nearbyFallbackContainer: {
-        paddingHorizontal: colors.layout.space5,
-        paddingBottom: colors.layout.space4,
-    },
-    nearbyFallbackCard: {
+    bookingMain: { flex: 1, minWidth: 0, gap: space.xxs },
+    bookingTitle: { ...typeScale.bodyStrong, color: colors.text.primary },
+    bookingMeta: { ...typeScale.caption, color: colors.text.secondary },
+    bookingWhen: { ...typeScale.caption, color: colors.text.primary, fontWeight: '600' },
+    bookingSide: { alignItems: 'flex-end', gap: space.xs, maxWidth: '42%' },
+    pressed: { opacity: colors.interactive.pressedOpacity },
+
+    // Recent places: one line of pills that scrolls sideways to the screen edges.
+    bleedRow: { marginHorizontal: -layout.gutter, flexGrow: 0 },
+    bleedContent: { paddingHorizontal: layout.gutter, gap: space.sm },
+    placeChip: {
+        minHeight: MIN_TOUCH_TARGET,
+        maxWidth: 240,
         flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: colors.layout.space3,
-        borderColor: colors.border.light,
+        alignItems: 'center',
+        gap: space.sm,
+        paddingHorizontal: space.lg,
+        borderRadius: radii.pill,
+        backgroundColor: colors.surface.card,
     },
-    nearbyFallbackIcon: {
+    placeChipText: { ...typeScale.callout, color: colors.text.primary, flexShrink: 1 },
+
+    // Nearby branches: one card with the status line, the rows and the actions.
+    nearbyCard: { gap: space.md },
+    nearbyStatus: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
+    nearbyIcon: {
         width: 36,
         height: 36,
-        borderRadius: 18,
+        borderRadius: radii.md,
+        backgroundColor: colors.tone.accent.bg,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.background.tertiary,
     },
-    nearbyFallbackIconWarning: {
-        backgroundColor: colors.background.secondary,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-    },
-    nearbyFallbackContent: {
-        flex: 1,
-    },
-    nearbyFallbackTitle: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: colors.text.primary,
-        marginBottom: colors.layout.space1,
-    },
-    nearbyFallbackText: {
-        fontSize: 13,
-        lineHeight: 18,
-        color: colors.text.secondary,
-    },
-    nearbyFallbackHint: {
-        marginTop: colors.layout.space3,
-        fontSize: 12,
-        lineHeight: 17,
-        color: colors.text.muted,
-    },
-    nearbyAction: {
-        marginTop: colors.layout.space3,
-    },
-    nearbyMapAction: {
-        marginTop: colors.layout.space2,
-    },
-    nearbyBranchList: {
-        marginTop: colors.layout.space3,
-        gap: colors.layout.space2,
-    },
-    nearbyBranchRow: {
-        minHeight: MIN_TOUCH_TARGET,
+    nearbyIconWarning: { backgroundColor: colors.tone.warning.bg },
+    nearbyText: { ...typeScale.callout, fontWeight: '400', color: colors.text.secondary, flex: 1 },
+    nearbyRows: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border.subtle },
+    nearbyRow: {
+        minHeight: 56,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: colors.layout.space3,
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space2,
-        borderRadius: colors.layout.radiusMd,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        backgroundColor: colors.background.secondary,
+        gap: space.md,
+        paddingVertical: space.sm,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.border.subtle,
     },
-    nearbyBranchRowDisabled: {
-        opacity: 0.55,
+    nearbyRowDisabled: { opacity: colors.interactive.disabledOpacity },
+    nearbyRowMain: { flex: 1, minWidth: 0, gap: space.xxs },
+    nearbyRowName: { ...typeScale.bodyStrong, color: colors.text.primary },
+    nearbyRowMeta: { ...typeScale.caption, color: colors.text.secondary },
+    nearbyDistance: { ...typeScale.callout, color: colors.tone.accent.fg },
+    nearbyMapRow: {
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: colors.border.subtle,
+        marginBottom: -space.sm,
     },
-    nearbyBranchMain: {
-        flex: 1,
-    },
-    nearbyBranchName: {
-        fontSize: 13,
-        fontWeight: '700',
-        color: colors.text.primary,
-        marginBottom: 2,
-    },
-    nearbyBranchMeta: {
-        fontSize: 12,
-        lineHeight: 16,
-        color: colors.text.secondary,
-    },
-    nearbyBranchDistance: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: colors.accent.primary,
-    },
-    businessList: {
-        padding: colors.layout.space5,
-        gap: colors.layout.space4,
-        paddingBottom: colors.layout.space8,
-    },
-    businessCard: {
-        marginBottom: 0,
-    },
-    businessHeader: {
-        marginBottom: colors.layout.space3,
-    },
-    businessNameRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: colors.layout.space2,
-        flexWrap: 'wrap',
-    },
-    businessPromotionsBadge: {
-        alignSelf: 'flex-start',
-        marginTop: colors.layout.space2,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: colors.status.success,
-        backgroundColor: colors.feedback.successSurface,
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space1,
-    },
-    businessPromotionsText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: colors.text.primary,
-    },
-    businessName: {
-        ...typography.sectionTitle,
-        color: colors.text.primary,
-        flex: 1,
-    },
-    businessInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: colors.layout.space2,
-        gap: colors.layout.space2,
-    },
-    businessAddress: {
-        fontSize: 14,
-        color: colors.text.secondary,
-        flex: 1,
-    },
-    businessPhone: {
-        fontSize: 12,
-        color: colors.text.secondary,
-        lineHeight: 18,
-    },
-    businessCategories: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: colors.layout.space2,
-        marginTop: colors.layout.space2,
-        marginBottom: colors.layout.space4,
-    },
-    businessCategoryTag: {
-        backgroundColor: colors.background.tertiary,
-        paddingHorizontal: colors.layout.space3,
-        paddingVertical: colors.layout.space1,
-        borderRadius: colors.layout.radiusMd,
-    },
-    businessCategoryText: {
-        fontSize: 11,
-        color: colors.text.secondary,
-        fontWeight: '500',
-    },
-    businessFooter: {
-        marginTop: colors.layout.space4,
-        paddingTop: colors.layout.space4,
-        borderTopWidth: 1,
-        borderTopColor: colors.border.dark,
-    },
-    bookButton: {
-        minHeight: MIN_TOUCH_TARGET,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: colors.layout.space3,
-        paddingHorizontal: colors.layout.space4,
-        borderRadius: colors.layout.radiusSm,
-        gap: colors.layout.space2,
-        ...colors.shadow.md,
-    },
-    bookButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: colors.text.light,
-    },
+
+    // Business card: one plain card with the initials tile, name, rating, address and tags.
+    businessCard: { gap: space.md },
+    businessTop: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
+    businessLogo: { borderRadius: radii.md },
+    businessMain: { flex: 1, minWidth: 0, gap: space.xs },
+    businessName: { ...typeScale.headline, color: colors.text.primary },
+    businessRating: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' },
+    businessMetaGroup: { gap: space.xs },
+    businessMetaRow:{ flexDirection: 'row', alignItems: 'center', gap: space.xs },
+    businessMeta: { ...typeScale.caption, color: colors.text.secondary, flexShrink: 1 },
+    businessTags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
 });

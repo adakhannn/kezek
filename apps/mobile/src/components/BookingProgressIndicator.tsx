@@ -1,13 +1,13 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { colors } from '../constants/colors';
 import { MIN_TOUCH_TARGET } from '../constants/accessibility';
+import { layout, radii, space } from '../constants/theme';
 import { useBooking } from '../contexts/BookingContext';
 import { useLanguage, type MobileI18nKey } from '../i18n';
 import { RootStackParamList } from '../navigation/types';
-import MotionPressable from './ui/MotionPressable';
 
 type StepInfo = {
     number: number;
@@ -24,181 +24,105 @@ const STEPS: StepInfo[] = [
     { number: 6, titleKey: 'booking.progress.confirm', screenName: 'BookingStep6Confirm' },
 ];
 
+const SEGMENT_HEIGHT = 4;
+/** The visible bar is thin; each segment still takes a 44dp touch target. */
+const SEGMENT_HIT = (MIN_TOUCH_TARGET - SEGMENT_HEIGHT) / 2;
+
 type BookingProgressIndicatorProps = {
     currentStep: number;
 };
 
+/**
+ * The one progress element of the booking flow: six thin segments under the header (which already
+ * says "2 / 6 · Услуга"). Done steps are filled and tappable to go back to them.
+ */
 export default function BookingProgressIndicator({ currentStep }: BookingProgressIndicatorProps) {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const { bookingData } = useBooking();
     const { t } = useLanguage();
     const totalSteps = STEPS.length;
-    const progress = (currentStep / totalSteps) * 100;
+    const current = STEPS[currentStep - 1];
+    const label = [
+        t('booking.progress.stepOf', { current: currentStep, total: totalSteps }),
+        current ? t(current.titleKey) : null,
+    ].filter(Boolean).join(', ');
 
     const handleStepPress = (step: StepInfo) => {
-        if (step.number <= currentStep && step.number < currentStep) {
+        if (step.number < currentStep) {
+            const nav = navigation as unknown as {
+                navigate: (
+                    screen: keyof RootStackParamList,
+                    params?: RootStackParamList[keyof RootStackParamList]
+                ) => void;
+            };
             if (step.number === 1 && bookingData.business?.slug) {
-                (
-                    navigation as unknown as {
-                        navigate: (
-                            screen: keyof RootStackParamList,
-                            params?: RootStackParamList[keyof RootStackParamList]
-                        ) => void;
-                    }
-                ).navigate(step.screenName as keyof RootStackParamList, { slug: bookingData.business.slug });
+                nav.navigate(step.screenName as keyof RootStackParamList, { slug: bookingData.business.slug });
             } else if (step.number > 1) {
-                (
-                    navigation as unknown as {
-                        navigate: (
-                            screen: keyof RootStackParamList,
-                            params?: RootStackParamList[keyof RootStackParamList]
-                        ) => void;
-                    }
-                ).navigate(step.screenName as keyof RootStackParamList);
+                nav.navigate(step.screenName as keyof RootStackParamList);
             }
         }
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.stepText}>
-                    {t('booking.progress.stepOf', { current: currentStep, total: totalSteps })}
-                </Text>
-                <Text style={styles.stepTitle}>
-                    {STEPS[currentStep - 1] ? t(STEPS[currentStep - 1].titleKey) : null}
-                </Text>
-            </View>
-
-            <View style={styles.progressBarContainer}>
-                <View style={styles.progressBarBackground}>
-                    <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
-                </View>
-            </View>
-
-            <View style={styles.stepsContainer}>
-                {STEPS.map((step, index) => {
-                    const isCompleted = step.number < currentStep;
-                    const isCurrent = step.number === currentStep;
-                    const isUpcoming = step.number > currentStep;
-                    const isClickable = step.number < currentStep;
-
-                    return (
-                        <View key={step.number} style={styles.stepItem}>
-                            <MotionPressable
-                                onPress={() => handleStepPress(step)}
-                                disabled={!isClickable}
-                                style={styles.stepPressable}
-                                accessibilityLabel={`${step.number}. ${t(step.titleKey)}`}
-                                accessibilityHint={isClickable ? t('booking.progress.stepHint') : undefined}
-                            >
-                                <View
-                                    style={[
-                                        styles.stepDot,
-                                        isCompleted && styles.stepDotCompleted,
-                                        isCurrent && styles.stepDotCurrent,
-                                        isUpcoming && styles.stepDotUpcoming,
-                                        isClickable && styles.stepDotClickable,
-                                    ]}
-                                />
-                            </MotionPressable>
-                            {index < STEPS.length - 1 ? (
-                                <View style={[styles.stepLine, isCompleted && styles.stepLineCompleted]} />
-                            ) : null}
-                        </View>
-                    );
-                })}
-            </View>
+        <View
+            style={styles.container}
+            accessible={false}
+            accessibilityRole="progressbar"
+            accessibilityLabel={label}
+            accessibilityValue={{ min: 1, max: totalSteps, now: currentStep }}
+            testID="booking-progress"
+        >
+            {STEPS.map((step) => {
+                const isDone = step.number < currentStep;
+                const isCurrent = step.number === currentStep;
+                return (
+                    <Pressable
+                        key={step.number}
+                        onPress={() => handleStepPress(step)}
+                        disabled={!isDone}
+                        hitSlop={{ top: SEGMENT_HIT, bottom: SEGMENT_HIT }}
+                        style={styles.segmentPressable}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${step.number}. ${t(step.titleKey)}`}
+                        accessibilityState={{ disabled: !isDone, selected: isCurrent }}
+                        accessibilityHint={isDone ? t('booking.progress.stepHint') : undefined}
+                    >
+                        <View
+                            style={[
+                                styles.segment,
+                                isDone ? styles.segmentDone : null,
+                                isCurrent ? styles.segmentCurrent : null,
+                            ]}
+                        />
+                    </Pressable>
+                );
+            })}
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        padding: 20,
-        backgroundColor: colors.background.secondary,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border.dark,
-    },
-    header: {
-        marginBottom: 16,
-        alignItems: 'center',
-    },
-    stepText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: colors.text.secondary,
-        marginBottom: 4,
-    },
-    stepTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: colors.text.primary,
-    },
-    progressBarContainer: {
-        marginBottom: 16,
-    },
-    progressBarBackground: {
-        height: 4,
-        backgroundColor: colors.border.light,
-        borderRadius: 2,
-        overflow: 'hidden',
-    },
-    progressBarFill: {
-        height: '100%',
-        backgroundColor: colors.primary.from,
-        borderRadius: 2,
-    },
-    stepsContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 8,
+        gap: space.xs,
+        paddingHorizontal: layout.gutter,
+        paddingTop: space.xs,
+        paddingBottom: space.md,
+        backgroundColor: colors.surface.card,
     },
-    stepItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    segmentPressable: {
         flex: 1,
-    },
-    stepPressable: {
-        width: MIN_TOUCH_TARGET,
-        height: MIN_TOUCH_TARGET,
-        alignItems: 'center',
         justifyContent: 'center',
     },
-    stepDot: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-        backgroundColor: colors.border.light,
-        borderWidth: 2,
-        borderColor: colors.border.light,
+    segment: {
+        height: SEGMENT_HEIGHT,
+        borderRadius: radii.pill,
+        backgroundColor: colors.fill.track,
     },
-    stepDotCompleted: {
-        backgroundColor: colors.primary.from,
-        borderColor: colors.primary.from,
+    segmentDone: {
+        backgroundColor: colors.accent.primary,
     },
-    stepDotCurrent: {
-        backgroundColor: colors.primary.from,
-        borderColor: colors.primary.from,
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        ...colors.shadow.md,
-    },
-    stepDotUpcoming: {
-        backgroundColor: colors.background.secondary,
-        borderColor: colors.border.light,
-    },
-    stepDotClickable: {},
-    stepLine: {
-        flex: 1,
-        height: 2,
-        backgroundColor: colors.border.light,
-        marginHorizontal: 4,
-    },
-    stepLineCompleted: {
-        backgroundColor: colors.primary.from,
+    segmentCurrent: {
+        backgroundColor: colors.tone.accent.fg,
     },
 });
-

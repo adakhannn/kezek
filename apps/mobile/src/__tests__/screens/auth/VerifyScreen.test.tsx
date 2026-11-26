@@ -28,7 +28,8 @@ describe('VerifyScreen', () => {
     test('должен отрендериться без ошибок', () => {
         render(<VerifyScreen />);
 
-        expect(screen.getByText('Подтверждение')).toBeTruthy();
+        // The header says "Подтверждение"; the screen opens with where the code went.
+        expect(screen.getByText(/test@example\.com/)).toBeTruthy();
     });
 
     test('должен отображать поле ввода кода', () => {

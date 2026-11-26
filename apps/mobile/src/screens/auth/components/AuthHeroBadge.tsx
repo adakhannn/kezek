@@ -1,20 +1,12 @@
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 
-import { colors } from '../../../constants/colors';
+import Logo from '../../../components/Logo';
 
+/** The brand at the top of the sign-in card (the logo, not a generic icon). */
 export default function AuthHeroBadge() {
   return (
-    <View style={styles.wrap}>
-      <LinearGradient
-        colors={[colors.brand.primaryFrom, colors.brand.primaryTo]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.badge}
-      >
-        <Ionicons name="sparkles-outline" size={26} color={colors.text.light} />
-      </LinearGradient>
+    <View style={styles.wrap} accessibilityRole="image" accessibilityLabel="Kezek">
+      <Logo />
     </View>
   );
 }
@@ -23,13 +15,5 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  badge: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...colors.shadow.md,
   },
 });

@@ -1,173 +1,69 @@
 import { StyleSheet } from 'react-native';
 
+import { colors } from '../../constants/colors';
+import { radii, space, typeScale } from '../../constants/theme';
+
+/* One booking (docs/mobile/UI_GUIDE.md): an accent hero, then sections with one card level. */
 export const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f9fafb',
-    },
-    card: {
-        margin: 20,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 24,
-    },
-    serviceName: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#111827',
-        flex: 1,
-        marginRight: 12,
-    },
-    statusBadge: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-    },
-    statusText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#fff',
-    },
-    section: {
-        marginBottom: 20,
-        paddingBottom: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
-    },
-    timelineSection: {
-        marginBottom: 20,
-        paddingBottom: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#6b7280',
-        marginBottom: 4,
-    },
-    value: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#111827',
-        marginBottom: 4,
-    },
-    phone: {
-        fontSize: 14,
-        color: '#6366f1',
-    },
-    address: {
-        fontSize: 14,
-        color: '#6b7280',
-    },
-    time: {
-        fontSize: 16,
-        color: '#374151',
-        marginTop: 4,
-    },
-    duration: {
-        fontSize: 14,
-        color: '#6b7280',
-        marginTop: 4,
-    },
-    price: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#10b981',
-    },
+    banner: { marginBottom: 0 },
+
+    hero: { gap: space.sm },
+    heroTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.md },
+    serviceName: { ...typeScale.title, color: colors.text.primary, flex: 1, minWidth: 0 },
+    when: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginTop: space.xs },
+    date: { ...typeScale.bodyStrong, color: colors.text.primary },
+    time: { ...typeScale.display, color: colors.text.primary, fontVariant: ['tabular-nums'] },
+    duration: { ...typeScale.caption, color: colors.text.secondary },
+
     timelineRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 8,
-        columnGap: 4,
+        padding: space.lg,
+        borderRadius: radii.lg,
+        backgroundColor: colors.surface.card,
     },
-    timelineStep: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    timelineStep: { flex: 1, alignItems: 'center', gap: space.sm },
+    timelineConnector: {
+        position: 'absolute',
+        top: 11,
+        right: '50%',
+        left: '-50%',
+        height: 2,
+        backgroundColor: colors.fill.track,
     },
+    timelineConnectorDone: { backgroundColor: colors.accent.primary },
     timelineDot: {
-        width: 18,
-        height: 18,
-        borderRadius: 9,
-        borderWidth: 1,
-        borderColor: '#d1d5db',
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: colors.border.strong,
+        backgroundColor: colors.surface.card,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#fff',
     },
-    timelineDotDone: {
-        backgroundColor: '#4f46e5',
-        borderColor: '#4f46e5',
-    },
-    timelineDotText: {
-        fontSize: 10,
-        color: '#fff',
-        fontWeight: '700',
-    },
-    timelineLabel: {
-        fontSize: 11,
-        color: '#6b7280',
-        marginLeft: 4,
-        marginRight: 4,
-    },
-    timelineConnector: {
-        width: 16,
-        height: 1,
-        backgroundColor: '#e5e7eb',
-    },
-    actions: {
-        padding: 20,
-        paddingBottom: 40,
-        gap: 12,
-    },
-    primaryAction: {
-        marginBottom: 4,
-    },
-    cancelButton: {
-        borderColor: '#ef4444',
-    },
+    timelineDotDone: { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary },
+    timelineLabel: { ...typeScale.caption, color: colors.text.tertiary, textAlign: 'center' },
+    timelineLabelDone: { color: colors.text.primary },
+
+    serviceRow: { minHeight: 48, justifyContent: 'center', paddingVertical: space.md },
+    serviceLine: { ...typeScale.body, color: colors.text.primary },
+
+    benefit: { gap: space.sm },
+    benefitRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    benefitLine: { ...typeScale.callout, fontWeight: '400', color: colors.text.primary, flexShrink: 1 },
+    total: { ...typeScale.headline, color: colors.tone.success.fg, marginTop: space.xs },
+
+    review: { gap: space.sm },
+    stars: { fontSize: 20, letterSpacing: 2, color: colors.tone.warning.fg },
+    reviewText: { ...typeScale.body, color: colors.text.secondary },
+
     notice: {
-        fontSize: 14,
-        color: '#6b7280',
-        marginTop: 12,
-        textAlign: 'center',
-    },
-    contactRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: 8,
+        alignItems: 'flex-start',
+        gap: space.sm,
+        padding: space.md,
+        borderRadius: radii.md,
+        backgroundColor: colors.tone.info.bg,
     },
-    contactButton: {
-        flex: 1,
-    },
-    serviceLine: {
-        fontSize: 15,
-        color: '#111827',
-        marginTop: 2,
-    },
-    benefitLine: {
-        fontSize: 15,
-        color: '#111827',
-        fontWeight: '500',
-        marginTop: 2,
-    },
-    mapRow: {
-        flexDirection: 'row',
-        gap: 8,
-        marginTop: 8,
-    },
-    mapButton: {
-        flex: 1,
-    },
-    reviewText: {
-        fontSize: 15,
-        color: '#374151',
-        marginTop: 4,
-    },
-    banner: {
-        marginBottom: 12,
-    },
+    noticeText: { ...typeScale.callout, fontWeight: '400', color: colors.text.primary, flex: 1 },
 });

@@ -24,7 +24,7 @@ export default function RoleApplyScreen() {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="role-apply-screen">
-            <View style={{ gap: colors.layout.space2 }}>
+            <View style={styles.intro}>
                 <Text style={styles.eyebrow}>{t('parity.roleApply.eyebrow')}</Text>
                 <Text style={styles.title} accessibilityRole="header">{t('parity.roleApply.title')}</Text>
                 <Text style={styles.description}>{t('parity.roleApply.description')}</Text>
@@ -40,24 +40,24 @@ export default function RoleApplyScreen() {
                     scale="firm"
                     testID={`role-apply-${mode}`}
                 >
-                    <Card style={styles.cardGap}>
+                    <Card variant="plain" padding="md" style={styles.cardGap}>
                         <View style={styles.row}>
-                            <Text style={[styles.eyebrow, { textAlign: 'left' }]}>{t(`${prefix}.eyebrow`)}</Text>
+                            <Text style={styles.eyebrow}>{t(`${prefix}.eyebrow`)}</Text>
                             <View style={styles.badge}>
                                 <Text style={styles.badgeText}>{t(`${prefix}.badge`)}</Text>
                             </View>
                         </View>
                         <Text style={styles.sectionTitle}>{t(`${prefix}.title`)}</Text>
                         <Text style={styles.hint}>{t(`${prefix}.description`)}</Text>
-                        <View style={[styles.row, { justifyContent: 'flex-start' }]}>
+                        <View style={styles.rowStart}>
                             <Text style={styles.link}>{t('parity.roleApply.open')}</Text>
-                            <Ionicons name="arrow-forward" size={16} color={colors.accent.indigo} />
+                            <Ionicons name="arrow-forward" size={16} color={colors.tone.accent.fg} />
                         </View>
                     </Card>
                 </MotionPressable>
             ))}
 
-            <Text style={[styles.hint, { textAlign: 'center' }]}>{t('parity.roleApply.newBusiness.prefix')}</Text>
+            <Text style={[styles.hint, styles.center]}>{t('parity.roleApply.newBusiness.prefix')}</Text>
             <Button
                 title={t('parity.roleApply.form.connectBusiness')}
                 onPress={() => navigation.navigate('BusinessApply')}

@@ -3,6 +3,7 @@ import { AppState, Linking, Modal, ScrollView, StyleSheet, Text, View } from 're
 
 import Button from '../../components/ui/Button';
 import { colors } from '../../constants/colors';
+import { elevation, layout, radii, space, typeScale } from '../../constants/theme';
 import { useLanguage } from '../../i18n';
 import { getApiErrorStatus, getErrorMessage } from '../../lib/errors';
 import { telegramProfileLink } from './profileApi';
@@ -156,6 +157,7 @@ export function TelegramLinkSheet({ visible, onClose, onLinked, onUnavailable }:
         <Modal visible={visible} animationType="slide" transparent onRequestClose={close}>
             <View style={styles.backdrop}>
                 <View style={styles.sheet} testID="telegram-link-sheet" accessibilityViewIsModal>
+                    <View style={styles.grabber} />
                     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
                         <Text style={styles.title} accessibilityRole="header">{t('parity.telegramLink.title')}</Text>
                         {error ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
@@ -168,9 +170,16 @@ export function TelegramLinkSheet({ visible, onClose, onLinked, onUnavailable }:
 
                         {attempt && state.status === 'pending' ? (
                             <>
-                                <Text style={styles.step}>1. {t('parity.telegramLink.step1')}</Text>
-                                <Text style={styles.step}>2. {t('parity.telegramLink.step2')}</Text>
-                                <Text style={styles.step}>3. {t('parity.telegramLink.step3')}</Text>
+                                <View style={styles.steps}>
+                                    {(['parity.telegramLink.step1', 'parity.telegramLink.step2', 'parity.telegramLink.step3'] as const).map((key, index) => (
+                                        <View key={key} style={styles.stepRow}>
+                                            <View style={styles.stepNumber}>
+                                                <Text style={styles.stepNumberText}>{index + 1}</Text>
+                                            </View>
+                                            <Text style={styles.step}>{t(key)}</Text>
+                                        </View>
+                                    ))}
+                                </View>
                                 <Button
                                     title={t('parity.telegramLink.openBot')}
                                     onPress={() => void openBot()}
@@ -232,21 +241,40 @@ const styles = StyleSheet.create({
     sheet: {
         maxHeight: '85%',
         backgroundColor: colors.surface.card,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        borderTopLeftRadius: radii.xxl,
+        borderTopRightRadius: radii.xxl,
+        paddingTop: space.sm,
+        ...elevation.floating,
     },
-    content: { padding: 20, gap: 10 },
-    title: { fontSize: 20, fontWeight: '600', color: colors.text.primary },
-    hint: { fontSize: 14, color: colors.text.secondary },
-    step: { fontSize: 14, color: colors.text.secondary },
-    caption: { fontSize: 12, color: colors.text.tertiary },
-    error: { fontSize: 14, color: colors.status.danger },
+    grabber: {
+        alignSelf: 'center',
+        width: 36,
+        height: 4,
+        borderRadius: radii.pill,
+        backgroundColor: colors.border.strong,
+    },
+    content: { paddingHorizontal: layout.gutter, paddingTop: space.lg, paddingBottom: space.xxl, gap: space.md },
+    title: { ...typeScale.title, color: colors.text.primary },
+    hint: { ...typeScale.callout, fontWeight: '400', color: colors.text.secondary },
+    steps: { gap: space.md },
+    stepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+    stepNumber: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.tone.info.bg,
+    },
+    stepNumberText: { ...typeScale.caption, fontWeight: '700', color: colors.tone.info.fg },
+    step: { ...typeScale.body, color: colors.text.primary, flex: 1 },
+    caption: { ...typeScale.caption, color: colors.text.tertiary },
+    error: { ...typeScale.callout, fontWeight: '400', color: colors.tone.danger.fg },
     account: {
-        borderWidth: 1,
-        borderColor: colors.border.subtle,
-        borderRadius: colors.layout.radiusMd,
-        padding: 14,
-        gap: 2,
+        borderRadius: radii.md,
+        backgroundColor: colors.surface.elevated,
+        padding: space.lg,
+        gap: space.xxs,
     },
-    accountName: { fontSize: 16, fontWeight: '600', color: colors.text.primary },
+    accountName: { ...typeScale.headline, color: colors.text.primary },
 });
