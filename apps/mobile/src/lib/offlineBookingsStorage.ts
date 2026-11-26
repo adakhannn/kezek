@@ -16,6 +16,9 @@ export type OfflineBooking = {
     end_at: string;
     branch_name?: string | null;
     service_name?: string | null;
+    /** services.name_ky/name_en; absent in caches written before C6. */
+    service_name_ky?: string | null;
+    service_name_en?: string | null;
     staff_name?: string | null;
     business_name?: string | null;
     /** businesses.tz of the booking; absent in caches written before ARCH-11. */

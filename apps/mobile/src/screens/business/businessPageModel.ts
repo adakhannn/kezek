@@ -4,6 +4,7 @@
  * Pure helpers, so the screen and its tests share them.
  */
 import type { Locale, Translate } from '../../i18n';
+import { getLocalizedText, getPromotionTitle } from '../../utils/i18n';
 
 export type BusinessPageBusiness = {
     id: string;
@@ -157,15 +158,9 @@ export function emailHref(email: string): string {
 
 // ---- Texts ----
 
-function localized(locale: Locale, ru: string | null | undefined, ky?: string | null, en?: string | null): string {
-    if (locale === 'ky' && ky?.trim()) return ky.trim();
-    if (locale === 'en' && en?.trim()) return en.trim();
-    return ru?.trim() ?? '';
-}
-
 /** The promotion's title in the app language, else the text of its type (promotions page). */
 export function promotionTitle(promotion: BusinessPagePromotion, t: Translate): string {
-    const title = localized(t.locale, promotion.title_ru, promotion.title_ky, promotion.title_en);
+    const title = getPromotionTitle(promotion, t.locale);
     if (title) return title;
 
     const params = promotion.params ?? {};
@@ -190,7 +185,10 @@ export function promotionTitle(promotion: BusinessPagePromotion, t: Translate): 
 }
 
 export function promotionDescription(promotion: BusinessPagePromotion, locale: Locale): string {
-    return localized(locale, promotion.description_ru, promotion.description_ky, promotion.description_en);
+    return getLocalizedText(
+        { ru: promotion.description_ru, ky: promotion.description_ky, en: promotion.description_en },
+        locale,
+    );
 }
 
 function formatNumber(value: number, locale: Locale): string {

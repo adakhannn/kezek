@@ -56,9 +56,16 @@ export const styles = StyleSheet.create({
     bookingCard: {
         marginBottom: 12,
     },
+    bookingHeader: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: colors.layout.space2,
+    },
     bookingService: {
         fontSize: 18,
         fontWeight: '600',
+        flexShrink: 1,
         color: colors.text.primary,
         marginBottom: 8,
     },

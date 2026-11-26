@@ -51,4 +51,10 @@ export const serverBookingEn = {
     'server.booking.nearbyRadiusInvalid': 'The radiusKm parameter must be a number from {min} to {max}',
     'server.booking.nearbyBranchesLoadFailed': 'Could not load branches',
     'server.booking.nearbySearchFailed': 'Internal error while searching for nearby branches',
+    'server.booking.confirmForbidden': 'No access to confirm this booking',
+    'server.booking.confirmNotConfirmable': 'Only a pending booking can be confirmed',
+    'server.booking.confirmBookingChanged': 'The booking has changed. Refresh it before confirming.',
+    'server.booking.managerBookingsQueryInvalid': 'Specify the business and the section of the bookings list',
+    'server.booking.managerBookingsLoadFailed': 'Could not load the business bookings',
+    'server.booking.managedBusinessesLoadFailed': 'Could not load your businesses',
 } as const;

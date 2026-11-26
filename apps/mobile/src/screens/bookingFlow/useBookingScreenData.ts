@@ -112,7 +112,7 @@ export function useBookingScreenData({ slug }: Options) {
 
             const { data, error } = await supabase
                 .from('branch_promotions')
-                .select('id, branch_id, promotion_type, title_ru, params')
+                .select('id, branch_id, promotion_type, title_ru, title_ky, title_en, params')
                 .in('branch_id', branchIds)
                 .eq('is_active', true)
                 .order('created_at', { ascending: false });

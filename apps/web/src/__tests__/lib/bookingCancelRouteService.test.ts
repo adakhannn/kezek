@@ -127,4 +127,42 @@ describe('bookingCancelRouteService', () => {
         expect(getBizContextForManagers).toHaveBeenCalled();
         expect(checkBookingBelongsToBusiness).toHaveBeenCalledWith('booking-1', 'biz-1');
     });
+
+    describe('explicit management check (the app\'s Bearer caller, O1)', () => {
+        const bookingOf = (bizId: string | null) => mockSupabase.from.mockReturnValue({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: { id: 'booking-1', client_id: 'client-1', biz_id: bizId, status: 'confirmed' }, error: null }),
+        });
+
+        beforeEach(() => {
+            mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'manager-1' } }, error: null });
+            (runServerCancelBooking as jest.Mock).mockResolvedValue(undefined);
+        });
+
+        test('a manager of the booking\'s business cancels without the cookie business context', async () => {
+            bookingOf('biz-2');
+            const isBusinessManager = jest.fn().mockResolvedValue(true);
+            const result = await runBookingCancelRoute({ supabase: mockSupabase as never, bookingId: 'booking-1', isBusinessManager });
+            expect(result).toEqual({ ok: true });
+            expect(isBusinessManager).toHaveBeenCalledWith('manager-1', 'biz-2');
+            expect(getBizContextForManagers).not.toHaveBeenCalled();
+            expect(runServerCancelBooking).toHaveBeenCalledWith(expect.objectContaining({ clientId: undefined }), 'booking-1');
+        });
+
+        test('someone who does not manage that business is refused and nothing is cancelled', async () => {
+            bookingOf('biz-2');
+            const result = await runBookingCancelRoute({ supabase: mockSupabase as never, bookingId: 'booking-1', isBusinessManager: jest.fn().mockResolvedValue(false) });
+            expect(result).toMatchObject({ ok: false, status: 403, error: 'forbidden' });
+            expect(runServerCancelBooking).not.toHaveBeenCalled();
+        });
+
+        test('a booking without a business is refused without asking', async () => {
+            bookingOf(null);
+            const isBusinessManager = jest.fn();
+            const result = await runBookingCancelRoute({ supabase: mockSupabase as never, bookingId: 'booking-1', isBusinessManager });
+            expect(result).toMatchObject({ ok: false, status: 403 });
+            expect(isBusinessManager).not.toHaveBeenCalled();
+        });
+    });
 });

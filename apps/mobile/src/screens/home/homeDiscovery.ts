@@ -1,4 +1,5 @@
 import { logWarn } from '../../lib/log';
+import { apiRequest } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 
 export type PublicCategories = {
@@ -9,16 +10,15 @@ export type PublicCategories = {
 };
 
 /**
- * Every active category with its name, read with the anon key (policy categories_public_active_select),
- * as the web home page does (apps/web/src/lib/publicCategoryLabels.ts). Missing names must not
- * break the catalog: on an error the chips fall back to the slugs seen in the results.
+ * Every active category with its name, from GET /api/mobile/categories (the same rows the web home page
+ * labels with). Through the web API, like the business list: on networks that block *.supabase.co a
+ * direct read failed and the chips showed raw slugs. Missing names must not break the catalog: on an
+ * error the chips fall back to the slugs seen in the results.
  */
 export async function fetchPublicCategories(): Promise<PublicCategories> {
     try {
-        const { data, error } = await supabase.from('categories').select('slug,name_ru').eq('is_active', true);
-        if (error) throw error;
-
-        const rows = (data ?? []) as { slug: string | null; name_ru: string | null }[];
+        const payload = await apiRequest<{ slug: string | null; name_ru: string | null }[] | { data?: { slug: string | null; name_ru: string | null }[] }>('/mobile/categories');
+        const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
         const slugs: string[] = [];
         const labels: Record<string, string> = {};
         for (const row of rows) {

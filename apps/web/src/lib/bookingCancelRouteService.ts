@@ -9,6 +9,7 @@ import { runServerCancelBooking } from '@/lib/serverCancelBookingService';
 type BookingRow = {
     id: string;
     client_id: string | null;
+    biz_id: string | null;
     status: string | null;
 };
 
@@ -29,9 +30,15 @@ export type BookingCancelRouteResult = CancelFailure | CancelSuccess | NonNullab
 export async function runBookingCancelRoute({
     supabase,
     bookingId,
+    isBusinessManager,
 }: {
     supabase: SupabaseClient;
     bookingId: string;
+    /**
+     * The management check of a caller without the website's business context (the app's Bearer
+     * token): true when the user manages the booking's business. Absent: the cookie context decides.
+     */
+    isBusinessManager?: (userId: string, bizId: string) => Promise<boolean>;
 }): Promise<BookingCancelRouteResult> {
     const { data: booking } = await supabase
         .from('bookings')
@@ -57,7 +64,9 @@ export async function runBookingCancelRoute({
 
     const isClientOwner = booking.client_id === user.id;
     if (!isClientOwner) {
-        const hasManagerAccess = await canManagerCancelBooking(bookingId);
+        const hasManagerAccess = isBusinessManager
+            ? Boolean(booking.biz_id) && await isBusinessManager(user.id, String(booking.biz_id))
+            : await canManagerCancelBooking(bookingId);
         if (!hasManagerAccess) {
             return forbidden();
         }

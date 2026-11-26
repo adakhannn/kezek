@@ -15,6 +15,7 @@ import BusinessScreen from '../screens/business/BusinessScreen';
 import MapScreen from '../screens/MapScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
 import ShiftQuickScreen from '../screens/ShiftQuickScreen';
+import StaffScheduleScreen from '../screens/StaffScheduleScreen';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import {
@@ -34,6 +35,7 @@ type RootStack = ReturnType<typeof createNativeStackNavigator<RootStackParamList
 const GuardedBookingDetailsScreen = withSessionGate(BookingDetailsScreen, 'booking');
 const GuardedShiftsScreen = withSessionGate(withStaffRouteGuard(ShiftsScreen), 'workspace');
 const GuardedShiftQuickScreen = withSessionGate(withStaffRouteGuard(ShiftQuickScreen), 'workspace');
+const GuardedStaffScheduleScreen = withSessionGate(withStaffRouteGuard(StaffScheduleScreen), 'workspace');
 
 export const rootStackScreenOptions: NativeStackNavigationOptions =
     detailStackScreenOptions;
@@ -154,6 +156,15 @@ export function AppStackScreens(Stack: RootStack, t: Translate) {
                     ...detailStackScreenOptions,
                     title: t('nav.shiftQuick'),
                     headerTitle: createNavigationHeaderTitle(t('nav.shiftQuick'), t('nav.eyebrow.workspace')),
+                }}
+            />
+            <Stack.Screen
+                name="StaffSchedule"
+                component={GuardedStaffScheduleScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: t('staff.schedule.title'),
+                    headerTitle: createNavigationHeaderTitle(t('staff.schedule.title'), t('nav.eyebrow.workspace')),
                 }}
             />
         </>

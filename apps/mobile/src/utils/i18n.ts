@@ -6,19 +6,39 @@
 
 import {
     getServiceName as getServiceNameShared,
+    getLocalizedText as getLocalizedTextShared,
+    getPromotionTitle as getPromotionTitleShared,
     formatStaffName as formatStaffNameShared,
     getStatusColorMobile,
     getStatusText as getStatusTextShared,
+    type LocalizedText,
+    type ServiceName,
 } from '@shared-client/i18n';
 
+export type { LocalizedText, ServiceName };
+
 /**
- * Получает название услуги с учетом текущего языка
+ * Название услуги на языке интерфейса: name_ky/name_en, если бизнес их заполнил, иначе name_ru
+ * (для en — транслитерация name_ru), как на сайте.
  */
 export function getServiceName(
-    service: { name_ru: string; name_ky?: string | null; name_en?: string | null } | string | null | undefined,
+    service: ServiceName | string | null | undefined,
     locale: 'ru' | 'ky' | 'en' = 'ru'
 ): string {
     return getServiceNameShared(service, locale);
+}
+
+/** Текст каталога (ru/ky/en) на языке интерфейса с fallback на русский. */
+export function getLocalizedText(text: LocalizedText | null | undefined, locale: 'ru' | 'ky' | 'en' = 'ru'): string {
+    return getLocalizedTextShared(text, locale);
+}
+
+/** Заголовок акции (title_ru/title_ky/title_en) на языке интерфейса с fallback на русский. */
+export function getPromotionTitle(
+    promotion: { title_ru?: string | null; title_ky?: string | null; title_en?: string | null } | null | undefined,
+    locale: 'ru' | 'ky' | 'en' = 'ru'
+): string {
+    return getPromotionTitleShared(promotion, locale);
 }
 
 /**
@@ -41,4 +61,3 @@ export function getStatusColor(status: string): string {
 export function getStatusText(status: string, locale: 'ru' | 'ky' | 'en' = 'ru'): string {
     return getStatusTextShared(status, locale);
 }
-

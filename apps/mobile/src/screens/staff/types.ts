@@ -16,22 +16,27 @@ export type StaffInfo = {
     } | null;
 };
 
+/** S1: the two lists of the staff workspace, like the website's /staff/bookings. */
+export type StaffBookingsTab = 'upcoming' | 'past';
+
+type ServiceNames = { name_ru: string | null; name_ky?: string | null; name_en?: string | null };
+
 export type UpcomingBooking = {
     id: string;
+    status: string | null;
     start_at: string;
     end_at: string;
-    service: {
-        name_ru: string | null;
-    } | null;
+    service: ServiceNames | null;
     client_name: string | null;
     client_phone: string | null;
 };
 
 export type BookingRow = {
     id: string;
+    status?: string | null;
     start_at: string;
     end_at: string;
     client_name: string | null;
     client_phone: string | null;
-    service: { name_ru: string | null }[] | { name_ru: string | null } | null;
+    service: ServiceNames[] | ServiceNames | null;
 };

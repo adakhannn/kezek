@@ -38,6 +38,8 @@ export interface StaffRow {
 }
 
 export interface BizRow {
+    /** businesses.id: the business whose owner and managers get push (O2). */
+    id?: string | null;
     name: string;
     tz?: string | null;
     email_notify_to: string[] | null;

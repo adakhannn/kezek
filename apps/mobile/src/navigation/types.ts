@@ -17,6 +17,8 @@ export type RootStackParamList = {
     BookingStep6Confirm: undefined;
     Shifts: undefined;
     ShiftQuick: undefined;
+    /** The master's own working hours, this week and next (S3). */
+    StaffSchedule: undefined;
 };
 
 export type MainTabParamList = {

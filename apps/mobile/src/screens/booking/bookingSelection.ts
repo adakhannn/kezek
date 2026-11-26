@@ -4,6 +4,7 @@
  * the promotion note (BookingSummary) and the create payload (useBookingCreation, useGuestBooking).
  */
 import type { MobileI18nKey, Translate } from '../../i18n';
+import { getPromotionTitle } from '../../utils/i18n';
 
 /** The "any master" choice (web StaffSelector): the chosen slot's staff_id becomes the master (C4). */
 export const ANY_STAFF = 'any';
@@ -87,7 +88,13 @@ export function temporaryTransfersOf(
         .map((row) => ({ staff_id: row.staff_id, branch_id: row.branch_id, date: row.date_on }));
 }
 
-type PromotionLike = { promotion_type: string; title_ru: string | null; params: Record<string, unknown> | null };
+type PromotionLike = {
+    promotion_type: string;
+    title_ru: string | null;
+    title_ky?: string | null;
+    title_en?: string | null;
+    params: Record<string, unknown> | null;
+};
 
 /** The text of a branch promotion (web BookingSummary getPromotionDescription). Read-only: the server applies it. */
 export function describePromotion(promotion: PromotionLike, t: Translate): string {
@@ -103,7 +110,7 @@ export function describePromotion(promotion: PromotionLike, t: Translate): strin
     ) {
         return t('booking.promotion.discountPercent', { percent: String(params.discount_percent) });
     }
-    return promotion.title_ru || t('booking.promotion.fallback');
+    return getPromotionTitle(promotion, t.locale) || t('booking.promotion.fallback');
 }
 
 export type BookingServiceItem = { service_id: string; duration_min: number; order_index: number };

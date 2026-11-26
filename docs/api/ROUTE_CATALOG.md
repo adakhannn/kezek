@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **187 route-файлов, 231 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **191 route-файлов, 235 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 555 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `d9d302b3f8bcceaafc359ff33bb22cbab1de76fe5aff372fa4f05fa2ca860a28`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 564 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `e9bac8da451f461ac0e4f6c4422c5e5200b9a20c08d4c9889832fbc1447960f7`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -107,6 +107,7 @@
 | `/api/auth/yandex/link/start` | POST | [route](../../apps/web/src/app/api/auth/yandex/link/start/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/auth/yandex/start` | GET | [route](../../apps/web/src/app/api/auth/yandex/start/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/bookings/[id]/cancel` | POST | [route](../../apps/web/src/app/api/bookings/[id]/cancel/route.ts) | [runBookingCancelHttp](../../apps/web/src/lib/bookingCancelHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
+| `/api/bookings/[id]/confirm` | POST | [route](../../apps/web/src/app/api/bookings/[id]/confirm/route.ts) | [runConfirmBookingHttp](../../apps/web/src/lib/mobileManagerHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
 | `/api/bookings/[id]/mark-attendance` | POST | [route](../../apps/web/src/app/api/bookings/[id]/mark-attendance/route.ts) | [runMarkAttendanceHttp](../../apps/web/src/lib/markAttendanceHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
 | `/api/bookings/[id]/reschedule` | POST | [route](../../apps/web/src/app/api/bookings/[id]/reschedule/route.ts) | [runBookingRescheduleHttp](../../apps/web/src/lib/bookingRescheduleHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |
 | `/api/bookings/client-identities` | POST | [route](../../apps/web/src/app/api/bookings/client-identities/route.ts) | [runDashboardBookingClientIdentityHttp](../../apps/web/src/lib/dashboardBookingClientIdentityHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
@@ -156,6 +157,9 @@
 | `/api/mobile/bookings/[id]` | GET, POST | [route](../../apps/web/src/app/api/mobile/bookings/[id]/route.ts) | [runCancelMobileBookingHttp, runGetMobileBookingDetailsHttp](../../apps/web/src/lib/mobileBookingsHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/mobile/bookings` | GET | [route](../../apps/web/src/app/api/mobile/bookings/route.ts) | [runListMobileBookingsHttp](../../apps/web/src/lib/mobileBookingsHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/mobile/businesses` | GET | [route](../../apps/web/src/app/api/mobile/businesses/route.ts) | [runMobileBusinessesHttp](../../apps/web/src/lib/mobileBusinessesHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
+| `/api/mobile/categories` | GET | [route](../../apps/web/src/app/api/mobile/categories/route.ts) | [runMobileCategoriesHttp](../../apps/web/src/lib/mobileCategoriesHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
+| `/api/mobile/manager/bookings` | GET | [route](../../apps/web/src/app/api/mobile/manager/bookings/route.ts) | [runListManagerBookingsHttp](../../apps/web/src/lib/mobileManagerHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
+| `/api/mobile/manager/businesses` | GET | [route](../../apps/web/src/app/api/mobile/manager/businesses/route.ts) | [runListManagedBusinessesHttp](../../apps/web/src/lib/mobileManagerHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/mobile/push-tokens` | POST, DELETE | [route](../../apps/web/src/app/api/mobile/push-tokens/route.ts) | [runRegisterPushTokenHttp, runUnregisterPushTokenHttp](../../apps/web/src/lib/mobilePushTokensHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/notify/ping` | POST | [route](../../apps/web/src/app/api/notify/ping/route.ts) | [runNotifyPingHttp](../../apps/web/src/lib/notifyPingHttpService.ts) | [справочник](AUTH_AND_INTEGRATIONS.md) |
 | `/api/notify` | POST | [route](../../apps/web/src/app/api/notify/route.ts) | [runNotifyHttp](../../apps/web/src/lib/notifyHttpService.ts) | [справочник](AUTH_AND_INTEGRATIONS.md) |

@@ -17,7 +17,7 @@ import OfflineBanner from '../../components/ui/OfflineBanner';
 import { colors } from '../../constants/colors';
 import { useLanguage } from '../../i18n';
 import { formatDate, formatTime } from '../../utils/format';
-import { getStatusColor, getStatusText } from '../../utils/i18n';
+import { getServiceName, getStatusColor, getStatusText } from '../../utils/i18n';
 import { styles } from './cabinetScreenStyles';
 import { StaffInvitationsBlock } from './StaffInvitationsBlock';
 import { bookingTitle, type Booking } from './types';
@@ -137,7 +137,7 @@ export function CabinetScreenSections({
                         <Text style={styles.overviewLabel}>{t('cabinet.overview.label')}</Text>
                         <Text style={styles.overviewTitle}>
                             {featuredBooking
-                                ? featuredBooking.service?.name_ru || t('cabinet.overview.upcomingFallback')
+                                ? getServiceName(featuredBooking.service, locale) || t('cabinet.overview.upcomingFallback')
                                 : t('cabinet.overview.empty')}
                         </Text>
                         <Text style={styles.overviewDescription}>
@@ -276,7 +276,7 @@ export function CabinetScreenSections({
                             style={styles.bookingPressable}
                             scale="firm"
                             accessibilityLabel={t('cabinet.bookings.itemLabel', {
-                                service: bookingTitle(booking) || t('cabinet.ui.serviceFallback'),
+                                service: bookingTitle(booking, locale) || t('cabinet.ui.serviceFallback'),
                                 date: formatDate(booking.start_at, locale, booking.business?.tz),
                                 time: formatTime(booking.start_at, booking.business?.tz),
                             })}
@@ -349,7 +349,7 @@ function BookingCard({ booking, isHistory, onReview }: { booking: Booking; isHis
         <Card style={styles.bookingCard}>
             <View style={styles.bookingHeader}>
                 <View style={styles.bookingTitleWrap}>
-                    <Text style={styles.bookingService}>{bookingTitle(booking) || t('cabinet.ui.serviceFallback')}</Text>
+                    <Text style={styles.bookingService}>{bookingTitle(booking, locale) || t('cabinet.ui.serviceFallback')}</Text>
                     <Text style={styles.bookingBusiness}>{booking.business?.name || t('cabinet.card.noBusiness')}</Text>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>

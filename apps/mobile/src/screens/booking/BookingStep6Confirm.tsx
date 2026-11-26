@@ -16,6 +16,7 @@ import BookingProgressIndicator from '../../components/BookingProgressIndicator'
 import RatingBadge from '../../components/ui/RatingBadge';
 import { translatePlural, useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
+import { getServiceName } from '../../utils/i18n';
 import BookingGuestForm from './BookingGuestForm';
 import { useBookingStep6Confirm } from './useBookingStep6Confirm';
 
@@ -124,7 +125,7 @@ export default function BookingStep6Confirm() {
                                 </Text>
                                 {selectedServices.map((service) => (
                                     <Text key={service.id} style={isMultiple ? styles.summaryItem : styles.summaryValue}>
-                                        {service.name_ru}
+                                        {getServiceName(service, t.locale)}
                                     </Text>
                                 ))}
                                 {totalDurationMin > 0 && (

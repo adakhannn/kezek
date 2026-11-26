@@ -3,9 +3,9 @@ import { ScrollView, Text, View } from 'react-native';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import OfflineBanner from '../../components/ui/OfflineBanner';
-import { useLanguage, type Locale } from '../../i18n';
+import { useLanguage } from '../../i18n';
 import { formatDate, formatTime } from '../../utils/format';
-import { getStatusColor, getStatusText } from '../../utils/i18n';
+import { getLocalizedText, getServiceName, getStatusColor, getStatusText } from '../../utils/i18n';
 import { styles } from './bookingDetailsStyles';
 import type { BookingDetails, TimelineStep } from './types';
 
@@ -36,14 +36,6 @@ type Props = {
     onDirections?: () => void;
 };
 
-type ServiceName = { name_ru: string; name_ky?: string | null; name_en?: string | null };
-
-function localizedServiceName(service: ServiceName, locale: Locale): string {
-    if (locale === 'ky' && service.name_ky) return service.name_ky;
-    if (locale === 'en' && service.name_en) return service.name_en;
-    return service.name_ru;
-}
-
 export function BookingDetailsSections({
     booking,
     timelineSteps,
@@ -71,6 +63,9 @@ export function BookingDetailsSections({
     const tz = booking.business?.tz;
     const services = booking.services ?? [];
     const promotion = booking.promotion ?? null;
+    const promotionTitle = promotion
+        ? getLocalizedText({ ru: promotion.title, ky: promotion.title_ky, en: promotion.title_en }, locale)
+        : "";
     const visitPackage = booking.package ?? null;
     const finalAmount = promotion?.final_amount ?? visitPackage?.final_amount ?? null;
     const review = booking.review ?? null;
@@ -93,8 +88,8 @@ export function BookingDetailsSections({
                 <View style={styles.header}>
                     <Text style={styles.serviceName}>
                         {services.length > 1
-                            ? services.map((item) => localizedServiceName(item, locale)).join(' + ')
-                            : booking.service?.name_ru || t('cabinet.ui.serviceFallback')}
+                            ? services.map((item) => getServiceName(item, locale)).join(' + ')
+                            : getServiceName(booking.service, locale) || t('cabinet.ui.serviceFallback')}
                     </Text>
                     <View style={[styles.statusBadge, { backgroundColor: getStatusColor(booking.status) }]}>
                         <Text style={styles.statusText}>{getStatusText(booking.status, locale)}</Text>
@@ -158,10 +153,10 @@ export function BookingDetailsSections({
                             <Text key={`${item.name_ru}-${index}`} style={styles.serviceLine}>
                                 {item.duration_min
                                     ? t('cabinet.details.serviceLine', {
-                                          name: localizedServiceName(item, locale),
+                                          name: getServiceName(item, locale),
                                           minutes: item.duration_min,
                                       })
-                                    : localizedServiceName(item, locale)}
+                                    : getServiceName(item, locale)}
                             </Text>
                         ))}
                     </View>
@@ -215,8 +210,8 @@ export function BookingDetailsSections({
                         <Text style={styles.label}>{t('cabinet.details.benefit')}</Text>
                         {promotion ? (
                             <Text style={styles.benefitLine}>
-                                {promotion.title
-                                    ? t('cabinet.details.promotion', { title: promotion.title })
+                                {promotionTitle
+                                    ? t('cabinet.details.promotion', { title: promotionTitle })
                                     : t('cabinet.card.promotion')}
                                 {promotion.discount_percent
                                     ? ` · ${t('cabinet.details.promotionDiscount', { percent: promotion.discount_percent })}`

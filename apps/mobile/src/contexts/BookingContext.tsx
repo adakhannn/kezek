@@ -9,6 +9,9 @@ type Branch = {
 export type Service = {
     id: string;
     name_ru: string;
+    /** services.name_ky/name_en (C6); shown in the app language with name_ru as the fallback. */
+    name_ky?: string | null;
+    name_en?: string | null;
     duration_min: number;
     price_from: number | null;
     price_to: number | null;
@@ -29,6 +32,8 @@ type Promotion = {
     branch_id: string;
     promotion_type: string;
     title_ru: string | null;
+    title_ky?: string | null;
+    title_en?: string | null;
     params: Record<string, unknown>;
 };
 

@@ -51,4 +51,10 @@ export const serverBookingRu = {
     'server.booking.nearbyRadiusInvalid': 'Параметр radiusKm должен быть числом от {min} до {max}',
     'server.booking.nearbyBranchesLoadFailed': 'Не удалось загрузить филиалы',
     'server.booking.nearbySearchFailed': 'Внутренняя ошибка при поиске ближайших филиалов',
+    'server.booking.confirmForbidden': 'Нет доступа к подтверждению этой записи',
+    'server.booking.confirmNotConfirmable': 'Подтвердить можно только запись в ожидании',
+    'server.booking.confirmBookingChanged': 'Запись изменилась. Обновите её перед подтверждением.',
+    'server.booking.managerBookingsQueryInvalid': 'Укажите бизнес и раздел списка записей',
+    'server.booking.managerBookingsLoadFailed': 'Не удалось загрузить записи бизнеса',
+    'server.booking.managedBusinessesLoadFailed': 'Не удалось загрузить ваши бизнесы',
 } as const;

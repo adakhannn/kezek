@@ -72,6 +72,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
             },
             ShiftQuick: 'staff/shift-quick',
             Shifts: 'staff/shifts',
+            StaffSchedule: 'staff/schedule',
             // OAuth callback URL handling (e.g. /auth/callback-mobile) is performed
             // by useRootNavigationSession.handleDeepLinkAuth as a side-effect flow,
             // not by direct screen route mapping.

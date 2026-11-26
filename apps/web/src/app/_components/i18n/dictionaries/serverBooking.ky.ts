@@ -51,4 +51,10 @@ export const serverBookingKy = {
     'server.booking.nearbyRadiusInvalid': 'radiusKm параметри {min} менен {max} ортосундагы сан болушу керек',
     'server.booking.nearbyBranchesLoadFailed': 'Филиалдарды жүктөө мүмкүн болгон жок',
     'server.booking.nearbySearchFailed': 'Жакынкы филиалдарды издөөдө ички ката кетти',
+    'server.booking.confirmForbidden': 'Бул жазылууну ырастоого укугуңуз жок',
+    'server.booking.confirmNotConfirmable': 'Күтүүдөгү жазылууну гана ырастоого болот',
+    'server.booking.confirmBookingChanged': 'Жазылуу өзгөрдү. Ырастоодон мурун аны жаңылаңыз.',
+    'server.booking.managerBookingsQueryInvalid': 'Бизнести жана жазылуулар тизмесинин бөлүмүн көрсөтүңүз',
+    'server.booking.managerBookingsLoadFailed': 'Бизнестин жазылууларын жүктөө мүмкүн болгон жок',
+    'server.booking.managedBusinessesLoadFailed': 'Бизнестериңизди жүктөө мүмкүн болгон жок',
 } as const;

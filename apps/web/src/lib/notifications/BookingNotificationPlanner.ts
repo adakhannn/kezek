@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { ParticipantDataService } from './ParticipantDataService';
 import { buildBookingEmailPayload } from './emailPayload';
 import { buildEmailRecipients } from './emailRecipients';
+import { listManagerPushRecipients } from './managerPushRecipients';
 import { buildPushMessage, buildTelegramText } from './messageBuilders';
 import { notificationLocale } from './notificationText';
 import type { PreparedDelivery } from './outboxTypes';
@@ -56,7 +57,7 @@ export async function prepareBookingNotificationContext(participants: Participan
  * The deliveries of one outbox event. Confirmations, cancellations and holds go to client, staff,
  * owner and the business addresses; reminders (24 h / 2 h before the visit) to the client only,
  * on the same channels and with the same opt-outs. Each channel is one block over the same
- * participants plus its transport branch; push goes to the client and, for confirm/cancel, the master.
+ * participants plus its transport branch; push goes to the client and, for confirm/cancel, the master, the owner and the business managers.
  */
 export async function planBookingNotifications(admin: SupabaseClient, booking: BookingRow, type: BookingEventType): Promise<PreparedDelivery[]> {
     const reminder = isReminderType(type);
@@ -90,21 +91,26 @@ export async function planBookingNotifications(admin: SupabaseClient, booking: B
             payload: buildBookingWhatsAppTemplatePayload(phone, details, type, templateName, notificationLocale(data.locale)) });
     }
     // Push to the app (owner decision 2026-11-25): the client for confirm, cancel and both reminders,
-    // the master's linked account for confirm and cancel; a hold is not pushed. No profile flag exists for push; a registered token is the opt-in, and the
-    // app's Profile switch removes it. One delivery per install; a shared install gets one message in
-    // the language of the first recipient, like a shared Telegram chat.
+    // the master's linked account for confirm and cancel; a hold is not pushed. For confirm and cancel
+    // also the owner and the owner/admin/manager accounts of the business (O2, 2026-11-26), so a new or
+    // cancelled booking reaches whoever manages it from the app. No profile flag exists for push; a
+    // registered token is the opt-in, and the app's Profile switch removes it. One delivery per install;
+    // a shared install gets one message in the language of the first recipient, like a shared Telegram chat.
+    const staffEvent = type === 'confirm' || type === 'cancel';
+    const managers = staffEvent ? await listManagerPushRecipients(admin, biz?.id, biz?.owner_id) : [];
     const pushRecipients = type === 'hold' ? [] : [
-        { userId: booking.client_id, data: clientData },
-        ...(type === 'confirm' || type === 'cancel' ? [{ userId: details.staff?.user_id ?? null, data: staffData }] : []),
-    ].filter((recipient): recipient is { userId: string; data: ParticipantData } => Boolean(recipient.userId));
+        { userId: booking.client_id, locale: clientData.locale },
+        ...(staffEvent ? [{ userId: details.staff?.user_id ?? null, locale: staffData.locale }] : []),
+        ...managers.map(manager => ({ userId: manager.userId, locale: manager.locale })),
+    ].filter((recipient): recipient is { userId: string; locale: ParticipantData['locale'] } => Boolean(recipient.userId));
     if (pushRecipients.length > 0) {
         const tokens = await listPushTokens(admin, pushRecipients.map(recipient => recipient.userId));
         const pushed = new Set<string>();
-        for (const { userId, data } of pushRecipients) {
+        for (const { userId, locale } of pushRecipients) {
             for (const { token } of tokens.filter(row => row.user_id === userId)) {
                 if (pushed.has(token)) continue;
                 pushed.add(token);
-                const { title, body } = buildPushMessage(details, type, notificationLocale(data.locale));
+                const { title, body } = buildPushMessage(details, type, notificationLocale(locale));
                 deliveries.push({ key: keyFor('push', token), channel: 'push', payload: {
                     to: token, title, body, data: { bookingId: booking.id, type },
                     sound: 'default', priority: 'high', channelId: 'default',

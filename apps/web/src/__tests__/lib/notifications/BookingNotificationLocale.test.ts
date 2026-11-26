@@ -5,6 +5,7 @@ import type { BookingRow, ParticipantData } from '@/lib/notifications/types';
 // FE-10: each recipient's message is in that recipient's preferred_locale.
 // No app installs: push tokens are covered in BookingNotificationPlanner.test.ts.
 jest.mock('@/lib/pushTokens', () => ({ listPushTokens: jest.fn().mockResolvedValue([]) }));
+jest.mock('@/lib/notifications/managerPushRecipients', () => ({ listManagerPushRecipients: jest.fn().mockResolvedValue([]) }));
 jest.mock('@/lib/env', () => ({ getEmailFrom: () => 'Kezek <synthetic@example.invalid>', getSiteOrigin: () => 'https://example.invalid', getTimezone: () => 'Asia/Bishkek',
     getWhatsAppBookingTemplateName: () => 'kezek_booking_confirmed',
     getWhatsAppBookingTemplateLanguage: (locale: string) => ({ default: 'ru', ky: 'ky_KG', en: 'en' } as Record<string, string>)[locale] }));

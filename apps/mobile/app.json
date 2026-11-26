@@ -17,7 +17,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "kg.kezek.app"
+      "bundleIdentifier": "kg.kezek.app",
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true
+      }
     },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
@@ -80,6 +83,11 @@
         }
       ]
     ],
+    "locales": {
+      "ru": "./locales/ru.json",
+      "ky": "./locales/ky.json",
+      "en": "./locales/en.json"
+    },
     "extra": {
       "eas": {
         "projectId": "f57c6b68-5764-4273-afe5-99f2d8fd5e89"

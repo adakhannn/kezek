@@ -59,3 +59,21 @@ describe('app.config Sentry uploads (MOB-07)', () => {
         expect(result.plugins?.[0]).toBe('expo-secure-store');
     });
 });
+
+describe('app.json native strings per language (C6)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const appJson = require('../../app.json') as { expo: { locales?: Record<string, string>; ios?: { infoPlist?: Record<string, unknown> } } };
+
+    test('the iOS location permission text and app name exist in ru, ky and en', () => {
+        expect(Object.keys(appJson.expo.locales ?? {}).sort()).toEqual(['en', 'ky', 'ru']);
+        expect(appJson.expo.ios?.infoPlist?.CFBundleAllowMixedLocalizations).toBe(true);
+        for (const file of Object.values(appJson.expo.locales ?? {})) {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const strings = require(`../../${file.replace('./', '')}`) as Record<string, string>;
+            expect(strings.CFBundleDisplayName).toBe('Kezek');
+            expect(strings.NSLocationWhenInUseUsageDescription).toMatch(/\S/);
+        }
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        expect((require('../../locales/ky.json') as Record<string, string>).NSLocationWhenInUseUsageDescription).toContain('геолокацияны');
+    });
+});

@@ -93,6 +93,8 @@ export type {
 // i18n хэлперы
 export {
     getServiceName,
+    getLocalizedText,
+    getPromotionTitle,
     formatStaffName,
     getStatusColorWeb,
     getStatusColorMobile,
@@ -101,6 +103,7 @@ export {
 } from './i18n';
 export type {
     ServiceName,
+    LocalizedText,
     StatusColorConfigWeb,
     StatusColorConfigMobile,
 } from './i18n';

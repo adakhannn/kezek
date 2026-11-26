@@ -160,7 +160,14 @@ export type ClientBookingServiceDto = {
 
 /** A promotion applied to the booking (bookings.promotion_applied, written by booking commands). */
 export type ClientBookingPromotionDto = {
+    /** The Russian title recorded by the booking command (promotion_title), else the promotion type. */
     title: string | null;
+    /**
+     * Kyrgyz and English titles of the promotion (branch_promotions.title_ky/title_en); null when
+     * not filled in or the promotion is no longer readable. Absent from older servers.
+     */
+    title_ky?: string | null;
+    title_en?: string | null;
     discount_percent: number | null;
     /** Amount after the promotion, in som; null when the command did not record it. */
     final_amount: number | null;
@@ -210,6 +217,9 @@ export type ClientBookingListItemDto = ClientBookingExtrasDto & {
     status: BookingStatus;
     service: {
         name_ru: string | null;
+        /** services.name_ky/name_en; absent from older servers. */
+        name_ky?: string | null;
+        name_en?: string | null;
     } | null;
     staff: {
         full_name: string | null;
@@ -240,6 +250,9 @@ export type ClientBookingDetailsDto = ClientBookingExtrasDto & {
     status: BookingStatus;
     service: {
         name_ru: string;
+        /** services.name_ky/name_en; absent from older servers. */
+        name_ky?: string | null;
+        name_en?: string | null;
         duration_min: number;
         price_from: number | null;
         price_to: number | null;

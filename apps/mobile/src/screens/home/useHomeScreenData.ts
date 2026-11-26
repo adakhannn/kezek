@@ -67,6 +67,8 @@ function mapBookingDto(booking: ClientBookingListItemDto): HomeBooking {
         service: booking.service
             ? {
                   name_ru: booking.service.name_ru ?? '',
+                  name_ky: booking.service.name_ky ?? null,
+                  name_en: booking.service.name_en ?? null,
               }
             : null,
     };

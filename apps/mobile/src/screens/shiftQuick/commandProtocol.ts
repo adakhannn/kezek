@@ -57,6 +57,20 @@ export function editShiftLedger(edit: ShiftItemEdit, t: Translate = russian): Sh
     return { ...edit.base, items: serializeShiftItems(items) };
 }
 
+/**
+ * The ledger without one manually added client (S4): the server's save command replaces the whole
+ * list, so a removal is the same revision-checked command as an edit. Booking rows stay read-only
+ * in the app, like their editing.
+ */
+export function removeShiftItem(base: ShiftLedgerSnapshot, itemId: string, t: Translate = russian): ShiftLedgerSnapshot {
+    if (!isShiftLedgerSnapshot(base)) throw new Error(t('staff.shiftQuick.refreshBeforeSave'));
+    const items = serializeShiftItems(base.items);
+    const index = items.findIndex(item => item.id === itemId);
+    if (index < 0) throw new Error(t('staff.shiftQuick.clientGone'));
+    if (items[index].bookingId) throw new Error(t('staff.shiftQuick.bookingRowReadOnly'));
+    return { ...base, items: items.filter((_, position) => position !== index) };
+}
+
 export function closeShiftLedger(base: ShiftLedgerSnapshot, t: Translate = russian): ShiftCloseCommand {
     if (!isShiftLedgerSnapshot(base)) throw new Error(t('staff.shiftQuick.refreshBeforeClose'));
     const items = serializeShiftItems(base.items);

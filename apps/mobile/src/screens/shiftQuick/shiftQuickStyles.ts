@@ -281,6 +281,9 @@ export const styles = StyleSheet.create({
     clientEditButtonText: {
         color: colors.accent.primary,
     },
+    clientDeleteButtonText: {
+        color: colors.status.danger,
+    },
     sourceChip: {
         flexDirection: 'row',
         alignItems: 'center',

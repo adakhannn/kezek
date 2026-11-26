@@ -1,24 +1,42 @@
 import { Alert, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { useLanguage } from '../i18n';
+import { useConfirm } from '../contexts/ConfirmContext';
+import { useToast } from '../contexts/ToastContext';
+import { useNow } from '../hooks/useNow';
+import { useLanguage, type MobileI18nKey } from '../i18n';
+import { getErrorMessage } from '../lib/errors';
 import { openWebAsCurrentUser } from '../lib/webLinks';
+import type { RootStackParamList } from '../navigation/types';
 import { DashboardScreenSections } from './dashboard/DashboardScreenSections';
+import type { ManagerBooking, ManagerBookingAction } from './dashboard/types';
 import { useDashboardScreenData } from './dashboard/useDashboardScreenData';
 import { styles } from './dashboard/dashboardScreenStyles';
 
-export default function DashboardScreen() {
-    const { t } = useLanguage();
-    const { businesses, isOwner, isLoading, loadError, refreshing, onRefresh } =
-        useDashboardScreenData();
+const ACTION_DONE: Record<ManagerBookingAction, MobileI18nKey> = {
+    confirm: 'manager.action.confirmed',
+    cancel: 'manager.action.cancelled',
+    attended: 'manager.action.markedAttended',
+    no_show: 'manager.action.markedNoShow',
+};
 
-    if (isLoading) {
+export default function DashboardScreen() {
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const { t } = useLanguage();
+    const { confirm } = useConfirm();
+    const { showToast } = useToast();
+    const { now } = useNow();
+    const data = useDashboardScreenData();
+
+    if (data.isLoading) {
         return <LoadingSpinner message={t('common.loading')} />;
     }
 
-    if (loadError) {
+    if (data.loadError) {
         return (
             <ScrollView style={styles.container}>
                 <EmptyState
@@ -28,7 +46,7 @@ export default function DashboardScreen() {
                     action={
                         <Button
                             title={t('staff.retry')}
-                            onPress={() => void onRefresh()}
+                            onPress={() => void data.onRefresh()}
                             variant="outline"
                             fullWidth
                         />
@@ -38,7 +56,7 @@ export default function DashboardScreen() {
         );
     }
 
-    if (!isOwner) {
+    if (!data.isOwner) {
         return (
             <ScrollView style={styles.container}>
                 <EmptyState
@@ -61,12 +79,58 @@ export default function DashboardScreen() {
         }
     };
 
+    // Cancelling and marking attendance cannot be undone in the app: both ask first.
+    const handleAction = async (booking: ManagerBooking, action: ManagerBookingAction) => {
+        if (action === 'cancel') {
+            const accepted = await confirm({
+                title: t('manager.cancelConfirm.title'),
+                message: t('manager.cancelConfirm.message'),
+                confirmLabel: t('manager.cancelConfirm.confirm'),
+                cancelLabel: t('manager.cancelConfirm.keep'),
+                variant: 'danger',
+            });
+            if (!accepted) return;
+        } else if (action === 'attended' || action === 'no_show') {
+            const accepted = await confirm({
+                title: t('manager.attendanceConfirm.title'),
+                message: t(action === 'attended' ? 'manager.attendanceConfirm.attended' : 'manager.attendanceConfirm.noShow'),
+                confirmLabel: t(action === 'attended' ? 'manager.action.attended' : 'manager.action.noShow'),
+                cancelLabel: t('manager.attendanceConfirm.back'),
+                variant: action === 'no_show' ? 'danger' : undefined,
+            });
+            if (!accepted) return;
+        }
+        try {
+            await data.runAction(booking.id, action);
+            showToast(t(ACTION_DONE[action]), 'success');
+        } catch (error) {
+            showToast(getErrorMessage(error, t('manager.action.error'), t), 'error');
+        }
+    };
+
     return (
         <DashboardScreenSections
-            businesses={businesses}
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            onBusinessPress={() => void openWebDashboard()}
+            businesses={data.businesses}
+            business={data.business}
+            onSelectBusiness={data.selectBusiness}
+            scope={data.scope}
+            onScopeChange={data.setScope}
+            bookings={data.bookings}
+            timezone={data.timezone}
+            now={now}
+            bookingsLoading={data.bookingsLoading}
+            bookingsError={data.bookingsError}
+            hasMore={data.hasMore}
+            isLoadingMore={data.isLoadingMore}
+            onLoadMore={data.loadMore}
+            onRetryBookings={data.retryBookings}
+            pendingBookingId={data.pendingBookingId}
+            onAction={(booking, action) => void handleAction(booking, action)}
+            // B1: a manager reads any booking of their business (viewer_role 'manager').
+            onOpenBooking={(id) => navigation.navigate('BookingDetails', { id })}
+            refreshing={data.refreshing}
+            onRefresh={data.onRefresh}
+            onOpenWeb={() => void openWebDashboard()}
         />
     );
 }

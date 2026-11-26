@@ -2,6 +2,7 @@ import {
     cancelMobileBooking,
     getMobileBookingDetails,
     listMobileBookings,
+    loadPromotionTitles,
     mapAppliedPackage,
     mapAppliedPromotion,
     parseMobileBookingsPage,
@@ -72,7 +73,7 @@ describe('mobileBookingsService', () => {
                     start_at: '2026-03-27T10:00:00Z',
                     end_at: '2026-03-27T11:00:00Z',
                     status: 'confirmed',
-                    service: { name_ru: 'Массаж' },
+                    service: { name_ru: 'Массаж', name_ky: null, name_en: null },
                     staff: { full_name: 'Master' },
                     branch: { name: 'Branch', address: 'Addr' },
                     business: { name: 'Biz', slug: 'biz', tz: 'Asia/Bishkek' },
@@ -193,6 +194,8 @@ describe('mobileBookingsService', () => {
                 benefit_applied: true,
                 service: {
                     name_ru: 'Массаж',
+                    name_ky: null,
+                    name_en: null,
                     duration_min: 60,
                     price_from: 1000,
                     price_to: 1500,
@@ -321,6 +324,91 @@ describe('mobileBookingsService', () => {
 
         expect(select.mock.calls[0][0]).toContain('business:businesses(name, slug, phones, tz)');
         expect(result.ok && result.data.business?.tz).toBe(expected);
+    });
+
+    describe('localized catalog names (C6)', () => {
+        /** The bookings query of a list/details client, plus branch_promotions for the ky/en titles. */
+        function withPromotions(bookingsClient: unknown, promotions: { data: unknown; error: unknown } | Error) {
+            const inFn = promotions instanceof Error
+                ? jest.fn().mockRejectedValue(promotions)
+                : jest.fn().mockResolvedValue(promotions);
+            const promoSelect = jest.fn().mockReturnValue({ in: inFn });
+            const bookingsQuery = (bookingsClient as { from: jest.Mock }).from();
+            const from = jest.fn((table: string) => (table === 'branch_promotions' ? { select: promoSelect } : bookingsQuery));
+            return { client: { from } as never, from, promoSelect, inFn };
+        }
+
+        test('list and details carry the ky/en service names', async () => {
+            const list = listClient([
+                {
+                    id: 'b-1', start_at: 's', end_at: 'e', status: 'confirmed',
+                    service: { name_ru: 'Стрижка', name_ky: 'Чач кыркуу', name_en: 'Haircut' },
+                    staff: null, branch: null, business: null,
+                },
+            ]);
+            const listed = await listMobileBookings({ client: list.client, userId: 'user-1', now: NOW });
+            expect(list.select.mock.calls[0][0]).toContain('service:services(name_ru, name_ky, name_en)');
+            expect(listed.ok && listed.data[0].service).toEqual({ name_ru: 'Стрижка', name_ky: 'Чач кыркуу', name_en: 'Haircut' });
+
+            const details = detailsClient({ ...baseDetailsRow, service: { ...baseDetailsRow.service, name_ky: 'Укалоо', name_en: 'Massage' } });
+            const read = await getMobileBookingDetails({ client: details.client, userId: 'user-1', bookingId: 'booking-1', now: NOW });
+            expect(details.select.mock.calls[0][0]).toContain('service:services(name_ru, name_ky, name_en, duration_min, price_from, price_to)');
+            expect(read.ok && read.data.service).toMatchObject({ name_ru: 'Массаж', name_ky: 'Укалоо', name_en: 'Massage' });
+        });
+
+        test('the applied promotion gets its ky/en titles from branch_promotions; the recorded ru title stays', async () => {
+            const list = listClient([
+                {
+                    id: 'b-1', start_at: 's', end_at: 'e', status: 'paid', service: null, staff: null, branch: null, business: null,
+                    promotion_applied: { promotion_id: 'promo-1', promotion_title: 'Скидка', discount_percent: 10 },
+                },
+                {
+                    id: 'b-2', start_at: 's', end_at: 'e', status: 'paid', service: null, staff: null, branch: null, business: null,
+                    promotion_applied: { promotion_id: 'promo-gone', promotion_title: 'Старая акция' },
+                },
+            ]);
+            const { client, from, promoSelect, inFn } = withPromotions(list.client, {
+                data: [{ id: 'promo-1', title_ky: 'Арзандатуу', title_en: ' ' }],
+                error: null,
+            });
+
+            const result = await listMobileBookings({ client, userId: 'user-1', now: NOW });
+
+            expect(from).toHaveBeenCalledWith('branch_promotions');
+            expect(promoSelect).toHaveBeenCalledWith('id, title_ky, title_en');
+            expect(inFn).toHaveBeenCalledWith('id', ['promo-1', 'promo-gone']);
+            if (!result.ok) throw new Error('expected ok');
+            expect(result.data[0].promotion).toEqual({
+                title: 'Скидка', title_ky: 'Арзандатуу', title_en: null, discount_percent: 10, final_amount: null,
+            });
+            // Not readable any more (inactive): the Russian title only, no ky/en fields.
+            expect(result.data[1].promotion).toEqual({ title: 'Старая акция', discount_percent: null, final_amount: null });
+        });
+
+        test('details localize the promotion too, and a failed title read keeps the booking readable', async () => {
+            const row = { ...baseDetailsRow, promotion_applied: { promotion_id: 'promo-1', promotion_title: 'Скидка' } };
+            const ok = withPromotions(detailsClient(row).client, {
+                data: [{ id: 'promo-1', title_ky: 'Арзандатуу', title_en: 'Discount' }],
+                error: null,
+            });
+            const read = await getMobileBookingDetails({ client: ok.client, userId: 'user-1', bookingId: 'booking-1', now: NOW });
+            expect(read.ok && read.data.promotion).toMatchObject({ title: 'Скидка', title_ky: 'Арзандатуу', title_en: 'Discount' });
+
+            const failing = withPromotions(detailsClient(row).client, new Error('network'));
+            const degraded = await getMobileBookingDetails({ client: failing.client, userId: 'user-1', bookingId: 'booking-1', now: NOW });
+            expect(degraded.ok && degraded.data.promotion).toEqual({ title: 'Скидка', discount_percent: null, final_amount: null });
+        });
+
+        test('no applied promotion means no promotion read; a read error means no titles', async () => {
+            const from = jest.fn();
+            expect(await loadPromotionTitles({ from } as never, [null, { promotion_title: 'no id' }])).toEqual(new Map());
+            expect(from).not.toHaveBeenCalled();
+
+            const errored = jest.fn().mockReturnValue({
+                select: jest.fn().mockReturnValue({ in: jest.fn().mockResolvedValue({ data: null, error: { message: 'denied' } }) }),
+            });
+            expect(await loadPromotionTitles({ from: errored } as never, [{ promotion_id: 7 }])).toEqual(new Map());
+        });
     });
 
     test('parses the page parameters with defaults and a cap', () => {

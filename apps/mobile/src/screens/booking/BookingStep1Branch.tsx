@@ -16,6 +16,7 @@ import RatingBadge from '../../components/ui/RatingBadge';
 import { useLanguage } from '../../i18n';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
+import { getPromotionTitle } from '../../utils/i18n';
 import BookingLoadError from './BookingLoadError';
 import { useBookingStep1Business } from './useBookingStep1Business';
 import type { BookingInitialData } from '../bookingFlow/useBookingScreenData';
@@ -122,7 +123,7 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
                                     <View key={promo.id} style={styles.promotionCard}>
                                         <Ionicons name="gift-outline" size={20} color={colors.status.success} />
                                         <Text style={styles.promotionText} numberOfLines={2}>
-                                            {promo.title_ru || t('booking.step1.promotionFallback')}
+                                            {getPromotionTitle(promo, t.locale) || t('booking.step1.promotionFallback')}
                                         </Text>
                                     </View>
                                 ))}

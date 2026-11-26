@@ -81,6 +81,7 @@ describe('home discovery', () => {
     beforeEach(() => {
         mockNavigate.mockClear();
         mockedApiRequest.mockImplementation(async (endpoint: string) => {
+            if (endpoint === '/mobile/categories') return mockTables.categories;
             if (endpoint.startsWith('/mobile/businesses?category=hair')) return [SALON];
             if (endpoint.startsWith('/mobile/businesses')) return [SALON, NAILS];
             return [];

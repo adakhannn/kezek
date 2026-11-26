@@ -14,7 +14,7 @@ import { StaffScreenSections } from './staff/StaffScreenSections';
 import { useStaffScreenData } from './staff/useStaffScreenData';
 import { styles } from './staff/staffScreenStyles';
 
-type StaffScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Shifts'>;
+type StaffScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function StaffScreen() {
     const navigation = useNavigation<StaffScreenNavigationProp>();
@@ -24,7 +24,9 @@ export default function StaffScreen() {
         staffRecords,
         needsSelection,
         selectStaff,
-        upcomingBookings,
+        tab,
+        setTab,
+        bookings,
         loadError,
         isLoading,
         refreshing,
@@ -102,11 +104,24 @@ export default function StaffScreen() {
     return (
         <StaffScreenSections
             staffInfo={staffInfo}
-            upcomingBookings={upcomingBookings}
+            list={{
+                tab,
+                onTabChange: setTab,
+                bookings: bookings.bookings,
+                isLoading: bookings.isLoading,
+                error: bookings.error,
+                hasMore: bookings.hasMore,
+                isLoadingMore: bookings.isLoadingMore,
+                onLoadMore: bookings.loadMore,
+                onRetry: () => void bookings.refetch(),
+                // B1: the master reads their own booking (viewer_role 'staff').
+                onOpenBooking: (id) => navigation.navigate('BookingDetails', { id }),
+            }}
             refreshing={refreshing}
             onRefresh={onRefresh}
             onOpenShiftQuick={() => navigation.navigate('ShiftQuick')}
             onOpenShifts={() => navigation.navigate('Shifts')}
+            onOpenSchedule={() => navigation.navigate('StaffSchedule')}
             onChangeBusiness={
                 staffRecords.length > 1
                     ? () => {

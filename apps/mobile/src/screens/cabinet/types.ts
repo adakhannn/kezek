@@ -3,7 +3,11 @@ import type {
     ClientBookingPackageDto,
     ClientBookingPromotionDto,
     ClientBookingReviewDto,
+    ClientBookingServiceDto,
 } from '@shared-client/types';
+
+import type { Locale } from '../../i18n';
+import { getServiceName } from '../../utils/i18n';
 
 export type Booking = {
     id: string;
@@ -12,6 +16,8 @@ export type Booking = {
     status: string;
     service: {
         name_ru: string;
+        name_ky?: string | null;
+        name_en?: string | null;
     } | null;
     staff: {
         full_name: string;
@@ -25,8 +31,8 @@ export type Booking = {
         /** businesses.tz; missing from older servers and old offline caches (Asia/Bishkek then). */
         tz?: string | null;
     } | null;
-    /** Names of all services of a multi-service booking (C11); empty for older servers and caches. */
-    serviceNames?: string[];
+    /** All services of a multi-service booking (C11), with their ky/en names; empty for older servers and caches. */
+    services?: ClientBookingServiceDto[];
     promotion?: ClientBookingPromotionDto | null;
     package?: ClientBookingPackageDto | null;
     review?: ClientBookingReviewDto | null;
@@ -42,6 +48,8 @@ export function mapClientBookingListItemToBooking(b: ClientBookingListItemDto): 
         service: b.service
             ? {
                   name_ru: b.service.name_ru ?? '',
+                  name_ky: b.service.name_ky ?? null,
+                  name_en: b.service.name_en ?? null,
               }
             : null,
         staff: b.staff
@@ -61,7 +69,7 @@ export function mapClientBookingListItemToBooking(b: ClientBookingListItemDto): 
                   tz: b.business.tz ?? null,
               }
             : null,
-        serviceNames: (b.services ?? []).map((item) => item.name_ru).filter(Boolean),
+        services: b.services ?? [],
         promotion: b.promotion ?? null,
         package: b.package ?? null,
         review: b.review ?? null,
@@ -69,8 +77,9 @@ export function mapClientBookingListItemToBooking(b: ClientBookingListItemDto): 
     };
 }
 
-/** The card title: all services of a multi-service booking, else the main service. */
-export function bookingTitle(booking: Booking): string | null {
-    if (booking.serviceNames && booking.serviceNames.length > 1) return booking.serviceNames.join(' + ');
-    return booking.service?.name_ru || null;
+/** The card title in the app language: all services of a multi-service booking, else the main service. */
+export function bookingTitle(booking: Booking, locale: Locale): string | null {
+    const names = (booking.services ?? []).map((item) => getServiceName(item, locale)).filter(Boolean);
+    if (names.length > 1) return names.join(' + ');
+    return getServiceName(booking.service, locale) || null;
 }

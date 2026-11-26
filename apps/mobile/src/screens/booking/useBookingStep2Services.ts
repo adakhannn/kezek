@@ -30,7 +30,7 @@ export function useBookingStep2Services({
 
             const { data, error: servicesError } = await supabase
                 .from('services')
-                .select('id, name_ru, duration_min, price_from, price_to, branch_id')
+                .select('id, name_ru, name_ky, name_en, duration_min, price_from, price_to, branch_id')
                 .eq('biz_id', bookingData.business.id)
                 .eq('branch_id', bookingData.branchId)
                 .eq('active', true)

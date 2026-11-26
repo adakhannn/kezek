@@ -49,7 +49,9 @@ function offlineItemToBooking(item: OfflineBooking): Booking {
         start_at: item.start_at,
         end_at: item.end_at,
         status: item.status,
-        service: item.service_name ? { name_ru: item.service_name } : null,
+        service: item.service_name
+            ? { name_ru: item.service_name, name_ky: item.service_name_ky ?? null, name_en: item.service_name_en ?? null }
+            : null,
         staff: item.staff_name ? { full_name: item.staff_name } : null,
         branch: item.branch_name ? { name: item.branch_name, address: '' } : null,
         business: item.business_name ? { name: item.business_name, tz: item.business_tz ?? null } : null,
@@ -73,6 +75,8 @@ async function loadBookingsPage(userId: string, offset: number): Promise<Booking
                 end_at: String(b.end_at),
                 branch_name: b.branch?.name ?? null,
                 service_name: b.service?.name_ru ?? null,
+                service_name_ky: b.service?.name_ky ?? null,
+                service_name_en: b.service?.name_en ?? null,
                 staff_name: b.staff?.full_name ?? null,
                 business_name: b.business?.name ?? null,
                 business_tz: b.business?.tz ?? null,

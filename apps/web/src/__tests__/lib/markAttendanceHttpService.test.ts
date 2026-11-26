@@ -22,6 +22,18 @@ jest.mock('@/lib/markAttendanceService', () => ({
   runMarkAttendance: jest.fn(),
 }));
 
+jest.mock('@/lib/requestAuthContext', () => ({
+  ...jest.requireActual('@/lib/requestAuthContext'),
+  resolveRequestAuthContext: jest.fn(),
+}));
+
+jest.mock('@/lib/businessManagerAccess', () => ({
+  managerAccessToBusiness: jest.fn(),
+}));
+
+import { managerAccessToBusiness } from '@/lib/businessManagerAccess';
+import { resolveRequestAuthContext } from '@/lib/requestAuthContext';
+
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -77,5 +89,52 @@ describe('markAttendanceHttpService', () => {
     });
     expect(response.status).toBe(200);
     expect(body.status).toBe('paid');
+  });
+
+  describe('Bearer caller (the app, O1)', () => {
+    const bookingRead = (row: unknown, error: unknown = null) => {
+      const builder = { select: jest.fn(() => builder), eq: jest.fn(() => builder), maybeSingle: jest.fn().mockResolvedValue({ data: row, error }) };
+      const admin = { from: jest.fn(() => builder), rpc: jest.fn() };
+      (getServiceClient as jest.Mock).mockReturnValue(admin);
+      return admin;
+    };
+    const bearerRequest = () => new Request('http://localhost/api/bookings/booking-1/mark-attendance', {
+      method: 'POST', headers: { Authorization: 'Bearer app-token' },
+    });
+
+    beforeEach(() => {
+      (resolveRequestAuthContext as jest.Mock).mockResolvedValue({ user: { id: 'user-1' }, supabase: {}, authSource: 'bearer' });
+      (validateRequest as jest.Mock).mockResolvedValue({ success: true, data: { attended: false } });
+      (runMarkAttendance as jest.Mock).mockResolvedValue({ ok: true, payload: { status: 'no_show' } });
+    });
+
+    test('a manager of the business of the booking marks it, acting for that business, without the cookie context', async () => {
+      const admin = bookingRead({ biz_id: 'biz-9' });
+      (managerAccessToBusiness as jest.Mock).mockResolvedValue('manager');
+      const response = await runMarkAttendanceHttp(bearerRequest(), {});
+      expect(response.status).toBe(200);
+      expect(getBizContextForManagers).not.toHaveBeenCalled();
+      expect(managerAccessToBusiness).toHaveBeenCalledWith(admin, 'user-1', 'biz-9');
+      expect(runMarkAttendance).toHaveBeenCalledWith(expect.objectContaining({ bizId: 'biz-9', actorId: 'user-1', attended: false }));
+    });
+
+    test('someone who does not manage the business gets 403 and nothing is marked', async () => {
+      bookingRead({ biz_id: 'biz-9' });
+      (managerAccessToBusiness as jest.Mock).mockResolvedValue('none');
+      const response = await runMarkAttendanceHttp(bearerRequest(), {});
+      expect(response.status).toBe(403);
+      expect(runMarkAttendance).not.toHaveBeenCalled();
+    });
+
+    test('a missing booking is 404, a failed read 500, an invalid token 401', async () => {
+      bookingRead(null);
+      expect((await runMarkAttendanceHttp(bearerRequest(), {})).status).toBe(404);
+      bookingRead(null, { message: 'down' });
+      expect((await runMarkAttendanceHttp(bearerRequest(), {})).status).toBe(500);
+      const { NextResponse: Response } = jest.requireActual('next/server');
+      (resolveRequestAuthContext as jest.Mock).mockResolvedValue(Response.json({ ok: false }, { status: 401 }));
+      expect((await runMarkAttendanceHttp(bearerRequest(), {})).status).toBe(401);
+      expect(runMarkAttendance).not.toHaveBeenCalled();
+    });
   });
 });

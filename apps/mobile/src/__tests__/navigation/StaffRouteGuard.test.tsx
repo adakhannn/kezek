@@ -33,6 +33,7 @@ describe('StaffRouteGuard', () => {
     test('renders the protected screen for staff users', () => {
         mockedUseUserRole.mockReturnValue({
             isOwner: false,
+            isBusinessManager: false,
             isStaff: true,
             isSuperAdmin: false,
             isLoading: false,
@@ -48,6 +49,7 @@ describe('StaffRouteGuard', () => {
     test('does not render protected content while role lookup is loading', () => {
         mockedUseUserRole.mockReturnValue({
             isOwner: false,
+            isBusinessManager: false,
             isStaff: false,
             isSuperAdmin: false,
             isLoading: true,
@@ -64,6 +66,7 @@ describe('StaffRouteGuard', () => {
     test('redirects non-staff users to Home without rendering protected content', async () => {
         mockedUseUserRole.mockReturnValue({
             isOwner: true,
+            isBusinessManager: true,
             isStaff: false,
             isSuperAdmin: false,
             isLoading: false,

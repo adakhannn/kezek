@@ -26,6 +26,8 @@ export type HomeBooking = {
     } | null;
     service: {
         name_ru: string | null;
+        name_ky?: string | null;
+        name_en?: string | null;
     } | null;
 };
 

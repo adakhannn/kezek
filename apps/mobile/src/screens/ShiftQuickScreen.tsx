@@ -50,6 +50,7 @@ export default function ShiftQuickScreen() {
         closeShiftMutation,
         addClientMutation,
         updateClientMutation,
+        deleteClientMutation,
         onRefresh,
     } = useShiftQuickScreenData();
 
@@ -92,6 +93,31 @@ export default function ShiftQuickScreen() {
         setNewServiceAmount(item.serviceAmount ? String(item.serviceAmount) : '');
         setNewConsumablesAmount(item.consumablesAmount ? String(item.consumablesAmount) : '');
         setAddClientError(null);
+    };
+
+    // S4: remove a client added by mistake. The same revision-checked ledger command as an edit:
+    // offline it waits in the queue, a conflict goes to review, booking rows stay read-only.
+    const handleDeleteClient = async (item: ShiftItem) => {
+        if (item.bookingId || !item.id) return;
+        const itemId = item.id;
+        let base: ShiftLedgerSnapshot;
+        try { base = captureShiftLedger(financeData, t); }
+        catch (error) { showToast(getErrorMessage(error, t('staff.shiftQuick.refreshShift'), t), 'error'); return; }
+        const accepted = await confirm({
+            title: t('staff.shiftQuick.deleteConfirmTitle'),
+            message: t('staff.shiftQuick.deleteConfirmMessage', { client: item.clientName || t('staff.client') }),
+            confirmLabel: t('staff.shiftQuick.delete'),
+            cancelLabel: t('staff.cancel'),
+            variant: 'danger',
+        });
+        if (!accepted) return;
+        deleteClientMutation.mutate({ base, itemId }, {
+            onSuccess: (result) => {
+                if (editingItemId === itemId) resetAddClientForm();
+                showToast(t(result.queued ? 'staff.shiftQuick.deleteQueued' : 'staff.shiftQuick.deleteSuccess'), result.queued ? 'warning' : 'success');
+            },
+            onError: (mutationError) => showToast(getErrorMessage(mutationError, t('staff.shiftQuick.deleteError'), t), 'error'),
+        });
     };
 
     const handleOpenShift = () => {
@@ -286,6 +312,7 @@ export default function ShiftQuickScreen() {
             isOpening={openShiftMutation.isPending}
             isClosing={closeShiftMutation.isPending}
             isAddingClient={addClientMutation.isPending || updateClientMutation.isPending}
+            deletingClient={deleteClientMutation.isPending}
             metrics={metrics}
             addClientForm={{
                 showAddClient,
@@ -318,6 +345,7 @@ export default function ShiftQuickScreen() {
                 submit: handleSaveClient,
             }}
             onEditClient={startEditClient}
+            onDeleteClient={(item) => void handleDeleteClient(item)}
             onRefresh={onRefresh}
             onOpenShift={handleOpenShift}
             onCloseShift={handleCloseShift}

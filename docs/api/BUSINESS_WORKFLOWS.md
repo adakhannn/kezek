@@ -211,7 +211,7 @@ SQL `read_staff_schedule` дополнительно проверяет поря
 
 | Часть | Контракт |
 | --- | --- |
-| Доступ/вход | Staff cookie; календарные from/to и defaults как выше, staffId из активной записи пользователя |
+| Доступ/вход | Staff cookie сайта или Bearer приложения (S3, 26 ноября 2026: [getStaffContextForRequest](../../apps/web/src/lib/authBiz.ts)); карточка — заголовок `X-Kezek-Staff-Id`, иначе запомненная (cookie) или единственная. Календарные from/to и defaults как выше. Пока модель выключена, 503 возвращается до auth; приложение тогда читает датированные `staff_schedule_rules`, как страница сайта |
 | Успех | `data: ScheduleSnapshot` |
 | Ошибки | Те же ошибки schedule; draftKind явно даёт 403 forbidden. Вызов не предоставляет staff публикацию |
 | Эффекты | Чтение расписания; получение staff-контекста может синхронизировать отсутствующую роль staff |

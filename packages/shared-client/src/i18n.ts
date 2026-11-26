@@ -15,10 +15,16 @@ export { transliterate };
  * Тип для услуги с многоязычными названиями
  */
 export type ServiceName = {
-    name_ru: string;
+    /** null only in partial reads (offline copies, older servers); the other names are used then. */
+    name_ru: string | null;
     name_ky?: string | null;
     name_en?: string | null;
 };
+
+function nonBlank(value: string | null | undefined): string | null {
+    const trimmed = typeof value === 'string' ? value.trim() : '';
+    return trimmed === '' ? null : trimmed;
+}
 
 /**
  * Тип статуса бронирования
@@ -45,18 +51,58 @@ export function getServiceName(service: ServiceName | string | null | undefined,
         if (locale === 'en') return transliterate(service);
         return service;
     }
-    
+
+    // Пустая строка или пробелы считаются незаполненным переводом.
+    const ru = nonBlank(service.name_ru);
+    const ky = nonBlank(service.name_ky);
+    const en = nonBlank(service.name_en);
+
     // Для киргизского языка: приоритет name_ky, fallback на name_ru
-    if (locale === 'ky' && service.name_ky) return service.name_ky;
-    
+    if (locale === 'ky' && ky) return ky;
+
     // Для английского языка: приоритет name_en, fallback на транслитерацию name_ru
     if (locale === 'en') {
-        if (service.name_en) return service.name_en;
-        return transliterate(service.name_ru);
+        if (en) return en;
+        const source = ru ?? ky;
+        return source ? transliterate(source) : '';
     }
-    
-    // Для русского языка и всех остальных случаев: возвращаем name_ru
-    return service.name_ru;
+
+    // Для русского языка и всех остальных случаев: name_ru (или другое заполненное название)
+    return ru ?? ky ?? en ?? '';
+}
+
+/** Catalog text in three languages (promotion titles, descriptions, plan names). */
+export type LocalizedText = {
+    ru: string | null | undefined;
+    ky?: string | null;
+    en?: string | null;
+};
+
+/**
+ * Catalog text in the interface language with the web's rule: the ky/en text when the business
+ * filled it in, else the Russian one (blank counts as missing; no transliteration, as the web
+ * promotions page). Without a Russian text another filled language is shown; '' when none.
+ *
+ * @example
+ * getLocalizedText({ ru: 'Скидка', ky: 'Арзандатуу', en: null }, 'en') // 'Скидка'
+ */
+export function getLocalizedText(text: LocalizedText | null | undefined, locale: 'ru' | 'ky' | 'en'): string {
+    if (!text) return '';
+    const ru = nonBlank(text.ru);
+    const ky = nonBlank(text.ky);
+    const en = nonBlank(text.en);
+    if (locale === 'ky' && ky) return ky;
+    if (locale === 'en' && en) return en;
+    return ru ?? ky ?? en ?? '';
+}
+
+/** Title of a promotion (branch_promotions.title_*) in the interface language, ru fallback. */
+export function getPromotionTitle(
+    promotion: { title_ru?: string | null; title_ky?: string | null; title_en?: string | null } | null | undefined,
+    locale: 'ru' | 'ky' | 'en',
+): string {
+    if (!promotion) return '';
+    return getLocalizedText({ ru: promotion.title_ru, ky: promotion.title_ky, en: promotion.title_en }, locale);
 }
 
 /**

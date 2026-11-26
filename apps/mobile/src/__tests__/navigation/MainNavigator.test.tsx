@@ -56,6 +56,7 @@ describe('MainNavigator', () => {
         mockNavigatorSpy?.mockClear();
         mockedUseUserRole.mockReturnValue({
             isOwner: true,
+            isBusinessManager: true,
             isStaff: true,
             isSuperAdmin: false,
             isLoading: false,
@@ -106,6 +107,7 @@ describe('MainNavigator', () => {
     test('hides role-specific tabs for a client-only user', () => {
         mockedUseUserRole.mockReturnValue({
             isOwner: false,
+            isBusinessManager: false,
             isStaff: false,
             isSuperAdmin: false,
             isLoading: false,
@@ -123,6 +125,7 @@ describe('MainNavigator', () => {
     test('shows only the owner tab for an owner-only user', () => {
         mockedUseUserRole.mockReturnValue({
             isOwner: true,
+            isBusinessManager: true,
             isStaff: false,
             isSuperAdmin: false,
             isLoading: false,
@@ -138,8 +141,40 @@ describe('MainNavigator', () => {
     test('shows only the staff tab for a staff-only user', () => {
         mockedUseUserRole.mockReturnValue({
             isOwner: false,
+            isBusinessManager: false,
             isStaff: true,
             isSuperAdmin: false,
+            isLoading: false,
+            loadError: null,
+        });
+
+        renderWithProviders(<MainNavigator />);
+
+        expect(screen.queryByText('Dashboard')).toBeNull();
+        expect(screen.getByText('Staff')).toBeTruthy();
+    });
+
+    test('an admin or manager of a business without owning one gets the Business tab (O3/B10)', () => {
+        mockedUseUserRole.mockReturnValue({
+            isOwner: false,
+            isBusinessManager: true,
+            isStaff: false,
+            isSuperAdmin: false,
+            isLoading: false,
+            loadError: null,
+        });
+
+        renderWithProviders(<MainNavigator />);
+
+        expect(screen.getByText('Dashboard')).toBeTruthy();
+    });
+
+    test('a super admin who is a master sees the staff tab and no business tab of their own (O3)', () => {
+        mockedUseUserRole.mockReturnValue({
+            isOwner: false,
+            isBusinessManager: false,
+            isStaff: true,
+            isSuperAdmin: true,
             isLoading: false,
             loadError: null,
         });

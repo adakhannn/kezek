@@ -1,5 +1,6 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Linking } from 'react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
 
@@ -7,6 +8,7 @@ import { LanguageProvider } from '../../i18n';
 import { setRequestLocale } from '../../i18n/locale';
 import { LOCALE_STORAGE_KEY } from '../../i18n/localeStorage';
 import StaffScreen from '../../screens/StaffScreen';
+import { STAFF_BOOKINGS_PAGE_SIZE } from '../../screens/staff/useStaffBookings';
 import { supabase } from '../../lib/supabase';
 import { staffCard, staffCardsQuery } from '../staffCards';
 import { createTestQueryClient } from '../testQueryClient';
@@ -55,28 +57,28 @@ describe('StaffScreen', () => {
         return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
     };
 
-    const mockBookingsQuery = (data: unknown[], error: Error | null = null) => ({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        in: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue({ data, error }),
-    });
+    type BookingsBuilder = Record<'select' | 'eq' | 'neq' | 'gte' | 'lt' | 'order' | 'range', jest.Mock>;
+    const mockBookingsQuery = (data: unknown[], error: Error | null = null): BookingsBuilder => {
+        const builder = {} as BookingsBuilder;
+        for (const method of ['select', 'eq', 'neq', 'gte', 'lt', 'order'] as const) builder[method] = jest.fn(() => builder);
+        builder.range = jest.fn(async () => ({ data, error }));
+        return builder;
+    };
 
     // Upcoming bookings of the card named by the staff_id filter.
     const mockBookingsByStaff = (byStaff: Record<string, unknown[]>) => {
         let staffId = '';
-        const builder: Record<'select' | 'eq' | 'in' | 'gte' | 'order' | 'limit', jest.Mock> = {
+        const builder: BookingsBuilder = {
             select: jest.fn(() => builder),
             eq: jest.fn((column: string, value: string) => {
                 if (column === 'staff_id') staffId = value;
                 return builder;
             }),
-            in: jest.fn(() => builder),
+            neq: jest.fn(() => builder),
             gte: jest.fn(() => builder),
+            lt: jest.fn(() => builder),
             order: jest.fn(() => builder),
-            limit: jest.fn(async () => ({ data: byStaff[staffId] ?? [], error: null })),
+            range: jest.fn(async () => ({ data: byStaff[staffId] ?? [], error: null })),
         };
         return builder;
     };
@@ -188,7 +190,7 @@ describe('StaffScreen', () => {
         expect(await screen.findByText(TEXT.upcomingTitle)).toBeTruthy();
         expect(await screen.findByText(TEXT.serviceName)).toBeTruthy();
         expect(await screen.findByText('Клиент: Client One')).toBeTruthy();
-        expect(await screen.findByText('+996555111222')).toBeTruthy();
+        expect(await screen.findByText('+996 555 111 222')).toBeTruthy();
         // A single business offers nothing to switch to.
         expect(screen.queryByText(TEXT.changeBusiness)).toBeNull();
     });
@@ -332,6 +334,92 @@ describe('StaffScreen', () => {
             ).toBeTruthy();
             expect(screen.queryByText('Could not select the business. Please try again.')).toBeNull();
             expect(secureStorage.get(SELECTION_KEY)).toBe('staff-a');
+        });
+    });
+
+    describe('bookings list (S1)', () => {
+        const oneCard = (bookings: (tab: 'upcoming' | 'past', offset: number) => unknown[]) => {
+            const builders: BookingsBuilder[] = [];
+            mockedSupabase.from.mockImplementation((table: string) => {
+                if (table === 'staff') return staffCardsQuery([staffCard({ id: 'staff-1', business: { id: 'biz-1', name: 'Low Fade', tz: 'Asia/Bishkek' } })]);
+                let tab: 'upcoming' | 'past' = 'upcoming';
+                const builder = mockBookingsQuery([]);
+                builder.lt.mockImplementation(() => { tab = 'past'; return builder; });
+                builder.range.mockImplementation(async (from: number) => ({ data: bookings(tab, from), error: null }));
+                builders.push(builder);
+                return builder;
+            });
+            return builders;
+        };
+
+        test('upcoming: not cancelled and not yet ended, soonest first; past: ended, latest first', async () => {
+            const builders = oneCard((tab) => tab === 'upcoming'
+                ? [booking('up-1', 'Будущая стрижка')]
+                : [{ ...booking('past-1', 'Прошлая стрижка'), status: 'no_show' }]);
+
+            renderWithProviders(<StaffScreen />);
+
+            expect(await screen.findByText('Будущая стрижка')).toBeTruthy();
+            expect(builders[0].neq).toHaveBeenCalledWith('status', 'cancelled');
+            expect(builders[0].gte).toHaveBeenCalledWith('end_at', expect.any(String));
+            expect(builders[0].order).toHaveBeenCalledWith('start_at', { ascending: true });
+            expect(builders[0].range).toHaveBeenCalledWith(0, STAFF_BOOKINGS_PAGE_SIZE);
+
+            fireEvent.press(screen.getByText('Прошедшие'));
+            expect(await screen.findByText('Прошлая стрижка')).toBeTruthy();
+            expect(screen.getByText('Не пришёл')).toBeTruthy();
+            const past = builders[builders.length - 1];
+            expect(past.lt).toHaveBeenCalledWith('end_at', expect.any(String));
+            expect(past.neq).not.toHaveBeenCalled();
+            expect(past.order).toHaveBeenCalledWith('start_at', { ascending: false });
+        });
+
+        test('pages through the list with Показать ещё', async () => {
+            oneCard((_tab, offset) => offset === 0
+                ? Array.from({ length: STAFF_BOOKINGS_PAGE_SIZE + 1 }, (_, index) => booking('b-' + index, 'Услуга ' + index))
+                : [booking('b-last', 'Последняя услуга')]);
+
+            renderWithProviders(<StaffScreen />);
+
+            expect(await screen.findByText('Услуга 0')).toBeTruthy();
+            expect(screen.queryByText('Услуга ' + STAFF_BOOKINGS_PAGE_SIZE)).toBeNull();
+            fireEvent.press(screen.getByText('Показать ещё'));
+            expect(await screen.findByText('Последняя услуга')).toBeTruthy();
+            expect(screen.queryByText('Показать ещё')).toBeNull();
+        });
+
+        test('a booking opens its details; the phone is callable and opens WhatsApp', async () => {
+            const openUrl = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+            oneCard(() => [{ ...booking('b-1', 'Стрижка'), client_name: 'Айбек', client_phone: '+996 555 111 222' }]);
+
+            renderWithProviders(<StaffScreen />);
+
+            fireEvent.press(await screen.findByTestId('staff-booking-b-1'));
+            expect(mockNavigate).toHaveBeenCalledWith('BookingDetails', { id: 'b-1' });
+
+            fireEvent.press(screen.getByText('Позвонить'));
+            await waitFor(() => expect(openUrl).toHaveBeenCalledWith('tel:+996555111222'));
+            fireEvent.press(screen.getByText('WhatsApp'));
+            await waitFor(() => expect(openUrl).toHaveBeenCalledWith('https://wa.me/996555111222'));
+        });
+
+        test('a failed bookings read is shown in the list, with retry, and the workspace stays', async () => {
+            mockedSupabase.from.mockImplementation((table: string) => table === 'staff'
+                ? staffCardsQuery([staffCard({ id: 'staff-1' })])
+                : mockBookingsQuery([], new Error('bookings down')));
+
+            renderWithProviders(<StaffScreen />);
+
+            expect(await screen.findByText('Не удалось загрузить записи')).toBeTruthy();
+            expect(screen.getByText(TEXT.shiftAction)).toBeTruthy();
+            expect(screen.queryByText('Нет предстоящих записей')).toBeNull();
+        });
+
+        test('Моё расписание opens the schedule', async () => {
+            oneCard(() => []);
+            renderWithProviders(<StaffScreen />);
+            fireEvent.press(await screen.findByText('Моё расписание'));
+            expect(mockNavigate).toHaveBeenCalledWith('StaffSchedule');
         });
     });
 });

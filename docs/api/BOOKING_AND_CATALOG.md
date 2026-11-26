@@ -2,7 +2,7 @@
 
 Статус: reference. Владелец: engineering. Статическая сверка: **2026-11-01**. Runtime: **NOT_RUN**.
 
-Этот справочник описывает 15 методов из соответствующих разделов прежнего общего справочника API. Контракт проверен по цепочке route → HTTP adapter → service → используемый validator; для расписания отдельно указана зависимость от SQL и флага. Наличие кода не доказывает, что миграции применены или что сценарий работает в развёрнутой среде. HTTP-запросы, тесты и изменения данных при подготовке документа не выполнялись.
+Этот справочник описывает 19 методов из соответствующих разделов прежнего общего справочника API. Контракт проверен по цепочке route → HTTP adapter → service → используемый validator; для расписания отдельно указана зависимость от SQL и флага. Наличие кода не доказывает, что миграции применены или что сценарий работает в развёрнутой среде. HTTP-запросы, тесты и изменения данных при подготовке документа не выполнялись.
 
 Навигация: [общий справочник API](../../API_DOCUMENTATION.md), [индекс документации](../README.md), [текущий статус проекта](../PROJECT_STATUS.md), [правила проверок](../../TESTING_GUIDE.md). Этот документ не меняет приёмку WEB и не возобновляет закрытую кампанию.
 
@@ -132,7 +132,7 @@ HTTP RPC deadline — 10 секунд, SQL lock timeout — 5 секунд, rout
 
 Сверено по исходникам и изолированным API/SQL-тестам 10 ноября 2026. Источники: [route](../../apps/web/src/app/api/bookings/[id]/mark-attendance/route.ts) → [HTTP](../../apps/web/src/lib/markAttendanceHttpService.ts) → [service](../../apps/web/src/lib/markAttendanceService.ts) → [атомарная команда](../../supabase/migrations/20261110130000_booking_attendance_command.sql).
 
-Доступ: business manager context; limiter normal. ID пути проверяется как UUID. Строгая [markAttendanceSchema](../../apps/web/src/lib/validation/schemas.ts) принимает только обязательный boolean attended. Сервер передаёт verified userId, bizId и bookingId service-only RPC; NULL actor или чужой бизнес запрещены в SQL.
+Доступ: business manager context (cookie-сессия сайта); limiter normal. С `Authorization: Bearer` (мобильное приложение, O1, 26 ноября 2026) бизнес берётся из брони (service role), и пользователь должен им управлять по [managerAccessToBusiness](../../apps/web/src/lib/businessManagerAccess.ts): нет брони — 404 not_found, не управляет — 403 forbidden, ошибка чтения — 500, неверный токен — 401; у приложения нет cookie «текущего бизнеса». ID пути проверяется как UUID. Строгая [markAttendanceSchema](../../apps/web/src/lib/validation/schemas.ts) принимает только обязательный boolean attended. Сервер передаёт verified userId, bizId и bookingId service-only RPC; NULL actor или чужой бизнес запрещены в SQL.
 
 Для изменения нужен hold/confirmed и start_at строго раньше момента команды. attended=true выбирает paid, false — no_show. Совпадающий финальный статус возвращает сохранённый receipt без нового списания. Противоположный финальный статус, cancelled, существующая противоречивая позиция ledger или использованная льгота требуют ручной финансовой проверки (409). Paid означает отметку посещения; команда не создаёт позицию смены или кассовый платёж.
 
@@ -166,13 +166,24 @@ Browser сохраняет только request ID под хешем actor/actio
 
 Источники: [route](../../apps/web/src/app/api/bookings/[id]/cancel/route.ts) → [HTTP](../../apps/web/src/lib/bookingCancelHttpService.ts) → [route service](../../apps/web/src/lib/bookingCancelRouteService.ts) → [server cancellation](../../apps/web/src/lib/serverCancelBookingService.ts).
 
-Доступ: cookie-сессия. Разрешён владелец брони (`client_id === user.id`) либо пользователь, чей management context подтверждает принадлежность брони бизнесу. `[id]` — UUID; тело не читается. Поле `reason` не сохраняется и не является частью реализованного входа. Локального limiter wrapper нет.
+Доступ: cookie-сессия либо `Authorization: Bearer` (мобильное приложение, O1, 26 ноября 2026; [createRequestSupabaseClient](../../apps/web/src/lib/requestAuthContext.ts)). Разрешён владелец брони (`client_id === user.id`) либо управляющий: с cookie — пользователь, чей management context подтверждает принадлежность брони бизнесу; с Bearer — владелец, admin или manager бизнеса брони ([managerAccessToBusiness](../../apps/web/src/lib/businessManagerAccess.ts)), без cookie «текущего бизнеса». `[id]` — UUID; тело не читается. Поле `reason` не сохраняется и не является частью реализованного входа. Локального limiter wrapper нет.
 
 Успех: `{"ok":true}`; `booking_id`, `cancelled` и `already_cancelled` наружу не добавляются. Уже отменённая бронь возвращает тот же успех без повторной отмены.
 
 Ошибки: невалидный UUID — `400 / validation`; отсутствие пользователя — **`403 / forbidden`**; отсутствующая/невидимая при выборке бронь — `404 / not_found`; нет доступа — `403 / forbidden`. Отмена paid, записи с позицией смены или применённой льготой возвращает `409 / financial_reversal_required` с указанием обратиться в организацию для финансового возврата. Другой недопустимый статус — `409 / not_cancellable`, конкурентная смена принадлежности — `409 / booking_changed`. Клиент брони отменяет её только до начала (`start_at > now()`, R25-10, [20261125150000](../../supabase/migrations/20261125150000_client_cancel_cutoff.sql)): после начала — `409 / booking_already_started`; владелец, менеджер, админ филиала, супер-админ и мастер брони отменяют и после начала (так же клиент, который сам управляет этим бизнесом). Прочие RPC-ошибки проходят общий mapper.
 
 Эффекты: проверяемый `cancel_booking` меняет только hold/confirmed; DB trigger записывает notification outbox в той же транзакции. Последующий dispatch повторяет enqueue с тем же ключом. Прямых UPDATE fallback нет. Shared SQL helper блокирует staff→booking и проверяет verified actor/точный филиал/назначенного сотрудника; browser DML таблицы отозван. Ошибка финансовой проверки не меняет статус, ledger, льготы и outbox. Доступность выбранной брони также зависит от видимости в cookie-клиенте до management fallback.
+
+<!-- api-contract: POST /api/bookings/[id]/confirm -->
+### POST `/api/bookings/[id]/confirm`
+
+Сверено по исходникам и jest-тестам 26 ноября 2026 ([mobileManagerHttpService.test.ts](../../apps/web/src/__tests__/lib/mobileManagerHttpService.test.ts)); на развёрнутом окружении не выполнялось. Источники: [route](../../apps/web/src/app/api/bookings/[id]/confirm/route.ts) → [HTTP](../../apps/web/src/lib/mobileManagerHttpService.ts) → `confirm_booking` ([20261110123000](../../supabase/migrations/20261110123000_service_only_booking_commands.sql)).
+
+Подтверждение записи в ожидании управляющим (O1: вкладка «Бизнес» приложения; сайт подтверждает тем же RPC из браузера). Auth — Bearer, иначе cookie. Разрешено владельцу, admin или manager бизнеса брони ([managerAccessToBusiness](../../apps/web/src/lib/businessManagerAccess.ts), чтение брони service role); клиенту брони и мастеру — нет. `[id]` — UUID; тело не читается. Limiter `normal`.
+
+Успех: `{"ok":true,"data":{"confirmed":true,"alreadyConfirmed":false}}`; уже confirmed — `alreadyConfirmed: true` без повторной команды. Ошибки: `401 / auth`; `400 / validation` (UUID); `404 / not_found` — брони нет; `403 / forbidden` — не управляет бизнесом или RPC отказал (`BOOKING_FORBIDDEN`); `409 / not_confirmable` — статус не hold (paid, no_show, cancelled); `409 / booking_changed` — бронь изменилась во время команды; `500 / internal` — ошибка чтения или неизвестная ошибка RPC; 429.
+
+Эффекты: `confirm_booking` выполняется от имени пользователя (проверка доступа в SQL повторяется) и переводит hold → confirmed; DB trigger ставит уведомление `confirm` в outbox в той же транзакции, затем dispatch повторяет enqueue с тем же ключом. Push получают клиент, мастер, владелец и управляющие бизнеса ([notifications README](../../apps/web/src/lib/notifications/README.md#push-в-мобильном-приложении)).
 
 ## Филиалы
 

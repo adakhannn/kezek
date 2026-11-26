@@ -15,6 +15,8 @@ import type { DbQueryClient } from '@/lib/supabaseTypes';
 
 type BookingListService = {
     name_ru: string | null;
+    name_ky?: string | null;
+    name_en?: string | null;
 };
 
 type BookingListStaff = {
@@ -64,6 +66,8 @@ type BookingListRow = {
 
 type BookingDetailsService = {
     name_ru: string | null;
+    name_ky?: string | null;
+    name_en?: string | null;
     duration_min: number | null;
     price_from: number | null;
     price_to: number | null;
@@ -144,14 +148,47 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
 }
 
+/** Kyrgyz/English titles of applied promotions by branch_promotions.id. */
+export type PromotionTitles = Map<string, { title_ky: string | null; title_en: string | null }>;
+
+function appliedPromotionId(value: unknown): string | null {
+    const id = asRecord(value)?.promotion_id;
+    if (typeof id === 'number' && Number.isFinite(id)) return String(id);
+    return toTextOrNull(id);
+}
+
+/**
+ * C6: promotion_applied records only the Russian title, so the Kyrgyz and English ones come from
+ * branch_promotions. RLS limits the read to active promotions (and the caller's own business); an
+ * unreadable promotion or a failed read keeps the recorded Russian title, never fails the answer.
+ */
+export async function loadPromotionTitles(client: MobileBookingsClient, values: unknown[]): Promise<PromotionTitles> {
+    const titles: PromotionTitles = new Map();
+    const ids = [...new Set(values.map(appliedPromotionId).filter((id): id is string => id !== null))];
+    if (ids.length === 0) return titles;
+    try {
+        const { data, error } = await client.from('branch_promotions').select('id, title_ky, title_en').in('id', ids);
+        if (error || !Array.isArray(data)) return titles;
+        for (const row of data as Array<{ id: unknown; title_ky?: unknown; title_en?: unknown }>) {
+            titles.set(String(row.id), { title_ky: toTextOrNull(row.title_ky), title_en: toTextOrNull(row.title_en) });
+        }
+    } catch {
+        // Localized titles are optional: the recorded Russian title stays.
+    }
+    return titles;
+}
+
 /** bookings.promotion_applied as the web cabinet shows it (title, discount, final amount). */
-export function mapAppliedPromotion(value: unknown): ClientBookingPromotionDto | null {
+export function mapAppliedPromotion(value: unknown, titles?: PromotionTitles): ClientBookingPromotionDto | null {
     const record = asRecord(value);
     if (!record) return null;
+    const promotionId = appliedPromotionId(record);
+    const localized = promotionId ? titles?.get(promotionId) : undefined;
     return {
         title: toTextOrNull(record.promotion_title) ?? toTextOrNull(record.promotion_type),
         discount_percent: toNumberOrNull(record.discount_percent),
         final_amount: toNumberOrNull(record.final_amount),
+        ...(localized ? { title_ky: localized.title_ky, title_en: localized.title_en } : {}),
     };
 }
 
@@ -233,7 +270,7 @@ export async function listMobileBookings({
                         status,
                         promotion_applied,
                         subscription_applied,
-                        service:services(name_ru),
+                        service:services(name_ru, name_ky, name_en),
                         booking_services(order_index, duration_min, service:services(name_ru, name_ky, name_en, duration_min)),
                         staff:staff(full_name),
                         branch:branches(name,address),
@@ -259,6 +296,7 @@ export async function listMobileBookings({
     const allRows = (data ?? []) as BookingListRow[];
     const hasMore = allRows.length > limit;
     const rows = hasMore ? allRows.slice(0, limit) : allRows;
+    const promotionTitles = await loadPromotionTitles(client, rows.map((row) => row.promotion_applied));
 
     return {
         ok: true,
@@ -284,6 +322,8 @@ export async function listMobileBookings({
                 service: service
                     ? {
                           name_ru: service.name_ru ?? null,
+                          name_ky: service.name_ky ?? null,
+                          name_en: service.name_en ?? null,
                       }
                     : null,
                 staff: staff
@@ -305,7 +345,7 @@ export async function listMobileBookings({
                       }
                     : null,
                 ...(services.length > 0 ? { services } : {}),
-                promotion: mapAppliedPromotion(booking.promotion_applied),
+                promotion: mapAppliedPromotion(booking.promotion_applied, promotionTitles),
                 package: mapAppliedPackage(booking.subscription_applied),
                 review,
                 can_review: canLeaveReview(booking, review, now),
@@ -360,7 +400,7 @@ export async function getMobileBookingDetails({
                         client_name,
                         promotion_applied,
                         subscription_applied,
-                        service:services(name_ru, duration_min, price_from, price_to),
+                        service:services(name_ru, name_ky, name_en, duration_min, price_from, price_to),
                         booking_services(order_index, duration_min, service:services(name_ru, name_ky, name_en, duration_min)),
                         staff:staff(full_name, user_id, is_active),
                         branch:branches(name, address, lat, lon),
@@ -413,6 +453,7 @@ export async function getMobileBookingDetails({
     const business = toSingle(row.business);
     const services = mapBookingServices(row.booking_services);
     const review = isClient ? mapReview(row.reviews) : null;
+    const promotionTitles = await loadPromotionTitles(client, [row.promotion_applied]);
 
     return {
         ok: true,
@@ -429,6 +470,8 @@ export async function getMobileBookingDetails({
             service: service
                 ? {
                       name_ru: service.name_ru ?? '',
+                      name_ky: service.name_ky ?? null,
+                      name_en: service.name_en ?? null,
                       duration_min: service.duration_min ?? 0,
                       price_from:
                           typeof service.price_from === 'number'
@@ -441,7 +484,7 @@ export async function getMobileBookingDetails({
                   }
                 : null,
             ...(services.length > 0 ? { services } : {}),
-            promotion: mapAppliedPromotion(row.promotion_applied),
+            promotion: mapAppliedPromotion(row.promotion_applied, promotionTitles),
             package: mapAppliedPackage(row.subscription_applied),
             staff: staff
                 ? {

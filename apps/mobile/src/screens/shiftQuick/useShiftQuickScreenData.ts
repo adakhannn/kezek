@@ -9,8 +9,11 @@ import { getErrorMessage } from '../../lib/errors';
 import { STAFF_ID_HEADER } from '../../lib/staffSelectionStorage';
 import { getOfflineQueue, getShiftCache, ownsOperation, saveOfflineQueue, saveShiftCache } from './offlineStorage';
 import type { ShiftOfflineOperation, ShiftOwner } from './offlineStorage';
-import { applySavedLedger, closeShiftLedger, editShiftLedger, errorStatus, isShiftLedgerSnapshot, readSavedLedger, UnconfirmedShiftCommandError } from './commandProtocol';
+import { applySavedLedger, closeShiftLedger, editShiftLedger, errorStatus, isShiftLedgerSnapshot, readSavedLedger, removeShiftItem, UnconfirmedShiftCommandError } from './commandProtocol';
 import type { FinanceData, ShiftItemEdit, ShiftLedgerSnapshot, ShiftQuickMetrics } from './types';
+
+/** Commands replayed from the queue: all save the ledger with its revision, or close it. */
+const LEDGER_COMMANDS: readonly ShiftOfflineOperation['type'][] = ['addItem', 'updateItem', 'deleteItem', 'close'];
 
 type StaffInfo = { id: string; full_name: string };
 type MutationResult = { queued: boolean };
@@ -99,7 +102,7 @@ export function useShiftQuickScreenData() {
         const currentOwner = assertOwner();
         const operationOwner = operation.owner;
         if (!operationOwner || !ownsOperation(operation, currentOwner) || !isShiftLedgerSnapshot(operation.data)
-            || !['addItem', 'updateItem', 'close'].includes(operation.type)) {
+            || !LEDGER_COMMANDS.includes(operation.type)) {
             throw new Error(t('staff.shiftQuick.manualReview'));
         }
         await queryClient.cancelQueries({ queryKey });
@@ -141,7 +144,7 @@ export function useShiftQuickScreenData() {
                     assertOwner();
                     if (operation.state === 'review') break;
                     if (!ownsOperation(operation, owner) || !isShiftLedgerSnapshot(operation.data)
-                        || !['addItem', 'updateItem', 'close'].includes(operation.type)) {
+                        || !LEDGER_COMMANDS.includes(operation.type)) {
                         await persistQueue([{ ...operation, state: 'review', reason: t('staff.shiftQuick.foreignOperation') }, ...pending.slice(1)]);
                         break;
                     }
@@ -171,7 +174,7 @@ export function useShiftQuickScreenData() {
         return () => clearInterval(interval);
     }, [processOfflineQueue]);
 
-    const executeCommand = async (type: 'close' | 'addItem' | 'updateItem', payload: ShiftLedgerSnapshot,
+    const executeCommand = async (type: 'close' | 'addItem' | 'updateItem' | 'deleteItem', payload: ShiftLedgerSnapshot,
         edit?: ShiftItemEdit): Promise<MutationResult> => runLocked(async () => {
         const currentOwner = assertOwner();
         const pending = await readQueue();
@@ -222,6 +225,9 @@ export function useShiftQuickScreenData() {
     });
     const addClientMutation = useMutation({ mutationFn: (edit: ShiftItemEdit) => executeCommand('addItem', editShiftLedger(edit, t), edit) });
     const updateClientMutation = useMutation({ mutationFn: (edit: ShiftItemEdit) => executeCommand('updateItem', editShiftLedger(edit, t), edit) });
+    // S4: no draft is kept for a removal (nothing to edit), so a removal under review can only be discarded.
+    const deleteClientMutation = useMutation({ mutationFn: ({ base, itemId }: { base: ShiftLedgerSnapshot; itemId: string }) =>
+        executeCommand('deleteItem', removeShiftItem(base, itemId, t)) });
 
     // Explicit review bypasses the offline cache. Refresh alone never rebases a draft.
     const reloadForReview = () => runLocked(async () => {
@@ -267,5 +273,5 @@ export function useShiftQuickScreenData() {
         queueError, canRestoreDraft: queue.length === 1 && !!owner && !!reviewOperation?.edit
             && ownsOperation(reviewOperation, owner) && isShiftLedgerSnapshot(reviewOperation.data),
         reloadForReview, discardReviewedQueue, metrics, openShiftMutation, closeShiftMutation,
-        addClientMutation, updateClientMutation, onRefresh };
+        addClientMutation, updateClientMutation, deleteClientMutation, onRefresh };
 }

@@ -106,3 +106,9 @@ export async function createRequestSupabaseClient(req: Request): Promise<DbClien
     }
     return createSupabaseServerClient();
 }
+
+/** The request carries a non-empty `Authorization: Bearer` token (the mobile app). */
+export function hasBearerAuthorization(req: Request): boolean {
+    const header = req.headers.get('Authorization') ?? '';
+    return header.startsWith('Bearer ') && header.length > 'Bearer '.length;
+}

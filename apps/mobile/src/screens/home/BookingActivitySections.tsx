@@ -7,6 +7,7 @@ import MotionPressable from '../../components/ui/MotionPressable';
 import { colors } from '../../constants/colors';
 import { useLanguage, type Locale, type MobileI18nKey, type Translate } from '../../i18n';
 import { formatDate, formatTime } from '../../utils/format';
+import { getServiceName } from '../../utils/i18n';
 
 import { styles } from './homeScreenStyles';
 import type { HomeBooking, RecentPlace } from './types';
@@ -65,6 +66,7 @@ export function UpcomingBookingsSection({
 
             {bookings.map((booking) => {
                 const bookingLabel = buildBookingAccessibilityLabel(booking, locale, t);
+                const serviceName = getServiceName(booking.service, locale);
 
                 return (
                     <Card key={booking.id} style={styles.bookingCard}>
@@ -85,9 +87,9 @@ export function UpcomingBookingsSection({
                                             {booking.branch.name}
                                         </Text>
                                     ) : null}
-                                    {booking.service?.name_ru ? (
+                                    {serviceName ? (
                                         <Text style={styles.bookingService}>
-                                            {booking.service.name_ru}
+                                            {serviceName}
                                         </Text>
                                     ) : null}
                                 </View>
@@ -161,8 +163,9 @@ function buildBookingAccessibilityLabel(booking: HomeBooking, locale: Locale, t:
         parts.push(t('booking.home.a11y.branch', { name: booking.branch.name }));
     }
 
-    if (booking.service?.name_ru) {
-        parts.push(t('booking.home.a11y.service', { name: booking.service.name_ru }));
+    const serviceName = getServiceName(booking.service, locale);
+    if (serviceName) {
+        parts.push(t('booking.home.a11y.service', { name: serviceName }));
     }
 
     parts.push(t('booking.home.a11y.time', {

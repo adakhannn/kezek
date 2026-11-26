@@ -3,9 +3,11 @@ import { ParticipantDataService } from '@/lib/notifications/ParticipantDataServi
 import type { BookingRow, ParticipantData } from '@/lib/notifications/types';
 import { getEmailFrom, getWhatsAppBookingTemplateLanguage, getWhatsAppBookingTemplateName } from '@/lib/env';
 import { listPushTokens } from '@/lib/pushTokens';
+import { listManagerPushRecipients } from '@/lib/notifications/managerPushRecipients';
 
 jest.mock('@/lib/notifications/ParticipantDataService');
 jest.mock('@/lib/pushTokens', () => ({ listPushTokens: jest.fn() }));
+jest.mock('@/lib/notifications/managerPushRecipients', () => ({ listManagerPushRecipients: jest.fn() }));
 jest.mock('@/lib/env', () => ({ getEmailFrom: jest.fn(() => 'Kezek <synthetic@example.invalid>'), getSiteOrigin: () => 'https://example.invalid', getTimezone: () => 'Asia/Bishkek',
     getWhatsAppBookingTemplateName: jest.fn(), getWhatsAppBookingTemplateLanguage: jest.fn() }));
 
@@ -27,7 +29,7 @@ const booking: BookingRow = { id: 'booking', notification_revision: 1, status: '
     biz: { name: 'Business', tz: 'Asia/Bishkek', slug: 'business', address: null, phones: null, email_notify_to: ['OWNER@example.invalid', 'office@example.invalid'] },
 };
 
-beforeEach(() => { jest.clearAllMocks(); configureTemplates(); jest.mocked(listPushTokens).mockResolvedValue([]); });
+beforeEach(() => { jest.clearAllMocks(); configureTemplates(); jest.mocked(listPushTokens).mockResolvedValue([]); jest.mocked(listManagerPushRecipients).mockResolvedValue([]); });
 function mockParticipants(client: ParticipantData, staff: ParticipantData, owner: ParticipantData) {
     jest.mocked(ParticipantDataService).mockImplementation(() => ({
         getClientData: jest.fn().mockResolvedValue(client), getStaffData: jest.fn().mockResolvedValue(staff), getOwnerData: jest.fn().mockResolvedValue(owner),
@@ -229,5 +231,50 @@ describe('push notifications to the app', () => {
         mockParticipants(participant(), participant(), participant());
         jest.mocked(listPushTokens).mockRejectedValue(new Error('PUSH_TOKEN_LIST_FAILED'));
         await expect(planBookingNotifications({} as never, booking, 'confirm')).rejects.toThrow('PUSH_TOKEN_LIST_FAILED');
+    });
+
+    describe('owner and business managers (O2)', () => {
+        const OWNER_TOKEN = 'ExponentPushToken[owner-install-00001]';
+        const MANAGER_TOKEN = 'ExponentPushToken[manager-install-0001]';
+        const managed: BookingRow = { ...bookingWithStaffAccount,
+            biz: { ...booking.biz as object, id: 'biz-1', owner_id: 'owner-user' } as BookingRow['biz'] };
+
+        test.each(['confirm', 'cancel'] as const)('%s also goes to the owner and every manager install, each in its language', async type => {
+            mockParticipants(participant({ locale: 'en' }), participant(), participant());
+            jest.mocked(listManagerPushRecipients).mockResolvedValue([
+                { userId: 'owner-user', locale: 'ky' }, { userId: 'manager-user', locale: 'en' },
+            ]);
+            jest.mocked(listPushTokens).mockResolvedValue([
+                { user_id: 'client', token: CLIENT_TOKEN }, { user_id: 'owner-user', token: OWNER_TOKEN }, { user_id: 'manager-user', token: MANAGER_TOKEN },
+            ]);
+            const admin = {} as never;
+            const plan = (await planBookingNotifications(admin, managed, type)).filter(value => value.channel === 'push');
+            expect(listManagerPushRecipients).toHaveBeenCalledWith(admin, 'biz-1', 'owner-user');
+            expect(listPushTokens).toHaveBeenCalledWith(admin, ['client', 'staff-user', 'owner-user', 'manager-user']);
+            expect(plan.map(value => value.payload.to)).toEqual([CLIENT_TOKEN, OWNER_TOKEN, MANAGER_TOKEN]);
+            expect(plan[2].payload.title).toBe(type === 'confirm' ? 'Booking confirmed' : plan[0].payload.title);
+            expect(plan[1].payload.title).not.toBe(plan[2].payload.title);
+            expect(plan[1].payload.data).toEqual({ bookingId: 'booking', type });
+        });
+
+        test('an install shared by the master and a manager (or the owner booking himself) gets one message', async () => {
+            mockParticipants(participant(), participant(), participant());
+            jest.mocked(listManagerPushRecipients).mockResolvedValue([{ userId: 'staff-user', locale: 'ru' }, { userId: 'client', locale: 'ru' }]);
+            jest.mocked(listPushTokens).mockResolvedValue([{ user_id: 'client', token: CLIENT_TOKEN }, { user_id: 'staff-user', token: STAFF_TOKEN }]);
+            const plan = (await planBookingNotifications({} as never, managed, 'confirm')).filter(value => value.channel === 'push');
+            expect(plan.map(value => value.payload.to)).toEqual([CLIENT_TOKEN, STAFF_TOKEN]);
+        });
+
+        test.each(['reminder_24h', 'reminder_2h', 'hold'] as const)('%s does not look up managers', async type => {
+            mockParticipants(participant(), participant(), participant());
+            await planBookingNotifications({} as never, { ...managed, status: type === 'hold' ? 'hold' : 'confirmed' }, type);
+            expect(listManagerPushRecipients).not.toHaveBeenCalled();
+        });
+
+        test('a manager lookup failure fails preparation instead of dropping the managers', async () => {
+            mockParticipants(participant(), participant(), participant());
+            jest.mocked(listManagerPushRecipients).mockRejectedValue(new Error('BUSINESS_ACCESS_READ_FAILED: user_roles'));
+            await expect(planBookingNotifications({} as never, managed, 'cancel')).rejects.toThrow('BUSINESS_ACCESS_READ_FAILED');
+        });
     });
 });

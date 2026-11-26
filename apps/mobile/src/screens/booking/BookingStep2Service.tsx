@@ -13,6 +13,7 @@ import { useBooking } from '../../contexts/BookingContext';
 import { useLanguage } from '../../i18n';
 import { trackMobileEvent } from '../../lib/analytics';
 import { RootStackParamList } from '../../navigation/types';
+import { getServiceName } from '../../utils/i18n';
 import { formatBookingPrice } from './bookingFormat';
 import BookingLoadError from './BookingLoadError';
 import { pickSelectedServices, summarizeServices } from './bookingSelection';
@@ -135,7 +136,7 @@ export default function BookingStep2Service() {
                                             <View style={styles.serviceHeader}>
                                                 <View style={styles.serviceInfo}>
                                                     <Text style={styles.serviceNameSelected}>
-                                                        {service.name_ru}
+                                                        {getServiceName(service, t.locale)}
                                                     </Text>
                                                     {service.duration_min ? (
                                                         <Text style={styles.serviceDurationSelected}>
@@ -152,7 +153,7 @@ export default function BookingStep2Service() {
                                         <View style={styles.serviceCardContent}>
                                             <View style={styles.serviceHeader}>
                                                 <View style={styles.serviceInfo}>
-                                                    <Text style={styles.serviceName}>{service.name_ru}</Text>
+                                                    <Text style={styles.serviceName}>{getServiceName(service, t.locale)}</Text>
                                                     {service.duration_min ? (
                                                         <Text style={styles.serviceDuration}>
                                                             {t('booking.duration.minutes', { minutes: service.duration_min })}

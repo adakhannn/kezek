@@ -340,3 +340,82 @@ test('a command queued by another business card is never sent as the selected ca
         && JSON.stringify(options?.headers) === JSON.stringify({ 'x-kezek-staff-id': 'staff-2' }))).toBe(true);
     expect((await getOfflineQueue())[0]).toMatchObject({ owner, state: 'review', data: operation.data });
 });
+
+describe('removing a client added by mistake (S4)', () => {
+    const manual: ShiftItem = { id: 'manual-1', clientName: 'Wrong client', serviceName: 'Cut', serviceAmount: 300, consumablesAmount: 0, bookingId: null };
+    const fromBooking: ShiftItem = { id: 'booked-1', clientName: 'Booked', serviceName: 'Beard', serviceAmount: 400, consumablesAmount: 0, bookingId: 'booking-1' };
+
+    test('the ledger is saved without that row, at the captured revision', async () => {
+        server = finance(3, [manual, fromBooking]);
+        const { result } = await mountHook();
+        const base = captureShiftLedger(result.current.financeData);
+        await act(async () => { expect(await result.current.deleteClientMutation.mutateAsync({ base, itemId: 'manual-1' })).toEqual({ queued: false }); });
+        expect(payloads()).toEqual([{ expectedShiftId: 'shift-1', expectedRevision: 3, items: [
+            { id: 'booked-1', clientName: 'Booked', serviceName: 'Beard', serviceAmount: 400, consumablesAmount: 0, bookingId: 'booking-1' },
+        ] }]);
+        expect(result.current.financeData?.today.items.map(entry => entry.id)).toEqual(['booked-1']);
+        expect(result.current.financeData?.today.shift?.ledger_revision).toBe(4);
+    });
+
+    test('a booking row and a row that is gone are refused before anything is sent', async () => {
+        server = finance(3, [manual, fromBooking]);
+        const { result } = await mountHook();
+        const base = captureShiftLedger(result.current.financeData);
+        await act(async () => {
+            await expect(result.current.deleteClientMutation.mutateAsync({ base, itemId: 'booked-1' })).rejects.toThrow();
+            await expect(result.current.deleteClientMutation.mutateAsync({ base, itemId: 'missing' })).rejects.toThrow();
+        });
+        expect(payloads()).toEqual([]);
+    });
+
+    test('offline the removal is queued as deleteItem and replayed with its original revision', async () => {
+        server = finance(3, [manual]);
+        const { result } = await mountHook();
+        const base = captureShiftLedger(result.current.financeData);
+        api.mockImplementation(async (path, options) => {
+            if (path === '/api/staff/finance') return { ok: true, data: server };
+            if (payloads().length === 1) throw new Error('Network request failed');
+            return response(JSON.parse(String(options?.body)));
+        });
+        await act(async () => { expect(await result.current.deleteClientMutation.mutateAsync({ base, itemId: 'manual-1' })).toEqual({ queued: true }); });
+        const [queued] = await getOfflineQueue();
+        expect(queued).toMatchObject({ type: 'deleteItem', owner, state: 'pending', data: { expectedRevision: 3, items: [] } });
+        expect(queued.edit).toBeUndefined();
+
+        await act(async () => { await result.current.onRefresh(); });
+        expect(payloads()).toHaveLength(2);
+        expect(payloads()[1]).toEqual(payloads()[0]);
+        expect(await getOfflineQueue()).toEqual([]);
+    });
+
+    test('a conflict freezes the removal for review; it cannot be restored as a draft, only discarded', async () => {
+        server = finance(3, [manual]);
+        const { result } = await mountHook();
+        const base = captureShiftLedger(result.current.financeData);
+        api.mockImplementation(async path => {
+            if (path === '/api/staff/finance') return { ok: true, data: server };
+            throw conflict();
+        });
+        await act(async () => { await expect(result.current.deleteClientMutation.mutateAsync({ base, itemId: 'manual-1' })).rejects.toThrow(); });
+        await waitFor(() => expect(result.current.reviewOperation?.type).toBe('deleteItem'));
+        expect(result.current.canRestoreDraft).toBe(false);
+        await act(async () => { await result.current.discardReviewedQueue(); });
+        expect(await getOfflineQueue()).toEqual([]);
+    });
+
+    test('the screen asks before removing and offers no removal for booking rows', async () => {
+        server = finance(3, [manual, fromBooking]);
+        render(<QueryClientProvider client={createTestQueryClient()}><ShiftQuickScreen /></QueryClientProvider>);
+        expect(await screen.findByText('Wrong client')).toBeTruthy();
+        expect(screen.getAllByText('Удалить')).toHaveLength(1);
+
+        mockConfirm.mockResolvedValueOnce(false);
+        fireEvent.press(screen.getByText('Удалить'));
+        await waitFor(() => expect(mockConfirm).toHaveBeenCalledWith(expect.objectContaining({ title: 'Удалить клиента?', variant: 'danger' })));
+        expect(payloads()).toEqual([]);
+
+        fireEvent.press(screen.getByText('Удалить'));
+        await waitFor(() => expect(payloads()).toHaveLength(1));
+        expect(payloads()[0].items.map(entry => entry.id)).toEqual(['booked-1']);
+    });
+});

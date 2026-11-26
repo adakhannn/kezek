@@ -63,6 +63,9 @@ type ShiftQuickSectionsProps = {
     onOpenShift: () => void;
     onCloseShift: () => void;
     onEditClient: (item: ShiftItem, itemIndex: number) => void;
+    /** S4: remove a manually added client (with confirmation in the screen). */
+    onDeleteClient?: (item: ShiftItem) => void;
+    deletingClient?: boolean;
 };
 
 type ShiftStatusMeta = {
@@ -87,6 +90,8 @@ export function ShiftQuickSections({
     onOpenShift,
     onCloseShift,
     onEditClient,
+    onDeleteClient,
+    deletingClient,
 }: ShiftQuickSectionsProps) {
     const { t, locale } = useLanguage();
     const money = (amount: number) => formatPrice(amount, locale);
@@ -375,8 +380,9 @@ export function ShiftQuickSections({
                                 key={item.id || `${item.clientName}-${index}`}
                                 item={item}
                                 itemIndex={index}
-                                canEdit={isOpen && !commandsBlocked}
+                                canEdit={isOpen && !commandsBlocked && !deletingClient}
                                 onEditClient={onEditClient}
+                                onDeleteClient={onDeleteClient}
                             />
                         ))}
                     </View>
@@ -469,11 +475,13 @@ function ClientCard({
     itemIndex,
     canEdit,
     onEditClient,
+    onDeleteClient,
 }: {
     item: ShiftItem;
     itemIndex: number;
     canEdit: boolean;
     onEditClient: (item: ShiftItem, itemIndex: number) => void;
+    onDeleteClient?: (item: ShiftItem) => void;
 }) {
     const { t, locale } = useLanguage();
     const canEditItem = canEdit && !item.bookingId;
@@ -515,6 +523,18 @@ function ClientCard({
                     style={styles.clientEditButton}
                     textStyle={styles.clientEditButtonText}
                     accessibilityLabel={t('staff.shiftQuick.edit')}
+                />
+            ) : null}
+            {canEditItem && item.id && onDeleteClient ? (
+                <Button
+                    title={t('staff.shiftQuick.delete')}
+                    onPress={() => onDeleteClient(item)}
+                    variant="ghost"
+                    size="sm"
+                    leadingIcon={<Ionicons name="trash-outline" size={14} color={colors.status.danger} />}
+                    style={styles.clientEditButton}
+                    textStyle={styles.clientDeleteButtonText}
+                    accessibilityLabel={t('staff.shiftQuick.deleteA11y', { client: item.clientName || t('staff.client') })}
                 />
             ) : null}
         </Card>

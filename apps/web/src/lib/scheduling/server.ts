@@ -5,7 +5,7 @@ import { explicitSchedulingEnabled } from './config';
 import { validDate, validatePublishSchedule, type ScheduleSnapshot } from './model';
 
 import { createErrorResponse, createSuccessResponse, handleApiError } from '@/lib/apiErrorHandler';
-import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
+import { getBizContextForManagers, getStaffContextForRequest } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
 const messages: Record<string, string> = {
@@ -30,7 +30,9 @@ export async function readSchedule(staffId: string, bizId: string, from: string,
 export async function scheduleHttp(request: Request, staffId?: string) {
     if (!explicitSchedulingEnabled()) return createErrorResponse('service_unavailable', 'Новая модель расписаний ещё не включена.', undefined, 503);
     try {
-        const context = staffId ? await getBizContextForManagers() : await getStaffContext();
+        // The employee's own schedule: the website's cookie or the app's Bearer token, the card named
+        // by X-Kezek-Staff-Id or remembered (S3). Managers act through their cookie business context.
+        const context = staffId ? await getBizContextForManagers() : await getStaffContextForRequest(request, 'ExplicitSchedule');
         const selectedStaff = staffId ?? ('staffId' in context ? context.staffId : '');
         if (!selectedStaff || !/^[0-9a-f-]{36}$/i.test(selectedStaff)) throw new Error('SCHEDULE_NOT_FOUND');
         if (request.method === 'GET') {

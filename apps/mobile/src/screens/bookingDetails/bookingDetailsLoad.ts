@@ -51,7 +51,16 @@ export function offlineBookingToDetails(item: OfflineBooking): BookingDetails {
         end_at: item.end_at,
         status: item.status,
         viewer_role: 'client',
-        service: item.service_name ? { name_ru: item.service_name, duration_min: 0, price_from: null, price_to: null } : null,
+        service: item.service_name
+            ? {
+                  name_ru: item.service_name,
+                  name_ky: item.service_name_ky ?? null,
+                  name_en: item.service_name_en ?? null,
+                  duration_min: 0,
+                  price_from: null,
+                  price_to: null,
+              }
+            : null,
         staff: item.staff_name ? { full_name: item.staff_name } : null,
         branch: item.branch_name ? { name: item.branch_name, address: null } : null,
         business: item.business_name

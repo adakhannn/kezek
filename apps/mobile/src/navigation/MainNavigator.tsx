@@ -21,7 +21,7 @@ const GuardedDashboardScreen = withSessionGate(DashboardScreen, 'workspace');
 const GuardedStaffScreen = withSessionGate(StaffScreen, 'workspace');
 
 export default function MainNavigator() {
-    const { isOwner, isStaff } = useUserRole();
+    const { isBusinessManager, isStaff } = useUserRole();
     const { hasSession } = useNavigationSession();
     const { t } = useLanguage();
 
@@ -48,7 +48,7 @@ export default function MainNavigator() {
                     tabBarIcon: renderTabIcon('person'),
                 }}
             />
-            {hasSession && isOwner ? (
+            {hasSession && isBusinessManager ? (
                 <Tab.Screen
                     name="Dashboard"
                     component={GuardedDashboardScreen}
