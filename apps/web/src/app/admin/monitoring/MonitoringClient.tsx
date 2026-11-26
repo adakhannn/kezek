@@ -477,9 +477,9 @@ export default function MonitoringClient() {
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
                                     <option value="">{t('admin.monitoring.all', 'Все')}</option>
-                                    <option value="debug">Debug</option>
+                                    {/* The levels /admin/api/finance-logs accepts (finance_logs.log_level). */}
                                     <option value="info">Info</option>
-                                    <option value="warn">Warn</option>
+                                    <option value="warning">Warning</option>
                                     <option value="error">Error</option>
                                 </select>
                             </FilterField>

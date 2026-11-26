@@ -101,7 +101,7 @@ export default function AdminAnalyticsLoadPage() {
     let ignore = false;
     async function loadBranches() {
       try {
-        const resp = await fetch('/api/admin/branches/list', { cache: 'no-store' });
+        const resp = await fetch('/api/dashboard/branches/list', { cache: 'no-store' });
         if (!resp.ok) return;
         const json = await resp.json();
         if (!json?.ok || !Array.isArray(json.data)) return;
