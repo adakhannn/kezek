@@ -30,7 +30,7 @@ export const authKy: Record<keyof typeof authRu, string> = {
     'auth.google.error.config': 'Google аркылуу кирүү туура эмес жөндөлгөн. Колдоо кызматына кайрылыңыз.',
     'auth.google.error.unavailable': 'Google аркылуу кирүү убактылуу жеткиликсиз. Кийинчерээк аракет кылыңыз.',
     'auth.google.error.state': 'Google сессиясын ырастоо мүмкүн болгон жок. Кайра аракет кылыңыз.',
-    'auth.google.noSession': 'Кирүү жообу келди, бирок сессия орнотулган жок. Кайра аракет кылыңыз.',
+    'auth.google.noSession': 'Кирүү аягына чыккан жок. Кайра аракет кылыңыз.',
     'auth.google.dismissed': 'Кирүү терезеси жабылды. Эгер браузерде кирүүнү аяктаган болсоңуз, тиркемеге кайтып, кайра аракет кылыңыз.',
     'auth.google.cancelled': 'Кирүү жокко чыгарылды',
     'auth.google.locked': 'Кирүү браузери ачык турат. Аны жаап, кайра аракет кылыңыз.',
@@ -51,7 +51,7 @@ export const authKy: Record<keyof typeof authRu, string> = {
     'auth.telegram.error.notInstalled': 'Telegram\'ды ачуу мүмкүн болгон жок. Тиркеме орнотулганын текшериңиз.',
     'auth.telegram.error.failed': 'Telegram аркылуу кирүүнү аягына чыгаруу мүмкүн болгон жок. Кайра аракет кылыңыз.',
     'auth.telegram.error.restart': 'Кирүүнү ушул тиркемеде кайра баштаңыз.',
-    'auth.telegram.error.noSession': 'Ырастоодон кийин сессия орнотулган жок',
+    'auth.telegram.error.noSession': 'Кирүү аягына чыккан жок. Кайра аракет кылыңыз.',
     'auth.telegram.error.start': 'Telegram аркылуу кирүүнү баштоо үчүн маалымат алынган жок',
 
     // Code entry shared by VerifyScreen and WhatsAppScreen
@@ -104,5 +104,5 @@ export const authKy: Record<keyof typeof authRu, string> = {
     'auth.whatsapp.sendCodeFailed': 'Кодду жөнөтүү мүмкүн болгон жок.',
     'auth.whatsapp.signInFailed': 'Кирүү мүмкүн болгон жок.',
     'auth.whatsapp.signInSuccess': 'Сиз ийгиликтүү кирдиңиз.',
-    'auth.whatsapp.unexpectedFormat': 'Серверден күтүлбөгөн форматтагы жооп келди.',
+    'auth.whatsapp.unexpectedFormat': 'Кирүү ишке ашкан жок. Кайра аракет кылыңыз.',
 };

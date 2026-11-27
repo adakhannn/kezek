@@ -68,9 +68,9 @@ export const staffRu = {
     'staff.shifts.emptyTitle': 'Нет смен',
     'staff.shifts.emptyMessage': 'За выбранный период смен не найдено',
     // translatePlural (i18n/plural.ts): .one for 1, 21…; .few for 2–4, 22–24…; .many for the rest.
-    'staff.shifts.clientsCount.one': '({count} клиент)',
-    'staff.shifts.clientsCount.few': '({count} клиента)',
-    'staff.shifts.clientsCount.many': '({count} клиентов)',
+    'staff.shifts.clientsCount.one': '{count} клиент',
+    'staff.shifts.clientsCount.few': '{count} клиента',
+    'staff.shifts.clientsCount.many': '{count} клиентов',
     'staff.shifts.openedAt': 'Открыта: {time}',
     'staff.shifts.consumablesAmount': 'Расходники: {amount}',
     'staff.shifts.toEmployee': 'Сотруднику: {amount}',
@@ -189,7 +189,7 @@ export const staffRu = {
     'staff.shiftQuick.queueMessage':
         'Повторная отправка сохранит исходную версию. При конфликте очередь остановится для проверки.',
     'staff.shiftQuick.itemConsumables': 'Расходники {amount}',
-    'staff.shiftQuick.fromBooking': 'Из брони',
+    'staff.shiftQuick.fromBooking': 'Из записи',
     'staff.shiftQuick.addedManually': 'Добавлен вручную',
     'staff.shiftQuick.edit': 'Редактировать',
     'staff.shiftQuick.activeLabel': 'Смена активна',

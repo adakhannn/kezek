@@ -18,7 +18,7 @@ import { colors } from '../../../constants/colors';
 import { space } from '../../../constants/theme';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useToast } from '../../../contexts/ToastContext';
-import { useLanguage } from '../../../i18n';
+import { translatePlural, useLanguage } from '../../../i18n';
 import { getMobileApiUrl } from '../../../lib/apiUrl';
 import type { RootStackParamList } from '../../../navigation/types';
 import { catalogApi, catalogKeys, type Promotion } from './catalogApi';
@@ -154,7 +154,7 @@ export default function BranchPromotionsScreen({ route }: Props) {
                                         })
                                         : null,
                                     typeof promotion.usage_count === 'number'
-                                        ? t('catalog.branches.promotions.usageCount', { count: promotion.usage_count })
+                                        ? translatePlural(t, 'catalog.branches.promotions.usageCount', promotion.usage_count)
                                         : null,
                                 ].filter(Boolean).join(' · ');
                                 return (

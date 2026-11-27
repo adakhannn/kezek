@@ -30,7 +30,7 @@ export const authEn: Record<keyof typeof authRu, string> = {
     'auth.google.error.config': 'Google sign-in is misconfigured. Please contact support.',
     'auth.google.error.unavailable': 'Google sign-in is temporarily unavailable. Please try again later.',
     'auth.google.error.state': 'Could not verify the Google session. Please try again.',
-    'auth.google.noSession': 'The sign-in callback arrived, but no session was set up. Please try again.',
+    'auth.google.noSession': 'Sign-in could not be completed. Please try again.',
     'auth.google.dismissed': 'The sign-in window was closed. If you finished signing in in the browser, return to the app and try again.',
     'auth.google.cancelled': 'Sign-in cancelled',
     'auth.google.locked': 'The sign-in browser is already open. Close it and try again.',
@@ -51,7 +51,7 @@ export const authEn: Record<keyof typeof authRu, string> = {
     'auth.telegram.error.notInstalled': 'Could not open Telegram. Check that the app is installed.',
     'auth.telegram.error.failed': 'Could not complete Telegram sign-in. Please try again.',
     'auth.telegram.error.restart': 'Start signing in again in this app.',
-    'auth.telegram.error.noSession': 'No session was set up after the confirmation',
+    'auth.telegram.error.noSession': 'Sign-in could not be completed. Please try again.',
     'auth.telegram.error.start': 'Could not get the Telegram sign-in details',
 
     // Code entry shared by VerifyScreen and WhatsAppScreen
@@ -104,5 +104,5 @@ export const authEn: Record<keyof typeof authRu, string> = {
     'auth.whatsapp.sendCodeFailed': 'Could not send the code.',
     'auth.whatsapp.signInFailed': 'Could not sign in.',
     'auth.whatsapp.signInSuccess': 'You are signed in.',
-    'auth.whatsapp.unexpectedFormat': 'Unexpected response format from the server.',
+    'auth.whatsapp.unexpectedFormat': 'Could not sign in. Please try again.',
 };

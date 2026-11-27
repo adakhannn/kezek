@@ -4,7 +4,7 @@ import Card from '../../../components/ui/Card';
 import Section from '../../../components/ui/Section';
 import { colors } from '../../../constants/colors';
 import { space, typeScale } from '../../../constants/theme';
-import { useLanguage, type MobileI18nKey } from '../../../i18n';
+import { translatePlural, useLanguage, type MobileI18nKey } from '../../../i18n';
 import { ratingAdviceKey } from './branchForm';
 import type { BranchRatingWeights } from './catalogApi';
 
@@ -18,11 +18,11 @@ const FACTORS: { key: keyof Omit<BranchRatingWeights, 'windowDays'>; label: Mobi
 /** How the branch rating is made (the website's BranchRatingCard): the score, then the weights. */
 export function BranchRatingCard({ score, weights }: { score: number | null; weights: BranchRatingWeights }) {
     const { t } = useLanguage();
-    const days = { days: weights.windowDays };
+    const period = { period: translatePlural(t, 'common.days', weights.windowDays) };
     return (
         <Section
             title={t('catalog.branch.rating.title')}
-            caption={`${t('catalog.branch.rating.period', days)} · ${t('catalog.branch.rating.refresh')}`}
+            caption={`${t('catalog.branch.rating.period', period)} · ${t('catalog.branch.rating.refresh')}`}
             testID="branch-rating-card"
         >
             <Card variant="plain" padding="md" style={styles.card}>

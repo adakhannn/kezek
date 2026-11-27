@@ -21,17 +21,17 @@ export const authRu = {
     // Google sign-in (hooks/useGoogleSignInFlow)
     'auth.google.status.loading': 'Открываем вход через Google',
     'auth.google.status.pending': 'Ожидаем подтверждение входа через Google',
-    'auth.google.status.success': 'Вход через Google подтвержден',
+    'auth.google.status.success': 'Вход через Google подтверждён',
     'auth.google.status.error': 'Не удалось выполнить вход через Google',
-    'auth.google.status.cancel': 'Вход через Google отменен',
+    'auth.google.status.cancel': 'Вход через Google отменён',
     'auth.google.status.expired': 'Срок входа через Google истек',
     'auth.google.error.network': 'Ошибка сети. Проверьте подключение к интернету и попробуйте снова.',
     'auth.google.error.config': 'Неверная конфигурация входа Google. Обратитесь в поддержку.',
     'auth.google.error.unavailable': 'Вход через Google временно недоступен. Попробуйте позже.',
     'auth.google.error.state': 'Не удалось подтвердить сессию Google. Повторите попытку.',
-    'auth.google.noSession': 'Колбэк авторизации получен, но сессия не установлена. Попробуйте снова.',
+    'auth.google.noSession': 'Не удалось завершить вход. Попробуйте снова.',
     'auth.google.dismissed': 'Окно входа закрыто. Если вход завершен в браузере, вернитесь в приложение и повторите.',
-    'auth.google.cancelled': 'Вход отменен',
+    'auth.google.cancelled': 'Вход отменён',
     'auth.google.locked': 'Браузер авторизации уже открыт. Закройте его и попробуйте снова.',
     'auth.google.unexpected': 'Не удалось завершить авторизацию. Попробуйте снова.',
 
@@ -40,7 +40,7 @@ export const authRu = {
     'auth.telegram.status.pending': 'Ожидаем подтверждение',
     'auth.telegram.status.success': 'Подтверждено',
     'auth.telegram.status.error': 'Ошибка входа через Telegram',
-    'auth.telegram.status.cancel': 'Вход через Telegram отменен',
+    'auth.telegram.status.cancel': 'Вход через Telegram отменён',
     'auth.telegram.status.expired': 'Срок подтверждения истек',
     'auth.telegram.expired': 'Истекло',
     'auth.telegram.unavailable': 'Вход через Telegram временно недоступен',
@@ -50,7 +50,7 @@ export const authRu = {
     'auth.telegram.error.notInstalled': 'Не удалось открыть Telegram. Проверьте, что приложение установлено.',
     'auth.telegram.error.failed': 'Не удалось завершить вход через Telegram. Попробуйте снова.',
     'auth.telegram.error.restart': 'Начните вход заново в этом приложении.',
-    'auth.telegram.error.noSession': 'Сессия не установлена после exchange',
+    'auth.telegram.error.noSession': 'Не удалось завершить вход. Попробуйте снова.',
     'auth.telegram.error.start': 'Не удалось получить данные запуска Telegram',
 
     // Code entry shared by VerifyScreen and WhatsAppScreen
@@ -103,5 +103,5 @@ export const authRu = {
     'auth.whatsapp.sendCodeFailed': 'Не удалось отправить код.',
     'auth.whatsapp.signInFailed': 'Не удалось выполнить вход.',
     'auth.whatsapp.signInSuccess': 'Вход выполнен успешно.',
-    'auth.whatsapp.unexpectedFormat': 'Неожиданный формат ответа от сервера.',
+    'auth.whatsapp.unexpectedFormat': 'Не удалось выполнить вход. Попробуйте снова.',
 } as const;

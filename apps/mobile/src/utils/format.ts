@@ -28,7 +28,8 @@ export function formatDateTime(date: string | Date, includeTime = true, locale: 
         const pattern = includeTime ? 'MMMM d, yyyy, HH:mm' : 'MMMM d, yyyy';
         return formatInTimeZone(dateObj, tz, pattern, { locale: enUS });
     }
-    const pattern = includeTime ? 'dd MMMM yyyy, HH:mm' : 'dd MMMM yyyy';
+    // "5 декабря 2026": no leading zero, as the website's Intl day: 'numeric'.
+    const pattern = includeTime ? 'd MMMM yyyy, HH:mm' : 'd MMMM yyyy';
     return formatInTimeZone(dateObj, tz, pattern, { locale: ru });
 }
 
@@ -45,6 +46,15 @@ export function formatTime(date: string | Date, timeZone?: string | null): strin
  */
 export function formatDate(date: string | Date, locale: Locale = 'ru', timeZone?: string | null): string {
     return formatDateTime(date, false, locale, timeZone);
+}
+
+/**
+ * A business calendar date (`YYYY-MM-DD`, e.g. a shift day or a package's last day) as formatDate
+ * writes it, with no time zone shift: the date is a calendar day, not an instant.
+ */
+export function formatYmd(ymd: string, locale: Locale = 'ru'): string {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return ymd;
+    return formatDate(new Date(`${ymd}T12:00:00Z`), locale, 'UTC');
 }
 
 /**
@@ -84,11 +94,30 @@ export function formatPhone(phone: string | null | undefined): string {
     return cleaned;
 }
 
+const NBSP = '\u00a0';
+
+/**
+ * A number with grouped thousands, the website's ru-RU / en-US toLocaleString: 12 345,5 (ru/ky,
+ * a no-break space and a decimal comma) or 12,345.5 (en). Grouping is done here, not by Intl, so
+ * every device shows the same text.
+ */
+export function formatNumber(value: number, locale: Locale, maxFractionDigits = 2): string {
+    if (!Number.isFinite(value)) return '0';
+    const negative = value < 0;
+    const factor = 10 ** maxFractionDigits;
+    const rounded = Math.round(Math.abs(value) * factor) / factor;
+    const [whole, fraction = ''] = String(rounded).split('.');
+    const separator = locale === 'en' ? ',' : NBSP;
+    const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, separator);
+    const decimalMark = locale === 'en' ? '.' : ',';
+    return `${negative && rounded !== 0 ? '-' : ''}${grouped}${fraction ? decimalMark + fraction : ''}`;
+}
+
 /**
  * Форматирование цены: «1 500 сом», en «1,500 som».
  */
 export function formatPrice(price: number | null | undefined, locale: Locale = 'ru'): string {
     if (price === null || price === undefined) return '';
     const currency = createTranslate(locale)('cabinet.format.currency');
-    return `${price.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} ${currency}`;
+    return `${formatNumber(price, locale)} ${currency}`;
 }

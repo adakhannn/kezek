@@ -27,6 +27,7 @@ import { getServiceName } from '../../../utils/i18n';
 import { runManagerBookingAction } from '../../dashboard/managerBookings';
 import type { ManagerBookingAction } from '../../dashboard/types';
 import { dayBoundsInTz, todayInTz } from '../opsKit/dates';
+import { shortDate } from '../opsKit/format';
 import { Field, LoadError, ui } from '../opsKit/ui';
 import BookingRowActions from './BookingRowActions';
 import { TimeBox } from './BookingsCalendarTab';
@@ -235,26 +236,32 @@ export default function BookingsListTab({ bizId, timezone, branches }: { bizId: 
                             const clientLabel = row.client_name || (row.client_id ? t('ops.bookings.client') : t('ops.bookings.walkIn'));
                             const start = formatInTimeZone(new Date(row.start_at), timezone, 'HH:mm');
                             const end = formatInTimeZone(new Date(row.end_at), timezone, 'HH:mm');
-                            const day = formatInTimeZone(new Date(row.start_at), timezone, 'dd.MM.yyyy');
+                            const day = shortDate(row.start_at, timezone);
                             return (
                                 <View key={row.id} style={styles.item} testID={`bookings-row-${row.id}`}>
                                     <ListRow
                                         leading={<TimeBox start={start} />}
                                         title={serviceLabel || '—'}
-                                        subtitle={[`${day} · ${start}–${end}`, branchName].filter(Boolean).join(' · ')}
+                                        subtitle={`${day} · ${start}–${end}`}
                                         numberOfLines={2}
                                         trailing={<StatusPill label={t(bookingStatusLabelKey(row.status, row.start_at, now))} tone={STATUS_TONE[row.status]} />}
                                         onPress={() => navigation.navigate('BookingDetails', { id: row.id })}
                                         accessibilityHint={`${t('ops.bookings.calendar.openBooking')} #${row.id.slice(0, 8)}`}
                                     />
                                     <View style={styles.people}>
+                                        {branchName ? (
+                                            <View style={styles.person}>
+                                                <Ionicons name="location-outline" size={14} color={colors.text.tertiary} />
+                                                <Text style={[ui.muted, styles.personText]} numberOfLines={1}>{branchName}</Text>
+                                            </View>
+                                        ) : null}
                                         <View style={styles.person}>
                                             <Ionicons name="cut-outline" size={14} color={colors.text.tertiary} />
-                                            <Text style={ui.muted} numberOfLines={1}>{t('ops.bookings.list.master')}: {row.staff_name || '—'}</Text>
+                                            <Text style={[ui.muted, styles.personText]} numberOfLines={1}>{t('ops.bookings.list.master')}: {row.staff_name || '—'}</Text>
                                         </View>
                                         <View style={styles.person}>
                                             <Ionicons name="person-outline" size={14} color={colors.text.tertiary} />
-                                            <Text style={ui.muted} numberOfLines={1}>{t('ops.bookings.client')}: {clientLabel}</Text>
+                                            <Text style={[ui.muted, styles.personText]} numberOfLines={1}>{t('ops.bookings.client')}: {clientLabel}</Text>
                                         </View>
                                         <Badge label={`#${row.id.slice(0, 8)}`} style={styles.id} />
                                     </View>
@@ -297,6 +304,7 @@ const styles = StyleSheet.create({
     },
     people: { gap: space.xs },
     person: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+    personText: { flexShrink: 1 },
     id: { marginTop: space.xxs },
     pagination: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
 });

@@ -45,55 +45,52 @@ export default function BookingRowActions({
     const actions = bookingRowActions(status, startAt, now);
     if (actions.length === 0) return null;
 
-    const run = async (action: ManagerBookingAction) => {
-        const accepted = await confirm({
-            title: t(CONFIRM_TEXT[action].title),
-            message: t(CONFIRM_TEXT[action].message),
-            confirmLabel: t('ops.bookings.actions.confirm'),
-            cancelLabel: t('ops.bookings.actions.back'),
-            variant: action === 'cancel' || action === 'no_show' ? 'danger' : undefined,
-        });
-        if (accepted) onAction(bookingId, action);
-    };
-
     const label: Record<ManagerBookingAction, MobileI18nKey> = {
         confirm: 'ops.bookings.actions.confirm',
         cancel: 'ops.bookings.actions.cancel',
         attended: 'ops.bookings.actions.attended',
         no_show: 'ops.bookings.actions.noShow',
     };
-    const positive = actions.filter((action) => action !== 'cancel');
+
+    const run = async (action: ManagerBookingAction) => {
+        const accepted = await confirm({
+            title: t(CONFIRM_TEXT[action].title),
+            message: t(CONFIRM_TEXT[action].message),
+            confirmLabel: t(label[action]),
+            cancelLabel: t('ops.bookings.actions.back'),
+            variant: action === 'cancel' || action === 'no_show' ? 'danger' : undefined,
+        });
+        if (accepted) onAction(bookingId, action);
+    };
+
     const button = (action: ManagerBookingAction) => (
         <Button
             key={action}
             title={t(label[action])}
             onPress={() => void run(action)}
             size="sm"
-            variant={action === 'cancel' ? 'ghost' : action === 'no_show' ? 'outline' : 'secondary'}
+            variant={action === 'confirm' || action === 'attended' ? 'secondary' : 'outline'}
+            style={styles.action}
             textStyle={action === 'cancel' ? styles.danger : undefined}
             loading={pending}
             disabled={pending}
             accessibilityLabel={`${t(label[action])} #${bookingId.slice(0, 8)}`}
         />
     );
-    // Cancelling is destructive: it stands apart on the right, after a hairline.
-    return (
-        <View style={styles.bar}>
-            <View style={styles.positive}>{positive.map(button)}</View>
-            {actions.includes('cancel') ? button('cancel') : null}
-        </View>
-    );
+    // One row of equal buttons (two rows on a narrow phone); the destructive cancel comes last.
+    return <View style={styles.bar}>{actions.map(button)}</View>;
 }
 
 const styles = StyleSheet.create({
     bar: {
         flexDirection: 'row',
-        alignItems: 'center',
+        flexWrap: 'wrap',
         gap: space.sm,
         paddingTop: space.sm,
         borderTopWidth: StyleSheet.hairlineWidth,
         borderTopColor: colors.border.subtle,
     },
-    positive: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+    // Equal widths; below ~88dp a button moves to the next line instead of squeezing its label.
+    action: { flexGrow: 1, flexBasis: 0, minWidth: 88 },
     danger: { color: colors.tone.danger.fg },
 });

@@ -4,6 +4,7 @@
  * Pure helpers, so the screen and its tests share them.
  */
 import type { Locale, Translate } from '../../i18n';
+import { formatNumber } from '../../utils/format';
 import { getLocalizedText, getPromotionTitle } from '../../utils/i18n';
 
 export type BusinessPageBusiness = {
@@ -191,9 +192,6 @@ export function promotionDescription(promotion: BusinessPagePromotion, locale: L
     );
 }
 
-function formatNumber(value: number, locale: Locale): string {
-    return value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU');
-}
 
 /** "1 000–1 500 сом", "1 000 сом" or "Цена по запросу", as the web business page. */
 export function formatServicePrice(service: Pick<BusinessPageService, 'price_from' | 'price_to'>, t: Translate): string {

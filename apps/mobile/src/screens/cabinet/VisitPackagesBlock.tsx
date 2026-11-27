@@ -12,7 +12,7 @@ import { colors } from '../../constants/colors';
 import { radii, space, typeScale } from '../../constants/theme';
 import { useLanguage, type Locale } from '../../i18n';
 import { apiRequest } from '../../lib/api';
-import { formatDate } from '../../utils/format';
+import { formatYmd } from '../../utils/format';
 
 /** GET /api/me/visit-packages item; `is_active` is computed by the server in the business time zone. */
 export type VisitPackageItem = {
@@ -86,7 +86,7 @@ export function VisitPackagesBlock({ userId }: { userId: string }) {
                         : t('cabinet.packages.remainingNoTotal', { remaining: item.remaining_visits })}
                 </Text>
                 <Text style={styles.itemHint}>
-                    {t('cabinet.packages.validUntil', { date: formatDate(`${item.valid_until}T12:00:00`, locale) })}
+                    {t('cabinet.packages.validUntil', { date: formatYmd(item.valid_until, locale) })}
                 </Text>
             </View>
         </View>

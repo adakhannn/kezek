@@ -13,7 +13,7 @@ import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { colors } from '../../constants/colors';
 import { space, typeScale } from '../../constants/theme';
 import { translatePlural, useLanguage } from '../../i18n';
-import { formatDate, formatPrice } from '../../utils/format';
+import { formatNumber, formatPrice, formatTime, formatYmd } from '../../utils/format';
 import FinancePeriodPicker from '../manage/finance/FinancePeriodPicker';
 import type { Shift, ShiftStats } from './types';
 
@@ -31,6 +31,8 @@ type Props = {
     refreshing: boolean;
     onPeriodChange: (period: Period) => void;
     onRefresh: () => Promise<void>;
+    /** businesses.tz of the master's business (NULL means Asia/Bishkek). */
+    timeZone?: string | null;
 };
 
 /** The master's shifts and earnings for a day, month or year (the website's /staff/finance). */
@@ -45,6 +47,7 @@ export function ShiftsScreenSections({
     refreshing,
     onPeriodChange,
     onRefresh,
+    timeZone,
 }: Props) {
     const { t, locale } = useLanguage();
     const money = (amount: number) => formatPrice(amount, locale);
@@ -60,7 +63,7 @@ export function ShiftsScreenSections({
         ? stats.totalBaseMasterShare!
         : Math.max(0, stats.totalAmount - baseSalonShare);
     const percent = (share: number) => stats.totalAmount > 0
-        ? t('staff.shifts.percentOfRevenue', { percent: ((share / stats.totalAmount) * 100).toFixed(1) })
+        ? t('staff.shifts.percentOfRevenue', { percent: formatNumber((share / stats.totalAmount) * 100, locale, 1) })
         : undefined;
 
     return (
@@ -110,7 +113,7 @@ export function ShiftsScreenSections({
             {stats.shifts.length > 0 ? (
                 <Section title={t('staff.shifts.periodTitle')}>
                     {stats.shifts.map((shift) => (
-                        <ShiftCard key={shift.id} shift={shift} />
+                        <ShiftCard key={shift.id} shift={shift} timeZone={timeZone} />
                     ))}
                 </Section>
             ) : (
@@ -124,13 +127,13 @@ export function ShiftsScreenSections({
     );
 }
 
-const clock = (iso: string) => new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-
 /** One shift: date, state and total; tap to see the clients of the shift. */
-function ShiftCard({ shift }: { shift: Shift }) {
+function ShiftCard({ shift, timeZone }: { shift: Shift; timeZone?: string | null }) {
     const { t, locale } = useLanguage();
     const money = (amount: number) => formatPrice(amount, locale);
-    const hours = (value: number) => t('staff.hours', { hours: value.toFixed(1) });
+    const hours = (value: number) => t('staff.hours', { hours: formatNumber(value, locale, 1) });
+    // The shift opened on the business clock, not the phone's.
+    const clock = (iso: string) => formatTime(iso, timeZone);
     const [expanded, setExpanded] = useState(shift.status === 'open');
     const isOpen = shift.status === 'open';
     const hasGuaranteed =
@@ -148,7 +151,7 @@ function ShiftCard({ shift }: { shift: Shift }) {
             >
                 <View style={styles.shiftMain}>
                     <View style={styles.shiftTitleRow}>
-                        <Text style={styles.shiftDate}>{formatDate(shift.shift_date, locale)}</Text>
+                        <Text style={styles.shiftDate}>{formatYmd(shift.shift_date, locale)}</Text>
                         <StatusPill
                             label={t(isOpen ? 'staff.status.open' : 'staff.status.closed')}
                             tone={isOpen ? 'success' : 'neutral'}

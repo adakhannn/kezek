@@ -6,6 +6,7 @@ import {
 } from '@core-domain/finance';
 
 import type { Locale } from '../../i18n/locale';
+import { formatNumber } from '../../utils/format';
 import type { WireShiftItem } from './api';
 import type {
     FinanceBooking,
@@ -85,7 +86,7 @@ export function guaranteeLine(
 }
 
 export function formatAmount(value: number, locale: Locale): string {
-    return value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU');
+    return formatNumber(value, locale);
 }
 
 export function formatShare(value: number, total: number): string {

@@ -1,20 +1,20 @@
 import { useCallback, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
+import { resolveBusinessTimeZone } from '@shared-client/timezone';
+
 import { useCurrentStaff } from '../../hooks/useCurrentStaff';
+import { businessTodayYmd } from '../../utils/businessWeek';
 import { apiRequest } from '../../lib/api';
 import type { ShiftStats, StaffInfo } from './types';
 
 export function useShiftsScreenData() {
     const [refreshing, setRefreshing] = useState(false);
     const [period, setPeriod] = useState<'day' | 'month' | 'year'>('day');
-    const [date, setDate] = useState(() => {
-        const today = new Date();
-        return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    });
-
     const currentStaff = useCurrentStaff();
     const staffInfo: StaffInfo | null = currentStaff.staffInfo;
+    // Today on the business calendar, not the phone's (ARCH-11).
+    const [date, setDate] = useState(() => businessTodayYmd(resolveBusinessTimeZone(staffInfo?.business?.tz)));
     const staffId = staffInfo?.id;
     const queryDate = period === 'day' ? date : period === 'month' ? date.slice(0, 7) : date.slice(0, 4);
 

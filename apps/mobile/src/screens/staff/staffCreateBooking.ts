@@ -23,9 +23,13 @@ export type StaffBookingBranch = { id: string; name: string };
 
 export type FreeSlot = { staff_id: string; branch_id: string; start_at: string; end_at: string };
 
-/** The business's active branches and services (the website page's reads, with the master's session). */
-export async function fetchStaffBookingOptions(bizId: string): Promise<{ branches: StaffBookingBranch[]; services: StaffBookingService[] }> {
-    const [branchesResult, servicesResult] = await Promise.all([
+/**
+ * The business's active branches and the active services this master performs (an active
+ * service_staff row), read with the master's session. A service nobody assigned to the master has
+ * no free time for them, so it is not offered (as the client flow hides services without a master).
+ */
+export async function fetchStaffBookingOptions(bizId: string, staffId: string): Promise<{ branches: StaffBookingBranch[]; services: StaffBookingService[] }> {
+    const [branchesResult, servicesResult, assignedResult] = await Promise.all([
         supabase.from('branches').select('id, name, is_active').eq('biz_id', bizId).eq('is_active', true).order('name'),
         supabase
             .from('services')
@@ -33,12 +37,15 @@ export async function fetchStaffBookingOptions(bizId: string): Promise<{ branche
             .eq('biz_id', bizId)
             .eq('active', true)
             .order('name_ru'),
+        supabase.from('service_staff').select('service_id').eq('staff_id', staffId).eq('is_active', true),
     ]);
     if (branchesResult.error) throw branchesResult.error;
     if (servicesResult.error) throw servicesResult.error;
+    if (assignedResult.error) throw assignedResult.error;
+    const assigned = new Set(((assignedResult.data ?? []) as { service_id: string }[]).map((row) => row.service_id));
     return {
         branches: ((branchesResult.data ?? []) as StaffBookingBranch[]).map(({ id, name }) => ({ id, name })),
-        services: (servicesResult.data ?? []) as StaffBookingService[],
+        services: ((servicesResult.data ?? []) as StaffBookingService[]).filter((service) => assigned.has(service.id)),
     };
 }
 

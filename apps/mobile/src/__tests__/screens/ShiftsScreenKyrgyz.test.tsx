@@ -109,10 +109,10 @@ describe('ShiftsScreen in Kyrgyz', () => {
         expect(screen.getByText('Ай')).toBeTruthy();
         expect(screen.getByText('Айлануу')).toBeTruthy();
         expect(screen.getByText('Кызматкердин үлүшү')).toBeTruthy();
-        expect(screen.getByText('кирешенин 60.0%')).toBeTruthy();
+        expect(screen.getByText('кирешенин 60%')).toBeTruthy();
         expect(screen.getByText('5 мин')).toBeTruthy();
         expect(screen.getAllByText('800 сом')).toHaveLength(2);
-        expect(screen.getByText('(1 кардар)')).toBeTruthy();
+        expect(screen.getByText('1 кардар')).toBeTruthy();
         expect(screen.getByText('Жабык')).toBeTruthy();
         expect(screen.getByText('Кызматкерге: 480 сом')).toBeTruthy();
         expect(screen.queryByText('Смены и статистика')).toBeNull();

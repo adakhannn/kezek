@@ -169,10 +169,10 @@ describe('ProfileScreen', () => {
     test('saves disabled notification preferences through the profile API', async () => {
         renderWithProviders(<ProfileScreen />);
 
-        await screen.findByText('Email уведомления');
-        await screen.findByText('WhatsApp уведомления');
+        await screen.findByText('Уведомления по email');
+        await screen.findByText('Уведомления в WhatsApp');
 
-        fireEvent(screen.getByLabelText('Email уведомления'), 'valueChange', false);
+        fireEvent(screen.getByLabelText('Уведомления по email'), 'valueChange', false);
         fireEvent(screen.getByTestId('profile-whatsapp-switch'), 'valueChange', false);
         fireEvent.press(await screen.findByText('Сохранить'));
 
@@ -273,7 +273,7 @@ describe('ProfileScreen', () => {
         }));
         renderWithProviders(<ProfileScreen />);
 
-        expect(await screen.findByText('• Сначала передайте владение или закройте все принадлежащие вам бизнесы. (2)')).toBeTruthy();
+        expect(await screen.findByText('• Сначала передайте владение или закройте все принадлежащие вам бизнесы (2)')).toBeTruthy();
         fireEvent.changeText(screen.getByTestId('account-deletion-confirmation'), 'УДАЛИТЬ');
         fireEvent.press(screen.getByText('Запросить удаление аккаунта'));
         expect(deletionCalls('POST')).toHaveLength(0);
@@ -438,7 +438,7 @@ describe('ProfileScreen', () => {
         fireEvent.press(screen.getByText('Подключить этот аккаунт'));
         await waitFor(() => expect(profileLinkCalls('finish')).toHaveLength(1));
         expect(JSON.parse(String(profileLinkCalls('finish')[0][1].body))).toEqual({ action: 'finish', token, telegramId: 777 });
-        await waitFor(() => expect(mockShowToast).toHaveBeenCalledWith('Telegram успешно подключен!', 'success'));
+        await waitFor(() => expect(mockShowToast).toHaveBeenCalledWith('Telegram успешно подключён!', 'success'));
         openURL.mockRestore();
     });
 

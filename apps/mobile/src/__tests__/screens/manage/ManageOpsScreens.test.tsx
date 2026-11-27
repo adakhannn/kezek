@@ -186,7 +186,7 @@ describe('business management screens', () => {
         fireEvent.press(await screen.findByText('Список'));
         expect(await screen.findByText('Стрижка')).toBeTruthy();
         expect(rpc).toHaveBeenCalledWith('dashboard_bookings_page', { p_biz_id: 'biz-1', p_status: 'notCancelled', p_limit: 30, p_offset: 0 });
-        fireEvent.press(screen.getByText('Только hold/confirmed'));
+        fireEvent.press(screen.getByText('Только ожидающие и подтверждённые'));
         await waitFor(() => expect(rpc).toHaveBeenCalledWith('dashboard_bookings_page', expect.objectContaining({ p_status: 'holdConfirmed' })));
 
         fireEvent.press(screen.getByText('Подтвердить'));

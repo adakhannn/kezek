@@ -358,7 +358,7 @@ export default function ManageStaffFinanceScreen() {
                                 <StatTile
                                     label={t('manageStaff.staff.finance.summary.toStaff')}
                                     value={money(calculations.masterShare)}
-                                    hint={guarantee !== null ? `${t('manageStaff.staff.finance.shift.guaranteedPayment')}: ${guarantee.toFixed(2)} ${t('manageStaff.staff.finance.shift.som')}` : undefined}
+                                    hint={guarantee !== null ? `${t('manageStaff.staff.finance.shift.guaranteedPayment')}: ${money(guarantee)}` : undefined}
                                     tone="success"
                                 />
                                 <StatTile label={t('manageStaff.staff.finance.summary.toBusiness')} value={money(calculations.salonShare)} tone="accent" />
@@ -371,9 +371,9 @@ export default function ManageStaffFinanceScreen() {
                                     <KeyValueRow label={t('manageStaff.staff.finance.details.total')} value={money(calculations.totalAmount + calculations.totalConsumables)} emphasis />
                                     <View style={ui.divider} />
                                     <Text style={ui.label}>{t('manageStaff.staff.finance.details.distribution')}</Text>
-                                    <KeyValueRow label={`${t('manageStaff.staff.finance.details.staffShare')} (${data.staffPercentMaster ?? 60}%)`} value={money(calculations.masterShare)} tone="success" />
+                                    <KeyValueRow label={t('manageStaff.staff.finance.details.staffShare', { percent: String(data.staffPercentMaster ?? 60) })} value={money(calculations.masterShare)} tone="success" />
                                     <KeyValueRow
-                                        label={`${t('manageStaff.staff.finance.details.businessShare')} ${t('manageStaff.staff.finance.details.businessSharePercent', { percent: String(data.staffPercentSalon ?? 40) })}`}
+                                        label={t('manageStaff.staff.finance.details.businessShare', { percent: String(data.staffPercentSalon ?? 40) })}
                                         value={money(calculations.salonShare)}
                                         tone="accent"
                                     />

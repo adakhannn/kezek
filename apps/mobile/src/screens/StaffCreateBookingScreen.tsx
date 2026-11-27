@@ -65,9 +65,9 @@ export default function StaffCreateBookingScreen() {
     }, [branchId, staffInfo?.branch?.id]);
 
     const optionsQuery = useQuery({
-        queryKey: ['staff-booking-options', bizId],
-        queryFn: () => fetchStaffBookingOptions(bizId),
-        enabled: !!bizId,
+        queryKey: ['staff-booking-options', bizId, staffId],
+        queryFn: () => fetchStaffBookingOptions(bizId, staffId),
+        enabled: !!bizId && !!staffId,
     });
     const branchServices = useMemo(
         () => servicesOfBranch(optionsQuery.data?.services ?? [], branchId),
@@ -212,7 +212,7 @@ export default function StaffCreateBookingScreen() {
                 <ChipGroup
                     options={dates.map((date) => {
                         const label = formatDateLabel(date);
-                        return { key: date, label: `${label.weekday} ${label.day} ${label.month}` };
+                        return { key: date, label: `${label.weekday}, ${label.dayMonth}` };
                     })}
                     value={day}
                     onChange={setDay}

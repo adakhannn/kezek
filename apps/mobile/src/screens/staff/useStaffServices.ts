@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
+import type { Locale } from '../../i18n/locale';
 import { supabase } from '../../lib/supabase';
+import { formatNumber } from '../../utils/format';
 
 export type StaffService = {
     id: string;
@@ -42,13 +44,13 @@ export function useStaffServices(staffId: string | undefined) {
 }
 
 /** "500 - 800 сом", "от 500 сом" or "до 800 сом" (web staff cabinet), or null without a price. */
-export function staffServicePriceKey(service: Pick<StaffService, 'price_from' | 'price_to'>):
+export function staffServicePriceKey(service: Pick<StaffService, 'price_from' | 'price_to'>, locale: Locale = 'ru'):
     | { key: 'parity.staffServices.priceBetween'; params: { from: string; to: string } }
     | { key: 'parity.staffServices.priceFromValue' | 'parity.staffServices.priceToValue'; params: { price: string } }
     | null {
     const { price_from: from, price_to: to } = service;
-    if (from && to) return { key: 'parity.staffServices.priceBetween', params: { from: String(from), to: String(to) } };
-    if (from) return { key: 'parity.staffServices.priceFromValue', params: { price: String(from) } };
-    if (to) return { key: 'parity.staffServices.priceToValue', params: { price: String(to) } };
+    if (from && to) return { key: 'parity.staffServices.priceBetween', params: { from: formatNumber(from, locale), to: formatNumber(to, locale) } };
+    if (from) return { key: 'parity.staffServices.priceFromValue', params: { price: formatNumber(from, locale) } };
+    if (to) return { key: 'parity.staffServices.priceToValue', params: { price: formatNumber(to, locale) } };
     return null;
 }

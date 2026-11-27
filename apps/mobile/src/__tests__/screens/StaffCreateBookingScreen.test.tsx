@@ -42,9 +42,17 @@ function builder(result: unknown) {
 describe('StaffCreateBookingScreen (web /staff/bookings "Создать запись")', () => {
     beforeEach(() => {
         const later = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
-        mockedSupabase.from.mockImplementation((table: string) => table === 'branches'
-            ? builder({ data: [{ id: 'br-1', name: 'Центр', is_active: true }], error: null })
-            : builder({ data: [{ id: 's1', name_ru: 'Стрижка', duration_min: 45, active: true, branch_id: 'br-1' }], error: null }));
+        mockedSupabase.from.mockImplementation((table: string) => {
+            if (table === 'branches') return builder({ data: [{ id: 'br-1', name: 'Центр', is_active: true }], error: null });
+            if (table === 'service_staff') return builder({ data: [{ service_id: 's1' }], error: null });
+            return builder({
+                data: [
+                    { id: 's1', name_ru: 'Стрижка', duration_min: 45, active: true, branch_id: 'br-1' },
+                    { id: 's2', name_ru: 'Маникюр', duration_min: 60, active: true, branch_id: 'br-1' },
+                ],
+                error: null,
+            });
+        });
         mockedSupabase.rpc.mockResolvedValue({ data: [{ staff_id: 'st1', branch_id: 'br-1', start_at: later, end_at: later }], error: null });
         mockedSupabase.auth.getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
         (apiRequest as jest.Mock).mockResolvedValue({ ok: true, data: { booking_id: 'bk-12345678-x', confirmed: true } });
@@ -54,6 +62,8 @@ describe('StaffCreateBookingScreen (web /staff/bookings "Создать запи
         render(<QueryClientProvider client={createTestQueryClient()}><StaffCreateBookingScreen /></QueryClientProvider>);
 
         fireEvent.press(await screen.findByTestId('staff-booking-service-s1'));
+        // Only the services this master performs (service_staff) are offered.
+        expect(screen.queryByTestId('staff-booking-service-s2')).toBeNull();
         await waitFor(() => expect(mockedSupabase.rpc).toHaveBeenCalledWith('get_free_slots_service_day_v2', expect.objectContaining({
             p_biz_id: 'biz-1', p_service_id: 's1', p_staff_id: 'st1',
         })));

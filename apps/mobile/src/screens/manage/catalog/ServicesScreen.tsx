@@ -16,6 +16,7 @@ import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useToast } from '../../../contexts/ToastContext';
 import { useLanguage } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
+import { formatNumber } from '../../../utils/format';
 import { getServiceName } from '../../../utils/i18n';
 import { catalogApi, catalogKeys, type ManagedService } from './catalogApi';
 import { catalogErrorText, hasBookingsMessage } from './catalogErrors';
@@ -40,7 +41,7 @@ export default function ServicesScreen({ navigation, route }: Props) {
         queryFn: () => catalogApi.services(bizId, branchFilter),
     });
 
-    const formatNumber = (n: number) => n.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU');
+    const formatPriceNumber = (n: number) => formatNumber(n, locale);
 
     const remove = async (service: ManagedService) => {
         const accepted = await confirm({
@@ -121,7 +122,9 @@ export default function ServicesScreen({ navigation, route }: Props) {
                                         const name = getServiceName(service, locale);
                                         const names = service.branch_ids.map(branchName).filter(Boolean).join(', ');
                                         const deleting = deletingId === service.first_id;
-                                        const price = `${formatNumber(service.price_from)}–${formatNumber(service.price_to)} ${t('catalog.booking.currency')}`;
+                                        const price = service.price_from === service.price_to
+                                            ? `${formatPriceNumber(service.price_from)} ${t('catalog.booking.currency')}`
+                                            : `${formatPriceNumber(service.price_from)}–${formatPriceNumber(service.price_to)} ${t('catalog.booking.currency')}`;
                                         return (
                                             <ItemCard
                                                 key={service.first_id}

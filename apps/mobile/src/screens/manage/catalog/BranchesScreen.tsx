@@ -12,7 +12,7 @@ import Screen from '../../../components/ui/Screen';
 import ScreenIntro from '../../../components/ui/ScreenIntro';
 import { colors } from '../../../constants/colors';
 import { useToast } from '../../../contexts/ToastContext';
-import { useLanguage } from '../../../i18n';
+import { translatePlural, useLanguage } from '../../../i18n';
 import { getMobileApiUrl } from '../../../lib/apiUrl';
 import type { RootStackParamList } from '../../../navigation/types';
 import { branchBookingUrl } from './branchForm';
@@ -75,7 +75,7 @@ export default function BranchesScreen({ navigation, route }: Props) {
                             <FeedbackBanner
                                 variant="warning"
                                 title={t('catalog.branches.new.limit.title')}
-                                message={t('catalog.branches.new.limit.description', { limit: data.branchLimit })}
+                                message={translatePlural(t, 'catalog.branches.new.limit.description', data.branchLimit)}
                                 compact
                             />
                         ) : null}

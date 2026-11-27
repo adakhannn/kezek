@@ -373,7 +373,7 @@ describe('SignInScreen', () => {
         fireEvent.press(screen.getByText(/Google/i));
 
         await waitFor(() => {
-            expect(mockShowToast).toHaveBeenCalledWith('Вход отменен', 'info');
+            expect(mockShowToast).toHaveBeenCalledWith('Вход отменён', 'info');
         });
 
         expect(mockTrackMobileEvent).toHaveBeenCalledWith(
@@ -402,7 +402,7 @@ describe('SignInScreen', () => {
         render(<SignInScreen />);
         fireEvent.press(screen.getByText(/Google/i));
         await waitFor(() => expect(mockedHandleDeepLinkAuth).toHaveBeenCalled());
-        await waitFor(() => expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('сессия не установлена'), 'info'), { timeout: 2000 });
+        await waitFor(() => expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('Не удалось завершить вход'), 'info'), { timeout: 2000 });
         expect(global.fetch).not.toHaveBeenCalled();
         expect(mockExchangeViaMobileApi).not.toHaveBeenCalled();
     });

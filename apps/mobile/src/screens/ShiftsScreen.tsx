@@ -101,6 +101,7 @@ export default function ShiftsScreen() {
             refreshing={refreshing}
             onPeriodChange={setPeriod}
             onRefresh={onRefresh}
+            timeZone={staffInfo.business?.tz ?? null}
         />
     );
 }

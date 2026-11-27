@@ -15,8 +15,8 @@ import { colors } from '../../../constants/colors';
 import { radii, space, typeScale } from '../../../constants/theme';
 import { translatePlural, useLanguage, type MobileI18nKey } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
-import { shortDateTime, useCurrentBusinessReady } from '../opsKit/format';
-import { formatMoney, formatShare } from '../opsKit/money';
+import { dayLabel, shortDateTime, useCurrentBusinessReady } from '../opsKit/format';
+import { formatMoney, formatNumber, formatShare } from '../opsKit/money';
 import { LoadError, ScreenSkeleton, ui } from '../opsKit/ui';
 import { fetchStaffFinanceStats, guaranteeTopup, type FinancePeriod } from './financeData';
 import FinancePeriodPicker, { financePeriodLabel } from './FinancePeriodPicker';
@@ -132,7 +132,7 @@ export default function ManageFinanceStaffScreen() {
                             <View key={shift.id} style={styles.shift} testID={`finance-shift-${shift.id}`}>
                                 <View style={styles.shiftHead}>
                                     <View style={styles.shiftTitle}>
-                                        <Text style={ui.strong}>{shift.shift_date}</Text>
+                                        <Text style={ui.strong}>{dayLabel(shift.shift_date, locale)}</Text>
                                         {shift.opened_at ? (
                                             <Text style={ui.muted}>
                                                 {shortDateTime(shift.opened_at, params.tz)}{shift.closed_at ? ` — ${shortDateTime(shift.closed_at, params.tz)}` : ''}
@@ -141,7 +141,7 @@ export default function ManageFinanceStaffScreen() {
                                         {shift.late_minutes > 0 || shift.hours_worked != null ? (
                                             <Text style={ui.muted}>
                                                 {[
-                                                    shift.hours_worked != null ? `${t('ops.finance.staffStats.hours')}: ${shift.hours_worked}` : null,
+                                                    shift.hours_worked != null ? t('staff.hours', { hours: formatNumber(shift.hours_worked, locale, 1) }) : null,
                                                     shift.late_minutes > 0 ? `${t('ops.finance.staffStats.late')}: ${shift.late_minutes} ${t('ops.finance.minutes')}` : null,
                                                 ].filter(Boolean).join(' · ')}
                                             </Text>

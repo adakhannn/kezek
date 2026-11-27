@@ -39,7 +39,7 @@ describe('QuickDesk client', () => {
 
     test('an account must be chosen from a finished search; a new client needs a valid name and E.164 phone', () => {
         expect(quickDeskClientPayload({ ...none, mode: 'existing', foundUsers: [user], selectedClientId: user.id, searchLoading: true }, t))
-            .toEqual({ ok: false, error: 'Выбери клиента' });
+            .toEqual({ ok: false, error: 'Выберите клиента' });
         expect(quickDeskClientPayload({ ...none, mode: 'new', newClientName: '', newClientPhone: '+996555123456' }, t))
             .toEqual({ ok: false, error: 'Введите имя клиента' });
         expect(quickDeskClientPayload({ ...none, mode: 'new', newClientName: 'А', newClientPhone: '+996555123456' }, t).ok).toBe(false);

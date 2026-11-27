@@ -52,4 +52,5 @@ export type ShiftStats = {
 export type StaffInfo = {
     id: string;
     full_name: string;
+    business?: { tz?: string | null } | null;
 };

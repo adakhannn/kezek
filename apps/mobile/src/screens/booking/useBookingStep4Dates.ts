@@ -17,10 +17,8 @@ export function useBookingStep4Dates(timeZone?: string | null) {
         formatInTimeZone(addDays(new Date(), index), tz, 'yyyy-MM-dd'),
     );
 
-    const formatDateLabel = (dateString: string) => {
-        const { day, month, weekday } = formatBookingDateLabel(dateString, locale);
-        return { day, month, weekday };
-    };
+    // day / month for a stacked chip (the month on its own line), dayMonth when they read together.
+    const formatDateLabel = (dateString: string) => formatBookingDateLabel(dateString, locale);
 
     return {
         dates,

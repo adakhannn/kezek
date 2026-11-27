@@ -16,7 +16,7 @@ import Section from '../../../components/ui/Section';
 import StatTile, { StatGrid } from '../../../components/ui/StatTile';
 import { colors } from '../../../constants/colors';
 import { radii, space, typeScale } from '../../../constants/theme';
-import { useLanguage, type MobileI18nKey } from '../../../i18n';
+import { translatePlural, useLanguage, type MobileI18nKey } from '../../../i18n';
 import { formatKyDate } from '../../../i18n/kyDate';
 import type { Locale } from '../../../i18n/locale';
 import { openWebAsCurrentUser } from '../../../lib/webLinks';
@@ -186,7 +186,7 @@ export default function ManageOverviewScreen() {
             {weights ? (
                 <Section
                     title={t('ops.home.rating.title')}
-                    caption={t('ops.home.rating.subtitle', { days: weights.windowDays })}
+                    caption={t('ops.home.rating.subtitle', { period: translatePlural(t, 'common.days', weights.windowDays) })}
                     actionLabel={t('ops.home.rating.moreInfo')}
                     onAction={() => void openWebAsCurrentUser('/docs/RATINGS_HOW_IT_WORKS').catch(() => undefined)}
                     testID="overview-rating"

@@ -168,11 +168,11 @@ describe('ShiftsScreen', () => {
         expect(await screen.findAllByText('800 сом')).toHaveLength(2);
         expect(await screen.findByText('480 сом')).toBeTruthy();
         expect(await screen.findByText('440 сом')).toBeTruthy();
-        expect(await screen.findByText('60.0% от выручки')).toBeTruthy();
-        expect(await screen.findByText('40.0% от выручки')).toBeTruthy();
-        expect(await screen.findByText('(1 клиент)')).toBeTruthy();
+        expect(await screen.findByText('60% от выручки')).toBeTruthy();
+        expect(await screen.findByText('40% от выручки')).toBeTruthy();
+        expect(await screen.findByText('1 клиент')).toBeTruthy();
 
-        fireEvent.press(await screen.findByText('06 июня 2026'));
+        fireEvent.press(await screen.findByText('6 июня 2026'));
 
         expect(await screen.findByText('F3 Client')).toBeTruthy();
         expect(await screen.findByText('Haircut')).toBeTruthy();
@@ -228,11 +228,11 @@ describe('ShiftsScreen', () => {
         renderWithProviders(<ShiftsScreen />);
 
         expect(await screen.findByText('500 сом')).toBeTruthy();
-        expect(await screen.findByText('60.0% от выручки')).toBeTruthy();
-        expect(await screen.findByText('40.0% от выручки')).toBeTruthy();
+        expect(await screen.findByText('60% от выручки')).toBeTruthy();
+        expect(await screen.findByText('40% от выручки')).toBeTruthy();
         expect(await screen.findByText('Сотруднику: 500 сом')).toBeTruthy();
         expect(await screen.findByText('Базовая: 60 сом')).toBeTruthy();
-        expect(await screen.findByText('За выход: 1.0 ч')).toBeTruthy();
+        expect(await screen.findByText('За выход: 1 ч')).toBeTruthy();
     });
 
     test('derives revenue percentages from the legacy stats contract', async () => {
@@ -263,8 +263,8 @@ describe('ShiftsScreen', () => {
 
         renderWithProviders(<ShiftsScreen />);
 
-        expect(await screen.findByText('60.0% от выручки')).toBeTruthy();
-        expect(await screen.findByText('40.0% от выручки')).toBeTruthy();
+        expect(await screen.findByText('60% от выручки')).toBeTruthy();
+        expect(await screen.findByText('40% от выручки')).toBeTruthy();
     });
 
     test('renders successful empty state when selected period has no shifts', async () => {

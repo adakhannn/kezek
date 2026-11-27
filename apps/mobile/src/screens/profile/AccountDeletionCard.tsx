@@ -31,7 +31,8 @@ const BLOCKER_KEYS: Record<string, MobileI18nKey> = {
 
 export function blockerText(blocker: AccountDeletionBlocker, t: (key: MobileI18nKey) => string): string {
     const key = BLOCKER_KEYS[blocker.code];
-    return `${key ? t(key) : blocker.message} (${blocker.count})`;
+    const text = (key ? t(key) : blocker.message).replace(/\.\s*$/, '');
+    return `${text} (${blocker.count})`;
 }
 
 /**

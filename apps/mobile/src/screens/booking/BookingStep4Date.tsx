@@ -73,8 +73,7 @@ export default function BookingStep4Date() {
                                 accessibilityLabel={[
                                     isToday ? t('booking.step4.today') : null,
                                     dateLabel.weekday,
-                                    dateLabel.day,
-                                    dateLabel.month,
+                                    dateLabel.dayMonth,
                                 ].filter(Boolean).join(', ')}
                             >
                                 <Text style={[styles.weekday, selected ? styles.textSelected : null]}>

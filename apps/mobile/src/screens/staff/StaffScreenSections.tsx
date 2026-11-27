@@ -125,7 +125,7 @@ export function StaffScreenSections({
                     ) : (
                         <ListGroup inset>
                             {services.map((service) => {
-                                const price = staffServicePriceKey(service);
+                                const price = staffServicePriceKey(service, locale);
                                 return (
                                     <ListRow
                                         key={service.id}

@@ -16,7 +16,7 @@ export const managerRu = {
     'manager.feed.webHint': 'Настройки, сотрудники и финансы — в веб-кабинете',
     'manager.manage.selectError': 'Не удалось открыть раздел этого бизнеса. Проверьте соединение и попробуйте ещё раз.',
     'manager.manage.sectionTitle': 'Управление',
-    'manager.feed.allBookings': 'Все брони',
+    'manager.feed.allBookings': 'Все записи',
     'manager.role.owner': 'Владелец',
     'manager.role.admin': 'Администратор',
     'manager.role.manager': 'Менеджер',

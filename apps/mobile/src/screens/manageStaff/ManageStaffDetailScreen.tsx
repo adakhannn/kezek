@@ -19,7 +19,7 @@ import KitStatTile, { StatGrid } from '../../components/ui/StatTile';
 import { colors } from '../../constants/colors';
 import { radii, space, typeScale } from '../../constants/theme';
 import { useToast } from '../../contexts/ToastContext';
-import { useLanguage, type MobileI18nKey } from '../../i18n';
+import { translatePlural, useLanguage, type MobileI18nKey } from '../../i18n';
 import type { ManageStaffRouteParams, RootStackParamList } from '../../navigation/types';
 import { fetchStaffDetail } from './api';
 import { staffErrorMessage } from './errors';
@@ -200,7 +200,7 @@ export default function ManageStaffDetailScreen() {
             {ratingWeights ? (
                 <Section
                     title={t('manageStaff.staff.rating.title')}
-                    caption={t('manageStaff.staff.rating.subtitle', { days: String(ratingWeights.windowDays) })}
+                    caption={t('manageStaff.staff.rating.subtitle', { period: translatePlural(t, 'common.days', ratingWeights.windowDays) })}
                 >
                     <Card variant="plain" padding="md" style={styles.rating}>
                         <View style={styles.score}>
@@ -223,14 +223,13 @@ export default function ManageStaffDetailScreen() {
                                 </View>
                             );
                         })}
-                        <Text style={ui.muted}>{`${t('manageStaff.staff.rating.window')}: ${ratingWeights.windowDays}`}</Text>
                     </Card>
                 </Section>
             ) : null}
 
             <Section
                 title={t('manageStaff.staff.detail.sections.reviews.title')}
-                right={<Badge label={`${t('manageStaff.staff.detail.reviews.count')} ${reviews.length}`} />}
+                right={<Badge label={t('manageStaff.staff.detail.reviews.count', { count: reviews.length })} />}
             >
                 {reviews.length === 0 ? (
                     <EmptyState icon="chatbubble-ellipses-outline" compact title={t('manageStaff.staff.detail.reviews.empty')} />

@@ -191,7 +191,7 @@ describe('DashboardScreen (O1)', () => {
         for (const key of ['overview', 'bookings', 'finance', 'analytics', 'roleApplications', 'visitPackages']) {
             expect(await screen.findByTestId(`manage-${key}`)).toBeTruthy();
         }
-        fireEvent.press(screen.getByText('Все брони'));
+        fireEvent.press(screen.getByText('Все записи'));
         await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('ManageBookings', { bizId: 'biz-1', bizName: 'Low Fade', tz: 'Asia/Bishkek' }));
         expect(api).toHaveBeenCalledWith('/me/current-business', expect.objectContaining({ method: 'POST', body: JSON.stringify({ bizId: 'biz-1' }) }));
     });

@@ -19,7 +19,7 @@ import { colors } from '../../../constants/colors';
 import { space } from '../../../constants/theme';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useToast } from '../../../contexts/ToastContext';
-import { useLanguage } from '../../../i18n';
+import { translatePlural, useLanguage } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
 import {
     applyMapPick,
@@ -80,7 +80,7 @@ export default function BranchEditScreen({ navigation, route }: Props) {
                                 <FeedbackBanner
                                     variant="warning"
                                     title={t('catalog.branches.new.limit.title')}
-                                    message={t('catalog.branches.new.limit.description', { limit: data.branchLimit })}
+                                    message={translatePlural(t, 'catalog.branches.new.limit.description', data.branchLimit)}
                                 />
                             </Screen>
                         );

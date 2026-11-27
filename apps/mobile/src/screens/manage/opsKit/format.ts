@@ -6,13 +6,13 @@ import { resolveBusinessTimeZone } from '@shared-client/timezone';
 
 import { formatKyDate } from '../../../i18n/kyDate';
 import type { Locale } from '../../../i18n/locale';
-import { formatDate } from '../../../utils/format';
+import { formatYmd } from '../../../utils/format';
 import { ensureCurrentBusiness } from '../currentBusiness';
 
 /** "26 ноября 2026" for a `YYYY-MM-DD` business date (no time zone shift). */
 export function dayLabel(date: string, locale: Locale): string {
     if (!date) return '';
-    return formatDate(new Date(`${date}T12:00:00Z`), locale, 'UTC');
+    return formatYmd(date, locale);
 }
 
 /** "ноябрь 2026" / "November 2026" / "2026-ж., ноябрь" for the month of a date. */

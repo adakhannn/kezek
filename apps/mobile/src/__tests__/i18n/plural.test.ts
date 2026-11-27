@@ -33,6 +33,9 @@ describe('plural forms', () => {
         expect(bases).toEqual([
             'booking.duration.minutesLong',
             'cabinet.signOut.pending.message',
+            'catalog.branches.new.limit.description',
+            'catalog.branches.promotions.usageCount',
+            'common.days',
             'discovery.home.promotions',
             'manageStaff.clientCount',
             'manageStaff.shiftCount',
@@ -55,9 +58,16 @@ describe('plural forms', () => {
         const [tRu, tKy, tEn] = (['ru', 'ky', 'en'] as const).map(createTranslate);
         const counted = (t: Translate, key: PluralKey, counts: number[]) => counts.map((count) => translatePlural(t, key, count));
 
-        expect(counted(tRu, 'staff.shifts.clientsCount', [1, 3, 5, 21])).toEqual(['(1 клиент)', '(3 клиента)', '(5 клиентов)', '(21 клиент)']);
-        expect(counted(tEn, 'staff.shifts.clientsCount', [1, 2, 21])).toEqual(['(1 client)', '(2 clients)', '(21 clients)']);
-        expect(counted(tKy, 'staff.shifts.clientsCount', [1, 5])).toEqual(['(1 кардар)', '(5 кардар)']);
+        expect(counted(tRu, 'staff.shifts.clientsCount', [1, 3, 5, 21])).toEqual(['1 клиент', '3 клиента', '5 клиентов', '21 клиент']);
+        expect(counted(tEn, 'staff.shifts.clientsCount', [1, 2, 21])).toEqual(['1 client', '2 clients', '21 clients']);
+        expect(counted(tKy, 'staff.shifts.clientsCount', [1, 5])).toEqual(['1 кардар', '5 кардар']);
+
+        // Rating windows ("за 21 день", "за 30 дней"), promotion uses and the branch limit.
+        expect(counted(tRu, 'common.days', [1, 2, 21, 30])).toEqual(['1 день', '2 дня', '21 день', '30 дней']);
+        expect(counted(tEn, 'common.days', [1, 30])).toEqual(['1 day', '30 days']);
+        expect(counted(tRu, 'catalog.branches.promotions.usageCount', [1, 2, 5])).toEqual(['Использовано: 1 раз', 'Использовано: 2 раза', 'Использовано: 5 раз']);
+        expect(counted(tRu, 'catalog.branches.new.limit.description', [1, 3]).map((text) => text.split('.')[0]))
+            .toEqual(['Для бизнеса разрешено до 1 филиала', 'Для бизнеса разрешено до 3 филиалов']);
 
         expect(counted(tRu, 'staff.shiftQuick.operationsQueued', [1, 2, 5])).toEqual([
             '1 операция в очереди',

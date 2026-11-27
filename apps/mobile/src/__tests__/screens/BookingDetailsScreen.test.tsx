@@ -134,13 +134,13 @@ describe('BookingDetailsScreen', () => {
     test('allows cancelling confirmed upcoming booking', async () => {
         renderWithProviders(<BookingDetailsScreen />);
 
-        expect(await screen.findByText('Отменить бронирование')).toBeTruthy();
+        expect(await screen.findByText('Отменить запись')).toBeTruthy();
     });
 
     test('returns to Cabinet after cancelling instead of an emptied booking flow', async () => {
         renderWithProviders(<BookingDetailsScreen />);
 
-        fireEvent.press(await screen.findByText('Отменить бронирование'));
+        fireEvent.press(await screen.findByText('Отменить запись'));
 
         await waitFor(() => {
             expect(mockNavigationReset).toHaveBeenCalledWith({
@@ -160,11 +160,11 @@ describe('BookingDetailsScreen', () => {
 
     test('shows not-found state when the server answers 404', async () => {
         mockRouteId = 'missing-booking-id';
-        mockedApiRequest.mockRejectedValue(apiError('Бронирование не найдено', 404));
+        mockedApiRequest.mockRejectedValue(apiError('Запись не найдена', 404));
 
         renderWithProviders(<BookingDetailsScreen />);
 
-        expect(await screen.findByText('Бронирование не найдено')).toBeTruthy();
+        expect(await screen.findByText('Запись не найдена')).toBeTruthy();
         expect(screen.getByText('Запись удалена или относится к другому аккаунту.')).toBeTruthy();
         expect(screen.queryByText('Тестовая услуга')).toBeNull();
         expect(screen.queryByText('Повторить')).toBeNull();
@@ -177,7 +177,7 @@ describe('BookingDetailsScreen', () => {
         renderWithProviders(<BookingDetailsScreen />);
 
         expect(await screen.findByText('Не удалось загрузить запись')).toBeTruthy();
-        expect(screen.queryByText('Бронирование не найдено')).toBeNull();
+        expect(screen.queryByText('Запись не найдена')).toBeNull();
 
         fireEvent.press(screen.getByText('Повторить'));
         expect(await screen.findByText('Тестовая услуга')).toBeTruthy();
@@ -208,7 +208,7 @@ describe('BookingDetailsScreen', () => {
         expect(await screen.findByText('Стрижка из кэша')).toBeTruthy();
         expect(jest.mocked(loadOfflineBookings)).toHaveBeenCalledWith('user-1');
         expect(screen.getByText('Нет подключения')).toBeTruthy();
-        expect(screen.queryByText('Отменить бронирование')).toBeNull();
+        expect(screen.queryByText('Отменить запись')).toBeNull();
         expect(screen.queryByText('Перенести запись')).toBeNull();
     });
 
@@ -219,7 +219,7 @@ describe('BookingDetailsScreen', () => {
 
         renderWithProviders(<BookingDetailsScreen />);
 
-        expect(await screen.findByText('Бронирование не найдено')).toBeTruthy();
+        expect(await screen.findByText('Запись не найдена')).toBeTruthy();
         expect(jest.mocked(loadOfflineBookings)).not.toHaveBeenCalled();
     });
 
@@ -242,7 +242,7 @@ describe('BookingDetailsScreen', () => {
 
         expect(await screen.findByText('Айда')).toBeTruthy();
         expect(screen.getByTestId('booking-staff-view-notice')).toBeTruthy();
-        expect(screen.queryByText('Отменить бронирование')).toBeNull();
+        expect(screen.queryByText('Отменить запись')).toBeNull();
         expect(screen.queryByText('Перенести запись')).toBeNull();
         expect(screen.queryByText('Оставить отзыв')).toBeNull();
         expect(screen.queryByText('Повторить запись')).toBeNull();
@@ -272,11 +272,11 @@ describe('BookingDetailsScreen', () => {
         renderWithProviders(<BookingDetailsScreen />);
 
         expect(await screen.findByText('Стрижка + Укладка')).toBeTruthy();
-        expect(screen.getByText('Укладка · 15 мин.')).toBeTruthy();
+        expect(screen.getByText('Укладка · 15 мин')).toBeTruthy();
         expect(screen.getByText('Акция: Счастливые часы · Скидка 20%')).toBeTruthy();
         expect(screen.getByText('Итого: 800 сом')).toBeTruthy();
         // B6: the promo step shows for a promotion and is done once paid.
-        expect(screen.getByText('Промо применено')).toBeTruthy();
+        expect(screen.getByText('Скидка применена')).toBeTruthy();
 
         fireEvent.press(screen.getByText('Маршрут'));
         await waitFor(() => expect(openURL).toHaveBeenCalledWith(expect.stringContaining('42.87%2C74.59')));
@@ -287,7 +287,7 @@ describe('BookingDetailsScreen', () => {
         renderWithProviders(<BookingDetailsScreen />);
 
         expect(await screen.findByText('Тестовая услуга')).toBeTruthy();
-        expect(screen.queryByText('Промо применено')).toBeNull();
+        expect(screen.queryByText('Скидка применена')).toBeNull();
     });
 
     test('paid with a package says so', async () => {
@@ -378,7 +378,7 @@ describe('BookingDetailsScreen', () => {
         renderWithProviders(<BookingDetailsScreen />);
 
         expect(await screen.findByTestId('booking-started-notice')).toBeTruthy();
-        expect(screen.queryByText('Отменить бронирование')).toBeNull();
+        expect(screen.queryByText('Отменить запись')).toBeNull();
         expect(screen.queryByText('Перенести запись')).toBeNull();
     });
 
@@ -394,7 +394,7 @@ describe('BookingDetailsScreen', () => {
 
         renderWithProviders(<BookingDetailsScreen />);
 
-        expect(await screen.findByText('Отменить бронирование')).toBeTruthy();
+        expect(await screen.findByText('Отменить запись')).toBeTruthy();
         expect(screen.queryByText('Перенести запись')).toBeNull();
         expect(screen.getByText('Запись с акцией или абонементом переносит организация: свяжитесь с ней.')).toBeTruthy();
     });
