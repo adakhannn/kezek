@@ -118,6 +118,6 @@ const styles = StyleSheet.create({
     text: { fontSize: 14, fontWeight: '500', color: colors.text.secondary },
     textSelected: { color: colors.text.light, fontWeight: '600' },
     count: { minWidth: 20, paddingHorizontal: 6, borderRadius: radii.pill, backgroundColor: colors.fill.track, alignItems: 'center' },
-    countSelected: { backgroundColor: 'rgba(255,255,255,0.22)' },
+    countSelected: { backgroundColor: colors.fill.onAccent },
     countText: { fontSize: 12, lineHeight: 18, fontWeight: '600', color: colors.text.secondary },
 });

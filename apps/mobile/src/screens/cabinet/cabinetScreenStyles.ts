@@ -61,7 +61,7 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: colors.fill.track,
     },
-    tabCountSelected: { backgroundColor: 'rgba(255, 255, 255, 0.22)' },
+    tabCountSelected: { backgroundColor: colors.fill.onAccent },
     tabCountText: { fontSize: 12, lineHeight: 18, fontWeight: '600', color: colors.text.secondary },
 
     bookingsList: { gap: layout.itemGap },

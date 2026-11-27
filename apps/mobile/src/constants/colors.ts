@@ -110,6 +110,8 @@ export const colors = {
         skeletonHighlight: '#243047',
         pressed: 'rgba(148, 163, 184, 0.08)',
         selected: 'rgba(99, 102, 241, 0.14)',
+        /** A count pill on a selected (accent-filled) chip or tab. */
+        onAccent: 'rgba(255, 255, 255, 0.22)',
     },
 
     interactive: {

@@ -1,6 +1,6 @@
-import Button from '../components/ui/Button';
-import EmptyState from '../components/ui/EmptyState';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ErrorState from '../components/ui/ErrorState';
+import Screen from '../components/ui/Screen';
+import { SkeletonBlock, SkeletonCard, SkeletonList } from '../components/ui/Skeleton';
 import { useLanguage } from '../i18n';
 import { ProfileScreenSections } from './profile/ProfileScreenSections';
 import { useProfileScreenData } from './profile/useProfileScreenData';
@@ -13,18 +13,27 @@ export default function ProfileScreen() {
     const { t } = useLanguage();
     const data = useProfileScreenData();
 
+    // The shape of the profile while it loads: the person, the data card, the settings rows.
     if (data.isLoading) {
-        return <LoadingSpinner message={t('cabinet.profile.loading')} />;
+        return (
+            <Screen tabBar testID="profile-loading">
+                <SkeletonBlock width="50%" height={20} />
+                <SkeletonCard lines={3} />
+                <SkeletonList rows={4} avatar={false} />
+            </Screen>
+        );
     }
 
     if (data.loadError) {
         return (
-            <EmptyState
-                icon="alert-circle"
-                title={t('cabinet.profile.loadError.title')}
-                message={t('cabinet.profile.loadError.message')}
-                action={<Button title={t('cabinet.ui.retry')} onPress={() => void data.retryLoad()} variant="outline" fullWidth />}
-            />
+            <Screen tabBar>
+                <ErrorState
+                    title={t('cabinet.profile.loadError.title')}
+                    message={t('cabinet.profile.loadError.message')}
+                    retryLabel={t('cabinet.ui.retry')}
+                    onRetry={() => void data.retryLoad()}
+                />
+            </Screen>
         );
     }
 
