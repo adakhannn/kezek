@@ -558,7 +558,7 @@
       }
     }
   },
-  "x-explicit-operation-count": 238,
+  "x-explicit-operation-count": 239,
   "x-reviewed-operation-count": 4,
   "paths": {
     "/.well-known/assetlinks.json": {
@@ -5670,6 +5670,25 @@
         },
         "x-next-route": "/api/staff/me/schedule",
         "x-source-file": "apps/web/src/app/api/staff/me/schedule/route.ts",
+        "x-manual-contract": "docs/api/BUSINESS_WORKFLOWS.md"
+      }
+    },
+    "/api/staff/me/time-off": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/BUSINESS_WORKFLOWS.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/staff/me/time-off",
+        "x-source-file": "apps/web/src/app/api/staff/me/time-off/route.ts",
         "x-manual-contract": "docs/api/BUSINESS_WORKFLOWS.md"
       }
     },

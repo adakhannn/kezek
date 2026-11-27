@@ -98,6 +98,20 @@ describe('StaffScheduleScreen (S3)', () => {
         expect(rulesQuery?.lt).toHaveBeenCalledWith('date_on', addDaysYmd(lastDay, 1));
     });
 
+    test('with the explicit model off, a manager-set absence shows on its days', async () => {
+        mockTables([{ date_on: week[0], intervals: [{ start: '08:00', end: '12:00' }], branch_id: 'home' }]);
+        api.mockImplementation(async (path: string) => {
+            if (path.startsWith('/api/staff/me/time-off')) return { ok: true, data: { items: [{ date_from: week[2], date_to: week[3] }] } };
+            throw Object.assign(new Error('off'), { status: 503 });
+        });
+
+        renderScreen();
+
+        expect(await within(await screen.findByTestId(`schedule-day-${week[2]}`)).findByText('Отсутствие')).toBeTruthy();
+        expect(within(screen.getByTestId(`schedule-day-${week[3]}`)).getByText('Отсутствие')).toBeTruthy();
+        expect(within(screen.getByTestId(`schedule-day-${week[0]}`)).getByText('08:00–12:00')).toBeTruthy();
+    });
+
     test('another failure is an error, not an empty schedule', async () => {
         mockTables();
         api.mockRejectedValue(Object.assign(new Error('down'), { status: 500 }));

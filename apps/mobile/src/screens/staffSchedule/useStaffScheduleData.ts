@@ -80,6 +80,21 @@ export async function loadStaffSchedule(staffId: string, bizId: string, from: st
         const intervals = ranges(rule.intervals);
         days.set(rule.date_on, { date: rule.date_on, kind: intervals.length ? 'working' : 'off', intervals, breaks: [], branchId: rule.branch_id ?? null });
     }
+    // Absences the manager set (RLS hides staff_time_off from the master): the shift screen already
+    // calls such a day off, so the schedule says so too. An older server without the route: skip.
+    try {
+        const absences = await apiRequest<{ ok?: boolean; data?: { items?: { date_from: string; date_to: string }[] } }>(
+            `/api/staff/me/time-off?from=${from}&to=${to}`,
+            { headers: { [STAFF_ID_HEADER]: staffId } },
+        );
+        for (const item of absences?.data?.items ?? []) {
+            for (let ymd = item.date_from < from ? from : item.date_from; ymd <= item.date_to && ymd <= to; ymd = addDaysYmd(ymd, 1)) {
+                days.set(ymd, { date: ymd, kind: 'absence', intervals: [], breaks: [], branchId: null });
+            }
+        }
+    } catch {
+        // The schedule still shows the dated rules.
+    }
     return days;
 }
 

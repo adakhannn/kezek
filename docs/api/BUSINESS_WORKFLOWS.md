@@ -282,6 +282,20 @@ SQL `read_staff_schedule` дополнительно проверяет поря
 
 Источники: [route](../../apps/web/src/app/api/staff/me/schedule/route.ts), [общий handler](../../apps/web/src/lib/scheduling/server.ts), [тип](../../apps/web/src/lib/scheduling/model.ts).
 
+### GET `/api/staff/me/time-off`
+
+<!-- api-contract: GET /api/staff/me/time-off -->
+
+| Часть | Контракт |
+| --- | --- |
+| Доступ/вход | Staff cookie сайта или Bearer приложения через [getStaffContextForRequest](../../apps/web/src/lib/authBiz.ts); карточка — как у `/api/staff/me/schedule` |
+| Запрос | `from`, `to` — YYYY-MM-DD, from <= to; иначе 400 validation |
+| Успех | `data.items`: до 100 активных (не отменённых) отсутствий мастера, пересекающих диапазон, только `date_from`, `date_to`; причина не отдаётся |
+| Ошибки | 400 validation; ошибки staff-контекста; прочее — handleApiError |
+| Эффекты | Только чтение через service client: RLS `staff_time_off` открыта лишь руководителям. Работает и при выключенной явной модели расписаний: приложение показывает эти дни в «Моём расписании» как отсутствие, как экран смены называет их выходным |
+
+Источники: [route](../../apps/web/src/app/api/staff/me/time-off/route.ts).
+
 ### POST `/api/staff/[id]/schedule`
 
 <!-- api-contract: POST /api/staff/[id]/schedule -->

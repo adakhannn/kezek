@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **208 route-файлов, 253 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **209 route-файлов, 254 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 593 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `4fdbb1c4989725db381c2b38fccad1592a9343143a058f056ea8d40b95bf8d31`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 594 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `4d60b3c4070c4ac7740db65896ad7afe1d25340f21818f0874060b593b3b829b`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -208,6 +208,7 @@
 | `/api/staff/create` | POST | [route](../../apps/web/src/app/api/staff/create/route.ts) | [runStaffCreateHttp](../../apps/web/src/lib/staffCreateHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/staff/finance` | GET | [route](../../apps/web/src/app/api/staff/finance/route.ts) | [runStaffFinanceHttp](../../apps/web/src/lib/staffFinanceHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/staff/me/schedule` | GET | [route](../../apps/web/src/app/api/staff/me/schedule/route.ts) | Внутри route; читать исходник | [справочник](BUSINESS_WORKFLOWS.md) |
+| `/api/staff/me/time-off` | GET | [route](../../apps/web/src/app/api/staff/me/time-off/route.ts) | Внутри route; читать исходник | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/api/staff/shift/close` | POST | [route](../../apps/web/src/app/api/staff/shift/close/route.ts) | [runStaffShiftCloseHttp](../../apps/web/src/lib/staffShiftCloseHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/staff/shift/items` | POST | [route](../../apps/web/src/app/api/staff/shift/items/route.ts) | [runStaffShiftItemsHttp](../../apps/web/src/lib/staffShiftItemsHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
 | `/api/staff/shift/open` | POST | [route](../../apps/web/src/app/api/staff/shift/open/route.ts) | [runStaffShiftOpenHttp](../../apps/web/src/lib/staffShiftOpenHttpService.ts) | [справочник](STAFF_AND_FINANCE.md) |
