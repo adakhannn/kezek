@@ -35,7 +35,7 @@ export const staffKy: Record<keyof typeof staffRu, string> = {
     'staff.workspace.changeBusiness': 'Бизнести алмаштыруу',
     'staff.workspace.changeBusinessHint': 'Бизнестериңиздин тизмесин ачат',
     'staff.workspace.stats': 'Статистика',
-    'staff.workspace.upcoming': 'Алдыдагы жазылыштар',
+    'staff.workspace.upcoming': 'Менин жазылууларым',
     'staff.workspace.bookingClient': 'Кардар: {name}',
     'staff.workspace.emptyTitle': 'Алдыда турган жазылыштар жок',
     'staff.workspace.emptyMessage': 'Кардарлар сизге жазылганда, жазылыштар ушул жерде пайда болот',

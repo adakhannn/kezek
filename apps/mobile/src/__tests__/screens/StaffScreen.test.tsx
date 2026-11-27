@@ -19,7 +19,7 @@ const TEXT = {
     nonStaffTitle: 'Вы не являетесь сотрудником',
     nonStaffMessage: 'Здесь будут отображаться ваши записи после назначения сотрудником',
     branchName: 'Low Fade Юго-Восток',
-    upcomingTitle: 'Предстоящие записи',
+    upcomingTitle: 'Мои записи',
     serviceName: 'Взрослая стрижка',
     shiftAction: 'Моя смена',
     statsAction: 'Статистика',

@@ -37,7 +37,7 @@ export const staffRu = {
     'staff.workspace.changeBusiness': 'Сменить бизнес',
     'staff.workspace.changeBusinessHint': 'Открывает список ваших бизнесов',
     'staff.workspace.stats': 'Статистика',
-    'staff.workspace.upcoming': 'Предстоящие записи',
+    'staff.workspace.upcoming': 'Мои записи',
     'staff.workspace.bookingClient': 'Клиент: {name}',
     'staff.workspace.emptyTitle': 'Нет предстоящих записей',
     'staff.workspace.emptyMessage': 'Записи появятся здесь, когда клиенты запишутся к вам',

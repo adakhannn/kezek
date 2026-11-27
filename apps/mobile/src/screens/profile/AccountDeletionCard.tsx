@@ -127,25 +127,30 @@ export function AccountDeletionCard({ userId }: { userId?: string }) {
                                 ))}
                             </View>
                         ) : null}
-                        <FormField
-                            label={t('parity.deletion.confirmation.label')}
-                            value={confirmation}
-                            onChangeText={setConfirmation}
-                            placeholder={t('parity.deletion.confirmation.placeholder', { phrase })}
-                            autoCapitalize="characters"
-                            autoCorrect={false}
-                            editable={state.eligible && !busy}
-                            testID="account-deletion-confirmation"
-                            containerStyle={styles.field}
-                        />
-                        <Button
-                            title={t('parity.deletion.request')}
-                            onPress={() => void submit()}
-                            variant="danger"
-                            fullWidth
-                            loading={requestMutation.isPending}
-                            disabled={!state.eligible || confirmation.trim() !== phrase || busy}
-                        />
+                        {/* While something blocks deletion only the reasons show: a field and a red button that cannot be used read as a broken form. */}
+                        {state.eligible ? (
+                            <>
+                                <FormField
+                                    label={t('parity.deletion.confirmation.label')}
+                                    value={confirmation}
+                                    onChangeText={setConfirmation}
+                                    placeholder={t('parity.deletion.confirmation.placeholder', { phrase })}
+                                    autoCapitalize="characters"
+                                    autoCorrect={false}
+                                    editable={state.eligible && !busy}
+                                    testID="account-deletion-confirmation"
+                                    containerStyle={styles.field}
+                                />
+                                <Button
+                                    title={t('parity.deletion.request')}
+                                    onPress={() => void submit()}
+                                    variant="danger"
+                                    fullWidth
+                                    loading={requestMutation.isPending}
+                                    disabled={!state.eligible || confirmation.trim() !== phrase || busy}
+                                />
+                            </>
+                        ) : null}
                     </View>
                 ) : stateQuery.isLoading ? (
                     <Text style={styles.muted}>{t('common.loading')}</Text>

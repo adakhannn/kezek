@@ -35,7 +35,7 @@ export const staffEn: Record<keyof typeof staffRu, string> = {
     'staff.workspace.changeBusiness': 'Change business',
     'staff.workspace.changeBusinessHint': 'Opens the list of your businesses',
     'staff.workspace.stats': 'Statistics',
-    'staff.workspace.upcoming': 'Upcoming bookings',
+    'staff.workspace.upcoming': 'My bookings',
     'staff.workspace.bookingClient': 'Client: {name}',
     'staff.workspace.emptyTitle': 'No upcoming bookings',
     'staff.workspace.emptyMessage': 'Bookings will appear here when clients book with you',

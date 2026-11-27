@@ -182,7 +182,7 @@ export function DashboardScreenSections(props: Props) {
                                         <View style={styles.bookingHeader}>
                                             <Text style={styles.bookingTime}>
                                                 {scope === 'upcoming' ? `${formatDate(booking.start_at, locale, timezone)} · ` : ''}
-                                                {formatTime(booking.start_at, timezone)} – {formatTime(booking.end_at, timezone)}
+                                                {formatTime(booking.start_at, timezone)}–{formatTime(booking.end_at, timezone)}
                                             </Text>
                                             <BookingStatusBadge status={booking.status} />
                                         </View>

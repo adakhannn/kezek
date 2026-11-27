@@ -219,7 +219,7 @@ function BookingItem({ booking, tz, onOpen }: { booking: UpcomingBooking; tz: st
                         </Text>
                     ) : null}
                     <Text style={styles.bookingMeta}>
-                        {formatDate(booking.start_at, locale, tz)} · {start} – {formatTime(booking.end_at, tz)}
+                        {formatDate(booking.start_at, locale, tz)} · {start}–{formatTime(booking.end_at, tz)}
                     </Text>
                 </View>
                 <BookingStatusPill status={booking.status} />

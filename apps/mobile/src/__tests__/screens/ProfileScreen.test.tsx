@@ -267,15 +267,15 @@ describe('ProfileScreen', () => {
         await waitFor(() => expect(mockShowToast).toHaveBeenCalledWith('Удаление аккаунта запрошено', 'success'));
     });
 
-    test('shows what blocks deletion and keeps the request button off', async () => {
+    test('shows what blocks deletion and no request form', async () => {
         mockedApiRequest.mockImplementation(apiAnswers({
             '/account/deletion': { ok: true, data: { request: null, eligible: false, blockers: [{ code: 'owned_businesses', message: 'x', count: 2 }] } },
         }));
         renderWithProviders(<ProfileScreen />);
 
         expect(await screen.findByText('• Сначала передайте владение или закройте все принадлежащие вам бизнесы (2)')).toBeTruthy();
-        fireEvent.changeText(screen.getByTestId('account-deletion-confirmation'), 'УДАЛИТЬ');
-        fireEvent.press(screen.getByText('Запросить удаление аккаунта'));
+        expect(screen.queryByTestId('account-deletion-confirmation')).toBeNull();
+        expect(screen.queryByText('Запросить удаление аккаунта')).toBeNull();
         expect(deletionCalls('POST')).toHaveLength(0);
     });
 
