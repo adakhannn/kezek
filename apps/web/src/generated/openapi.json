@@ -558,7 +558,7 @@
       }
     }
   },
-  "x-explicit-operation-count": 239,
+  "x-explicit-operation-count": 240,
   "x-reviewed-operation-count": 4,
   "paths": {
     "/.well-known/assetlinks.json": {
@@ -4682,6 +4682,25 @@
         "x-next-route": "/api/mobile/push-tokens",
         "x-source-file": "apps/web/src/app/api/mobile/push-tokens/route.ts",
         "x-manual-contract": "docs/api/CLIENT_AND_AUTH_FLOWS.md"
+      }
+    },
+    "/api/network-check/dns": {
+      "get": {
+        "tags": [
+          "Inventory only"
+        ],
+        "summary": "Inventory only — see the source-reviewed manual contract",
+        "description": "Authentication, inputs, errors and side effects are described in docs/api/OPERATIONS_AND_TELEMETRY.md. No typed contract is declared here; absence of a security declaration does not imply public access.",
+        "x-contract-status": "inventory-only",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "Unmodeled response. Consult the linked manual contract and source."
+          }
+        },
+        "x-next-route": "/api/network-check/dns",
+        "x-source-file": "apps/web/src/app/api/network-check/dns/route.ts",
+        "x-manual-contract": "docs/api/OPERATIONS_AND_TELEMETRY.md"
       }
     },
     "/api/notify": {

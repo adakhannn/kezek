@@ -120,6 +120,20 @@ Session не нужна, но с API-09 действует limiter `telemetry` (
 
 Android проверяет этот файл, чтобы ссылки `https://kezek.vercel.app/booking/<id>` и `/b/<slug>` открывались в приложении (MOB-05; `autoVerify` в [app.json](../../apps/mobile/app.json)). Источники: [route](../../apps/web/src/app/.well-known/assetlinks.json/route.ts), [утверждения](../../apps/web/src/lib/androidAssetLinks.ts).
 
+## Проверка сети: DNS адреса Supabase
+
+<!-- api-contract: GET /api/network-check/dns -->
+
+| Часть | Контракт |
+| --- | --- |
+| Доступ/вход | Публичный, без сессии; query, заголовки и тело не читаются. Limiter public (10 запросов в минуту) с budget маршрута; [условия 429/503](../../RATE_LIMITING.md) |
+| Что делает | Ищет в DNS только один хост — из серверного `NEXT_PUBLIC_SUPABASE_URL` (A и AAAA, тайм-аут 2,5 с), со стороны Vercel, а не из сети посетителя |
+| Успех | 200 `{ ok: true, data: { host, ipv4: string[], ipv6: string[], ms } }`; нет AAAA — пустой `ipv6` |
+| Ошибки | Ни одного адреса — 502 `{ ok: false, error: 'dns_failed', message, details: { code, ms } }`, где `code` — только код резолвера (`ENOTFOUND`, `ETIMEOUT`, …), без текста ошибки; неверный URL в env — `code: 'CONFIG'` |
+| Ограничения | Все ответы, включая 429/503, с `Cache-Control: no-store, max-age=0`. IP и user-agent не сохраняются и не логируются (limiter хранит только хеш) |
+
+Ответ показывает страница [/network-check](../../apps/web/src/app/network-check/NetworkCheckClient.tsx) рядом с проверками из браузера (R25-31, шаг 0 в [SUPABASE_ACCESS_OPTIONS](../SUPABASE_ACCESS_OPTIONS.md)). Источники: [route](../../apps/web/src/app/api/network-check/dns/route.ts), [service](../../apps/web/src/lib/networkCheckDnsService.ts), [тесты](../../apps/web/src/__tests__/api/network-check/dns.test.ts).
+
 ## Неизвестные пути API
 
 <!-- api-contract: GET /api/[...path] -->

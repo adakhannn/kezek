@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **209 route-файлов, 254 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **210 route-файлов, 255 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 594 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `79502e002e24f6768ae155aed297c978d9c20565a5cd92fd2632dcc629c47d04`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 598 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `3899342ea90b92936740e7e5f481225edbc35f5bf0f9675b474cd876958827cf`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -177,6 +177,7 @@
 | `/api/mobile/manager/bookings` | GET | [route](../../apps/web/src/app/api/mobile/manager/bookings/route.ts) | [runListManagerBookingsHttp](../../apps/web/src/lib/mobileManagerHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/mobile/manager/businesses` | GET | [route](../../apps/web/src/app/api/mobile/manager/businesses/route.ts) | [runListManagedBusinessesHttp](../../apps/web/src/lib/mobileManagerHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
 | `/api/mobile/push-tokens` | POST, DELETE | [route](../../apps/web/src/app/api/mobile/push-tokens/route.ts) | [runRegisterPushTokenHttp, runUnregisterPushTokenHttp](../../apps/web/src/lib/mobilePushTokensHttpService.ts) | [справочник](CLIENT_AND_AUTH_FLOWS.md) |
+| `/api/network-check/dns` | GET | [route](../../apps/web/src/app/api/network-check/dns/route.ts) | Внутри route; читать исходник | [справочник](OPERATIONS_AND_TELEMETRY.md) |
 | `/api/notify/ping` | POST | [route](../../apps/web/src/app/api/notify/ping/route.ts) | [runNotifyPingHttp](../../apps/web/src/lib/notifyPingHttpService.ts) | [справочник](AUTH_AND_INTEGRATIONS.md) |
 | `/api/notify` | POST | [route](../../apps/web/src/app/api/notify/route.ts) | [runNotifyHttp](../../apps/web/src/lib/notifyHttpService.ts) | [справочник](AUTH_AND_INTEGRATIONS.md) |
 | `/api/profile/locale` | POST | [route](../../apps/web/src/app/api/profile/locale/route.ts) | [runProfileLocaleHttp](../../apps/web/src/lib/profileLocaleHttpService.ts) | [справочник](BOOKING_AND_CATALOG.md) |

@@ -27,6 +27,7 @@ import { footerKy } from './footer.ky';
 import { headerKy } from './header.ky';
 import { homeKy } from './home.ky';
 import { monthPickerKy } from './monthPicker.ky';
+import { networkCheckKy } from './networkCheck.ky';
 import { notificationsKy } from './notifications.ky';
 import { scheduleFormKy } from './scheduleForm';
 import { schedulingKy } from './scheduling';
@@ -68,4 +69,5 @@ export const ky: Translations = Object.assign(
     apiDocsKy,
     devKy,
     selectBusinessKy,
+    networkCheckKy,
 );

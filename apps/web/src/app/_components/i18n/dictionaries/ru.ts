@@ -27,6 +27,7 @@ import { footerRu } from './footer.ru';
 import { headerRu } from './header.ru';
 import { homeRu } from './home.ru';
 import { monthPickerRu } from './monthPicker.ru';
+import { networkCheckRu } from './networkCheck.ru';
 import { notificationsRu } from './notifications.ru';
 import { scheduleFormRu } from './scheduleForm';
 import { schedulingRu } from './scheduling';
@@ -68,4 +69,5 @@ export const ru: Translations = Object.assign(
     apiDocsRu,
     devRu,
     selectBusinessRu,
+    networkCheckRu,
 );

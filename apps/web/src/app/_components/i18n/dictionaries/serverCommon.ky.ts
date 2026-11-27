@@ -22,4 +22,5 @@ export const serverCommonKy = {
     'server.common.loadFailed': 'Маалыматты жүктөө мүмкүн болгон жок. Кайра аракет кылыңыз.',
     'server.common.saveFailed': 'Өзгөртүүлөрдү сактоо мүмкүн болгон жок. Кайра аракет кылыңыз.',
     'server.common.deleteFailed': 'Өчүрүү мүмкүн болгон жок. Кайра аракет кылыңыз.',
+    'server.common.dnsLookupFailed': 'Сайттын сервери маалымат базасынын дарегин таба алган жок.',
 } as const;

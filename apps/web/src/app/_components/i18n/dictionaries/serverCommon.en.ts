@@ -22,4 +22,5 @@ export const serverCommonEn = {
     'server.common.loadFailed': 'Could not load the data. Please try again.',
     'server.common.saveFailed': 'Could not save the changes. Please try again.',
     'server.common.deleteFailed': 'Could not delete. Please try again.',
+    'server.common.dnsLookupFailed': 'The site server could not resolve the database address.',
 } as const;

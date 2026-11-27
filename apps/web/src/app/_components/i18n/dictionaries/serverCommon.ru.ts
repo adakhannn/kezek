@@ -22,4 +22,5 @@ export const serverCommonRu = {
     'server.common.loadFailed': 'Не удалось загрузить данные. Попробуйте ещё раз.',
     'server.common.saveFailed': 'Не удалось сохранить изменения. Попробуйте ещё раз.',
     'server.common.deleteFailed': 'Не удалось удалить. Попробуйте ещё раз.',
+    'server.common.dnsLookupFailed': 'Сервер сайта не смог найти адрес базы данных.',
 } as const;

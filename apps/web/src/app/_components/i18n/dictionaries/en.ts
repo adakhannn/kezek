@@ -27,6 +27,7 @@ import { footerEn } from './footer.en';
 import { headerEn } from './header.en';
 import { homeEn } from './home.en';
 import { monthPickerEn } from './monthPicker.en';
+import { networkCheckEn } from './networkCheck.en';
 import { notificationsEn } from './notifications.en';
 import { scheduleFormEn } from './scheduleForm';
 import { schedulingEn } from './scheduling';
@@ -68,4 +69,5 @@ export const en: Translations = Object.assign(
     apiDocsEn,
     devEn,
     selectBusinessEn,
+    networkCheckEn,
 );
