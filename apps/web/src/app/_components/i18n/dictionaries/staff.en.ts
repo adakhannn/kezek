@@ -63,7 +63,7 @@ export const staffEn = {
     'staff.cabinet.services.priceTo': 'to',
     'staff.cabinet.status.cancelled': 'Cancelled',
     'staff.cabinet.status.confirmed': 'Confirmed',
-    'staff.cabinet.status.hold': 'Hold',
+    'staff.cabinet.status.hold': 'Pending',
     'staff.cabinet.status.noShow': 'No show',
     'staff.cabinet.status.paid': 'Completed',
     'staff.cabinet.title': 'Staff cabinet',

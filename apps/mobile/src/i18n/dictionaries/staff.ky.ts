@@ -217,7 +217,7 @@ export const staffKy: Record<keyof typeof staffRu, string> = {
     'staff.contact.whatsapp': 'WhatsApp',
     'staff.contact.whatsappA11y': 'Кардарга WhatsApp аркылуу жазуу: {phone}',
     'staff.contact.openError': 'Тиркемени ачуу мүмкүн болгон жок. Кардардын номери: {phone}',
-    'staff.bookingStatus.hold': 'Ырастоону күтүүдө',
+    'staff.bookingStatus.hold': 'Күтүүдө',
     'staff.bookingStatus.confirmed': 'Ырасталган',
     'staff.bookingStatus.paid': 'Аткарылган',
     'staff.bookingStatus.cancelled': 'Жокко чыгарылган',

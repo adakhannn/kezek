@@ -94,7 +94,7 @@ export const bookingEn = {
     'booking.status': 'Status',
     'booking.status.cancelled': 'Cancelled',
     'booking.status.confirmed': 'Confirmed',
-    'booking.status.hold': 'Awaiting confirmation',
+    'booking.status.hold': 'Pending',
     'booking.status.paid': 'Completed',
     'booking.step.branch': 'Branch',
     'booking.step.day': 'Day',

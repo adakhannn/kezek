@@ -85,7 +85,7 @@ describe('DashboardScreen (O1)', () => {
         expect(screen.getByText('Мастер: Мастер Азамат')).toBeTruthy();
         expect(screen.getByText('+996 555 123 456')).toBeTruthy();
         expect(screen.getByText('Позвонить')).toBeTruthy();
-        expect(screen.getByText('Ожидает подтверждения')).toBeTruthy();
+        expect(screen.getByText('В ожидании')).toBeTruthy();
         expect(screen.getByText('Открыть веб-кабинет')).toBeTruthy();
 
         fireEvent.press(screen.getByText('Предстоящие'));

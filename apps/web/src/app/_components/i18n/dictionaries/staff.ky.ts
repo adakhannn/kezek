@@ -63,7 +63,7 @@ export const staffKy = {
     'staff.cabinet.services.priceTo': 'до',
     'staff.cabinet.status.cancelled': 'Жокко чыгарылган',
     'staff.cabinet.status.confirmed': 'Ырасталган',
-    'staff.cabinet.status.hold': 'Удержание',
+    'staff.cabinet.status.hold': 'Күтүүдө',
     'staff.cabinet.status.noShow': 'Келген жок',
     'staff.cabinet.status.paid': 'Аткарылган',
     'staff.cabinet.title': 'Кызматкердин кабинети',

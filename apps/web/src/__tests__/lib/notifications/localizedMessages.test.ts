@@ -48,7 +48,7 @@ describe('Kyrgyz', () => {
     test('WhatsApp', () => {
         expect(buildWhatsAppText({ ...details, booking: { ...details.booking, status: 'hold' } }, 'hold', 'ky')).toBe(
             'Убакыт убактылуу ээленди: Salon\n\nКызмат: Чач кыркуу\nКызматкер: Aibek\nУбакыт: 20.11.2026 12:00\n'
-            + 'Абалы: Ырастоону күтүүдө\n\nhttps://kezek.vercel.app/booking/11111111-2222-3333-4444-555555555555');
+            + 'Абалы: Күтүүдө\n\nhttps://kezek.vercel.app/booking/11111111-2222-3333-4444-555555555555');
     });
 
     test('the e-mail subject, greeting and calendar file', () => {

@@ -137,8 +137,8 @@ export const bookingRu = {
     // Home: upcoming bookings and recent places
     'booking.home.booking': 'Запись',
     'booking.home.status.confirmed': 'Подтверждено',
-    'booking.home.status.hold': 'Ожидает',
-    'booking.home.status.paid': 'Оплачено',
+    'booking.home.status.hold': 'В ожидании',
+    'booking.home.status.paid': 'Выполнено',
     'booking.home.upcomingTitle': 'Ближайшие записи',
     'booking.home.openAll': 'Открыть все',
     'booking.home.openAllLabel': 'Открыть все записи',

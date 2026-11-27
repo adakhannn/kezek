@@ -145,7 +145,7 @@ export const bookingsRu = {
     'bookings.status.cancelled': 'Отменено',
     'bookings.status.confirmed': 'Подтверждено',
     'bookings.status.hold': 'В ожидании',
-    'bookings.status.noShow': 'Не пришел',
+    'bookings.status.noShow': 'Не пришёл',
     'bookings.status.noShowShort': 'не пришел',
     'bookings.status.paid': 'Выполнено',
     'bookings.subtitle': 'Управление бронированиями',

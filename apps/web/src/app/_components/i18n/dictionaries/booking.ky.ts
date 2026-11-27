@@ -91,7 +91,7 @@ export const bookingKy = {
     'booking.status': 'Статус',
     'booking.status.cancelled': 'Жокко чыгарылган',
     'booking.status.confirmed': 'Ырасталган',
-    'booking.status.hold': 'Ырастоону күтүүдө',
+    'booking.status.hold': 'Күтүүдө',
     'booking.status.paid': 'Аткарылган',
     'booking.step.branch': 'Филиал',
     'booking.step.day': 'Күн',

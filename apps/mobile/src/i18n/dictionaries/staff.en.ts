@@ -216,7 +216,7 @@ export const staffEn: Record<keyof typeof staffRu, string> = {
     'staff.contact.whatsapp': 'WhatsApp',
     'staff.contact.whatsappA11y': 'Message the client on WhatsApp: {phone}',
     'staff.contact.openError': 'Could not open the app. Client number: {phone}',
-    'staff.bookingStatus.hold': 'Awaiting confirmation',
+    'staff.bookingStatus.hold': 'Pending',
     'staff.bookingStatus.confirmed': 'Confirmed',
     'staff.bookingStatus.paid': 'Completed',
     'staff.bookingStatus.cancelled': 'Cancelled',

@@ -162,6 +162,6 @@ test.describe('QuickDesk - управление бронированиями', (
         await row.getByRole('button', { name: 'Не пришел', exact: true }).click();
         await confirmDialog(page);
         await page.locator('select', { has: page.locator('option[value="no_show"]') }).selectOption('no_show');
-        await expect(page.locator('tr', { hasText: 'E2E Неявка' })).toContainText(/не пришел/i);
+        await expect(page.locator('tr', { hasText: 'E2E Неявка' })).toContainText(/не приш[её]л/i);
     });
 });

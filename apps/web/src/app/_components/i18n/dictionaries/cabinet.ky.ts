@@ -50,7 +50,7 @@ export const cabinetKy = {
     'cabinet.bookings.card.service': 'Кызмат',
     'cabinet.bookings.card.status.cancelled': 'Жокко чыгарылган',
     'cabinet.bookings.card.status.confirmed': 'Ырасталган',
-    'cabinet.bookings.card.status.hold': 'Ырастоону күтүүдө',
+    'cabinet.bookings.card.status.hold': 'Күтүүдө',
     'cabinet.bookings.card.status.paid': 'Аткарылган',
     'cabinet.bookings.empty.past.desc': 'Бул жерде өткөн жана жокко чыгарылган жазылыштарыңыз, анын ичинде келечектеги визиттердин жокко чыгарылышы көрсөтүлөт',
     'cabinet.bookings.empty.past.title': 'Жазылыштардын таржымалы азырынча бош',

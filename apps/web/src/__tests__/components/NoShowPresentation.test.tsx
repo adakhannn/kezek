@@ -16,7 +16,7 @@ jest.mock('@/app/cabinet/components/MapDialog', () => ({ __esModule: true, defau
 jest.mock('@/app/cabinet/components/ReviewDialog', () => ({ __esModule: true, default: () => null }));
 
 const locales = [
-    ['ru', { ...cabinetRu, ...bookingRu }, 'Неявка'],
+    ['ru', { ...cabinetRu, ...bookingRu }, 'Не пришёл'],
     ['ky', { ...cabinetKy, ...bookingKy }, 'Келген жок'],
     ['en', { ...cabinetEn, ...bookingEn }, 'No-show'],
 ] as const;

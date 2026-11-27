@@ -107,9 +107,9 @@ export function BookingFilters({
                         className="motion-interactive min-h-[44px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-3 text-sm text-[var(--text-primary)] hover:border-[var(--border-strong)] focus:border-[var(--focus-ring)] focus:outline-none"
                     >
                         <option value="all">{t('bookings.filters.statusAll', 'Все активные')}</option>
-                        <option value="hold">{t('bookings.status.hold', 'Ожидает')}</option>
+                        <option value="hold">{t('bookings.status.hold', 'В ожидании')}</option>
                         <option value="confirmed">{t('bookings.status.confirmed', 'Подтверждена')}</option>
-                        <option value="paid">{t('bookings.status.paid', 'Оплачена')}</option>
+                        <option value="paid">{t('bookings.status.paid', 'Выполнено')}</option>
                         <option value="cancelled">{t('bookings.status.cancelled', 'Отменена')}</option>
                         <option value="no_show">{t('bookings.status.noShow', 'Не пришел')}</option>
                     </select>

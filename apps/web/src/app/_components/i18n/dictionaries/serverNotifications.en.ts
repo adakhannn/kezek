@@ -32,7 +32,7 @@ export const serverNotificationsEn = {
     'server.notifications.durationMinutes': '{minutes} min',
     'server.notifications.price': '{amount} KGS',
     'server.notifications.priceRange': '{from} - {to} KGS',
-    'server.notifications.statusHold': 'Awaiting confirmation',
+    'server.notifications.statusHold': 'Pending',
     'server.notifications.statusConfirmed': 'Confirmed',
     'server.notifications.statusPaid': 'Completed',
     'server.notifications.statusCancelled': 'Cancelled',

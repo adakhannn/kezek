@@ -138,7 +138,7 @@ export const bookingKy: Record<keyof typeof bookingRu, string> = {
     'booking.home.booking': 'Жазылуу',
     'booking.home.status.confirmed': 'Ырасталган',
     'booking.home.status.hold': 'Күтүүдө',
-    'booking.home.status.paid': 'Төлөнгөн',
+    'booking.home.status.paid': 'Аткарылган',
     'booking.home.upcomingTitle': 'Жакынкы жазылуулар',
     'booking.home.openAll': 'Баарын ачуу',
     'booking.home.openAllLabel': 'Бардык жазылууларды ачуу',

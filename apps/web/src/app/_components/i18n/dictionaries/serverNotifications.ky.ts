@@ -32,7 +32,7 @@ export const serverNotificationsKy = {
     'server.notifications.durationMinutes': '{minutes} мин',
     'server.notifications.price': '{amount} сом',
     'server.notifications.priceRange': '{from} - {to} сом',
-    'server.notifications.statusHold': 'Ырастоону күтүүдө',
+    'server.notifications.statusHold': 'Күтүүдө',
     'server.notifications.statusConfirmed': 'Ырасталган',
     'server.notifications.statusPaid': 'Аткарылган',
     'server.notifications.statusCancelled': 'Жокко чыгарылган',

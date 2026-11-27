@@ -404,7 +404,7 @@ export default async function AdminHomePage() {
 function bookingStatusLabel(status: string, t: Translate) {
     const labels: Record<string, string> = {
         confirmed: t('admin.home.bookingsToday.status.confirmed', 'Подтверждено'),
-        hold: t('admin.home.bookingsToday.status.hold', 'Ожидание'),
+        hold: t('admin.home.bookingsToday.status.hold', 'В ожидании'),
         canceled: t('admin.home.bookingsToday.status.cancelled', 'Отменено'),
         cancelled: t('admin.home.bookingsToday.status.cancelled', 'Отменено'),
         paid: t('admin.home.bookingsToday.status.paid', 'Выполнено'),

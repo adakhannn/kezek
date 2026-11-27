@@ -171,7 +171,7 @@ export const adminRu = {
     'admin.home.bookingsToday.empty': 'На сегодня броней нет',
     'admin.home.bookingsToday.status.cancelled': 'Отменено',
     'admin.home.bookingsToday.status.confirmed': 'Подтверждено',
-    'admin.home.bookingsToday.status.hold': 'Ожидание',
+    'admin.home.bookingsToday.status.hold': 'В ожидании',
     'admin.home.bookingsToday.status.paid': 'Выполнено',
     'admin.home.bookingsToday.table.business': 'Бизнес / филиал',
     'admin.home.bookingsToday.table.client': 'Клиент',

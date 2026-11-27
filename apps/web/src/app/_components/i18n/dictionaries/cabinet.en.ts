@@ -51,7 +51,7 @@ export const cabinetEn = {
     'cabinet.bookings.card.service': 'Service',
     'cabinet.bookings.card.status.cancelled': 'Cancelled',
     'cabinet.bookings.card.status.confirmed': 'Confirmed',
-    'cabinet.bookings.card.status.hold': 'Awaiting confirmation',
+    'cabinet.bookings.card.status.hold': 'Pending',
     'cabinet.bookings.card.status.paid': 'Completed',
     'cabinet.bookings.empty.past.desc': 'Your past and cancelled bookings will appear here, including cancellations of future visits',
     'cabinet.bookings.empty.past.title': 'No booking history yet',

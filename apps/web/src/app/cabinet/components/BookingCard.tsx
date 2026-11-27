@@ -181,9 +181,9 @@ export default function BookingCard({
     const hasMapCoordinates = branch?.lat != null && branch?.lon != null;
 
     const statusLabels = {
-        hold: t('cabinet.bookings.card.status.hold', 'Pending confirmation'),
+        hold: t('cabinet.bookings.card.status.hold', 'Pending'),
         confirmed: t('cabinet.bookings.card.status.confirmed', 'Confirmed'),
-        paid: t('cabinet.bookings.card.status.paid', 'Paid'),
+        paid: t('cabinet.bookings.card.status.paid', 'Completed'),
         cancelled: t('cabinet.bookings.card.status.cancelled', 'Cancelled'),
         no_show: t('cabinet.bookings.card.status.noShow', 'No-show'),
     };

@@ -138,7 +138,7 @@ export const bookingEn: Record<keyof typeof bookingRu, string> = {
     'booking.home.booking': 'Booking',
     'booking.home.status.confirmed': 'Confirmed',
     'booking.home.status.hold': 'Pending',
-    'booking.home.status.paid': 'Paid',
+    'booking.home.status.paid': 'Completed',
     'booking.home.upcomingTitle': 'Upcoming bookings',
     'booking.home.openAll': 'Open all',
     'booking.home.openAllLabel': 'Open all bookings',
