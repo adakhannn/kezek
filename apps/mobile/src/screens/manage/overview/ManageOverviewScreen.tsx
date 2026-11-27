@@ -131,7 +131,7 @@ export default function ManageOverviewScreen() {
                 ))}
             </StatGrid>
 
-            <Card variant="plain" padding="md" style={[styles.focus, { borderColor: tone.border }]} testID={`overview-focus-${focus.kind}`}>
+            <Card variant="plain" padding="md" style={styles.focus} testID={`overview-focus-${focus.kind}`}>
                 <View style={styles.focusHead}>
                     <View style={[styles.focusIcon, { backgroundColor: tone.bg }]}>
                         <Ionicons name={FOCUS_ICON[focus.tone]} size={20} color={tone.fg} />
@@ -228,7 +228,8 @@ export default function ManageOverviewScreen() {
 const styles = StyleSheet.create({
     hero: { gap: space.xs },
     heroName: { ...typeScale.title, color: colors.text.primary },
-    focus: { borderWidth: 1, gap: space.sm },
+    // One card level, no outline: the tinted icon and the overline carry the tone.
+    focus: { gap: space.sm },
     focusHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
     focusIcon: { width: 36, height: 36, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
     focusTitle: { ...typeScale.headline, color: colors.text.primary },

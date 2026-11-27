@@ -278,7 +278,6 @@ export function ShiftQuickSections({
                                 value={addClientForm.newClientName}
                                 onChangeText={addClientActions.setNewClientName}
                                 autoFocus
-                                error={addClientForm.error ?? undefined}
                                 returnKeyType="next"
                                 blurOnSubmit={false}
                                 onFocus={revealActiveField}

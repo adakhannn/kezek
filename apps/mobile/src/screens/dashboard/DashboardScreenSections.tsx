@@ -31,9 +31,10 @@ const ACTION_LABEL: Record<ManagerBookingAction, MobileI18nKey> = {
     no_show: 'manager.action.noShow',
     cancel: 'manager.action.cancel',
 };
-const ACTION_VARIANT: Record<ManagerBookingAction, 'primary' | 'outline' | 'ghost' | 'danger'> = {
-    confirm: 'primary',
-    attended: 'primary',
+// A list of cards: no gradient (primary) button per card, as in the owner's bookings list.
+const ACTION_VARIANT: Record<ManagerBookingAction, 'secondary' | 'outline' | 'ghost' | 'danger'> = {
+    confirm: 'secondary',
+    attended: 'secondary',
     no_show: 'outline',
     cancel: 'ghost',
 };
@@ -185,14 +186,14 @@ export function DashboardScreenSections(props: Props) {
                                             </Text>
                                             <BookingStatusBadge status={booking.status} />
                                         </View>
-                                        <Text style={styles.bookingService}>
+                                        <Text style={styles.bookingService} numberOfLines={2}>
                                             {getServiceName(booking.service, locale) || t('staff.service')}
                                         </Text>
-                                        <Text style={styles.bookingMeta}>
+                                        <Text style={styles.bookingMeta} numberOfLines={1}>
                                             {booking.client_name ? t('manager.feed.client', { name: booking.client_name }) : t('manager.feed.clientUnknown')}
                                         </Text>
-                                        {booking.staff_name ? <Text style={styles.bookingMeta}>{t('manager.feed.staff', { name: booking.staff_name })}</Text> : null}
-                                        {booking.branch_name ? <Text style={styles.bookingMeta}>{t('manager.feed.branch', { name: booking.branch_name })}</Text> : null}
+                                        {booking.staff_name ? <Text style={styles.bookingMeta} numberOfLines={1}>{t('manager.feed.staff', { name: booking.staff_name })}</Text> : null}
+                                        {booking.branch_name ? <Text style={styles.bookingMeta} numberOfLines={1}>{t('manager.feed.branch', { name: booking.branch_name })}</Text> : null}
                                     </MotionPressable>
                                     <ClientContactActions phone={booking.client_phone} />
                                     {actions.length > 0 ? (
