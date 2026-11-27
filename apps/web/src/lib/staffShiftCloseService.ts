@@ -1,6 +1,7 @@
 import { isShiftDurationWithinDay } from '@core-domain/finance/guarantee';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { publicErrorMessage } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { readNotificationLocales, sendShiftCloseNotification } from '@/lib/notifications/shiftNotifications';
 import { measurePerformance } from '@/lib/performanceServer';
@@ -263,7 +264,7 @@ export async function runStaffShiftClose(params: {
     if (!typedResult || !typedResult.ok) {
         const errorMessage = typedResult?.error || 'Не удалось закрыть смену';
         logError('StaffShiftCloseService', 'RPC returned error', { error: errorMessage, result: rpcResult });
-        return { ok: false, statusCode: 500, errorType: 'internal', message: errorMessage };
+        return { ok: false, statusCode: 500, errorType: 'internal', message: publicErrorMessage(errorMessage, 'Не удалось закрыть смену') };
     }
 
     const updatedShift = typedResult.shift;

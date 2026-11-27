@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { validatePublicContactPatch } from '@/lib/businessContacts';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { validateDirectoryLinks } from '@/lib/directoryLinks';
@@ -122,7 +123,7 @@ export async function updateBranch(params: {
     return {
       ok: false,
       error: 'validation',
-      message: error.message,
+      message: reportDatabaseError('BranchUpdate', error, DATABASE_FAILURE_MESSAGES.save),
       status: 400,
     };
   }

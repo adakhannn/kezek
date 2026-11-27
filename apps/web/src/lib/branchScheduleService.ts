@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbTableClient } from '@/lib/supabaseTypes';
 
 export type ScheduleItem = {
@@ -37,7 +38,7 @@ async function ensureBranchBelongsToBiz(
     return {
       ok: false as const,
       error: 'validation' as const,
-      message: branchError.message,
+      message: reportDatabaseError('BranchSchedule', branchError, DATABASE_FAILURE_MESSAGES.load),
       status: 400,
     };
   }
@@ -74,7 +75,7 @@ export async function getBranchSchedule(params: {
     return {
       ok: false,
       error: 'validation',
-      message: scheduleError.message,
+      message: reportDatabaseError('BranchSchedule', scheduleError, DATABASE_FAILURE_MESSAGES.load),
       status: 400,
     };
   }
@@ -126,7 +127,7 @@ export async function saveBranchSchedule(params: {
       return {
         ok: false,
         error: 'validation',
-        message: insertError.message,
+        message: reportDatabaseError('BranchSchedule', insertError, DATABASE_FAILURE_MESSAGES.save),
         status: 400,
       };
     }

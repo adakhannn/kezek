@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, createSuccessResponse, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, DATABASE_FAILURE_MESSAGES, publicErrorMessage, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
 import { getStaffContextForRequest } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
@@ -93,6 +93,6 @@ async function runSelfStaffFinanceStats(req: Request, context: unknown): Promise
             message.toLowerCase().includes('auth');
 
         if (!isAuthError) logError('StaffFinanceStats', 'Failed to load staff finance stats', error);
-        return createErrorResponse(isAuthError ? 'auth' : 'internal', message, undefined, isAuthError ? 401 : 500);
+        return createErrorResponse(isAuthError ? 'auth' : 'internal', publicErrorMessage(message, isAuthError ? 'Не авторизован' : DATABASE_FAILURE_MESSAGES.internal), undefined, isAuthError ? 401 : 500);
     }
 }

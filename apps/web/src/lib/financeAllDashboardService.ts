@@ -1,4 +1,5 @@
-﻿import { readFinanceReport, readFinanceReportToday, financeReportWorkedHours, type FinanceReport, type ReportClient } from '@/lib/finance/reportSnapshot';
+﻿import { publicErrorMessage } from '@/lib/apiErrorHandler';
+import { readFinanceReport, readFinanceReportToday, financeReportWorkedHours, type FinanceReport, type ReportClient } from '@/lib/finance/reportSnapshot';
 import { logError } from '@/lib/log';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { financeAllQuerySchema } from '@/lib/validation/schemas';
@@ -58,7 +59,7 @@ export async function runFinanceAllDashboard({
     try { report = await readFinanceReport(admin, { bizId, dateFrom, dateTo, branchId }); }
     catch (error) {
         logError('FinanceAll', 'Failed to read complete finance snapshot', error);
-        return { ok: false, statusCode: 500, errorType: 'internal', message: error instanceof Error ? error.message : 'Не удалось получить финансовую статистику' };
+        return { ok: false, statusCode: 500, errorType: 'internal', message: publicErrorMessage(error, 'Не удалось получить финансовую статистику') };
     }
     const { branches, staff: staffList, shifts: openShifts } = report;
     const closedByStaff = new Map(report.closedStats.map(row => [row.staff_id, row]));

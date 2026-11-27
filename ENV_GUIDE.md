@@ -1,6 +1,6 @@
 # Переменные окружения Kezek
 
-Статус: справочник конфигурации, уточнён 10 ноября 2026. Сопровождение: разработка и эксплуатация. Значения реальных окружений здесь не хранятся.
+Статус: справочник конфигурации, уточнён 28 ноября 2026. Сопровождение: разработка и эксплуатация. Значения реальных окружений здесь не хранятся.
 
 Подготовка среды описана в [GETTING_STARTED.md](GETTING_STARTED.md), факты deployment и секретов — в [OPERATIONS.md](docs/OPERATIONS.md). Этот справочник содержит ключевые имена; полный набор конкретной функции проверяют по коду её потребителей. Шаблоны `apps/web/.env.example` и `apps/mobile/.env.example` помогают заполнить конфигурацию, но их наличие не доказывает полноту или правильность среды.
 
@@ -14,7 +14,7 @@
 
 ## Web
 
-Основные server helpers: [env.ts](apps/web/src/lib/env.ts). Browser client читает публичные настройки непосредственно: [supabaseClient.ts](apps/web/src/lib/supabaseClient.ts). Дополнительные потребители могут читать `process.env` без этого helper.
+Полный перечень переменных, которые читает код web, с пометками «обязательно / обязательно в production / необязательно» — в [apps/web/.env.example](apps/web/.env.example) (сверено с кодом 28 ноября 2026; `NODE_ENV`, `NEXT_RUNTIME`, `CI` и `TZ` задаёт платформа). Основные server helpers: [env.ts](apps/web/src/lib/env.ts). Browser client читает публичные настройки непосредственно: [supabaseClient.ts](apps/web/src/lib/supabaseClient.ts). Дополнительные потребители могут читать `process.env` без этого helper.
 
 | Имя или группа | Назначение | Граница |
 | --- | --- | --- |
@@ -36,8 +36,22 @@
 | `SENTRY_ENVIRONMENT` | Метка окружения событий | Необязательно; по умолчанию `vercel-production`/`vercel-preview`, иначе NODE_ENV |
 | `ANDROID_APP_LINK_SHA256_FINGERPRINTS` | Отпечатки SHA-256 ключа подписи Android-приложения для `/.well-known/assetlinks.json` (MOB-05) | Через запятую, формат `AB:CD:…` (32 байта; EAS: `eas credentials`). Пока не задано, файла нет и ссылки открываются в браузере |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Загрузка source maps при сборке | Только в сборке Vercel; токен — секрет, в CI и репозиторий не попадает |
-| Health alert settings | Оповещения | [MONITORING_AND_ALERTS](MONITORING_AND_ALERTS.md), [PERFORMANCE_MONITORING](PERFORMANCE_MONITORING.md) |
-| Telegram, Yandex OAuth и feature flags | Зависит от конкретного auth/notification flow | Тематические документы ниже и текущий код; не переносить старые значения между окружениями |
+| `ALERT_EMAIL_TO` | Получатель оповещений health check и сбоев cron | Без него (или без `EMAIL_FROM`) письмо-оповещение пропускается. [MONITORING_AND_ALERTS](MONITORING_AND_ALERTS.md), [PERFORMANCE_MONITORING](PERFORMANCE_MONITORING.md) |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Запасные имена Upstash из Vercel Marketplace | Читаются, только когда `UPSTASH_REDIS_REST_*` пусты |
+| `EXPO_ACCESS_TOKEN` | Bearer-токен Expo Push API | Нужен, только если в проекте Expo включена enhanced push security |
+| `WHATSAPP_GRAPH_API_VERSION` | Версия Graph API (например `v21.0`) | Необязательно; иначе версия по умолчанию из кода |
+| `WHATSAPP_OTP_TEMPLATE_TYPE`, `WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON` | Стратегия OTP-шаблона (`utility` по умолчанию или `authentication`) и JSON его компонентов с `{{OTP_CODE}}` | `WHATSAPP_OTP_TEMPLATE_*` имеют приоритет над старыми `WHATSAPP_AUTH_TEMPLATE_*` |
+| `WHATSAPP_BOOKING_{CONFIRMED,CANCELLED,REMINDER}_TEMPLATE_NAME`, `WHATSAPP_BOOKING_TEMPLATE_LANG`, `WHATSAPP_BOOKING_TEMPLATE_LANG_KY`, `WHATSAPP_BOOKING_TEMPLATE_LANG_EN` | Шаблоны уведомлений о записях и коды их переводов | Пустое имя — WhatsApp-сообщение этого вида не отправляется; e-mail и Telegram не зависят. Язык по умолчанию `ru`; ky/en — только после одобрения перевода |
+| `WHATSAPP_{STAFF,BUSINESS,OWNER}_APPLICATION_*_TEMPLATE_NAME`, `WHATSAPP_APPLICATION_TEMPLATE_LANGUAGE`, `WHATSAPP_APPLICATION_NAMED_PARAMETERS` | Шаблоны уведомлений о заявках (владельцу/админу, заявителю, об одобрении), их язык и именованные параметры (JSON по типу) | Пустое имя — канал WhatsApp для этого типа не включён; без JSON — позиционные параметры |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET` | Бот: уведомления, вход и привязка профиля; секрет входящего webhook | Только сервер. [TELEGRAM_AUTH_IMPLEMENTATION](TELEGRAM_AUTH_IMPLEMENTATION.md) |
+| `TELEGRAM_MOBILE_BOT_SECRET` | Секрет callback-ов бота входа из мобильного приложения | Только сервер; нужен для входа через Telegram deep link |
+| `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`, `NEXT_PUBLIC_TELEGRAM_BOT_LOGIN_ENABLED`, `NEXT_PUBLIC_TELEGRAM_BOT_LINK_ENABLED` | Имя бота для виджетов; показ входа и привязки через бота | Публичные; включается значением `true` |
+| `MOBILE_WHATSAPP_AUTH`, `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT`, `MOBILE_TELEGRAM_DEEPLINK_AUTH`, `MOBILE_TELEGRAM_DEEPLINK_AUTH_ROLLOUT_PERCENT` (и `NEXT_PUBLIC_MOBILE_*` как запасные) | Флаги и доля пользователей (0–100) для входа в приложение через WhatsApp и Telegram | [featureFlags.ts](apps/web/src/lib/featureFlags.ts) |
+| `SCHEDULE_V2_ENABLED` | Явная модель расписания сотрудников | Только точное `true` |
+| `LOCAL_AUTH_PUBLIC_ORIGIN` (старое имя `YANDEX_OAUTH_PUBLIC_ORIGIN`) | HTTPS-туннель для OAuth callback в разработке | Вне `NODE_ENV=production`; в production берётся origin запроса |
+| `SMS_PROVIDER`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`, `SMS_WEBHOOK_URL`, `SMS_WEBHOOK_TOKEN` | Старый SMS-отправитель (`twilio` по умолчанию или `webhook`) | Только сервер |
+| `E2E_*`, `PLAYWRIGHT_TEST_BASE_URL` | Запуск Playwright и тестовые фикстуры | Только тестовая среда, обычно `apps/web/e2e/.e2e.env`: [Playwright reference](apps/web/e2e/README.md) |
+| Yandex OAuth и прочие flows | Зависит от конкретного auth/notification flow | Тематические документы ниже и текущий код; не переносить старые значения между окружениями |
 
 Внешние отправки и auth callbacks проверяются только для разрешённого сценария и получателей. Пустая или недействительная конфигурация не является полноценной изоляцией интеграций.
 

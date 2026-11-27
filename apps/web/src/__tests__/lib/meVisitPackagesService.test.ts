@@ -146,7 +146,6 @@ describe('meVisitPackagesService', () => {
             ok: false,
             error: 'server',
             message: 'Не удалось загрузить пакеты',
-            details: 'db failed',
             status: 500,
         });
     });

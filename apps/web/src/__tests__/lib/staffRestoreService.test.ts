@@ -43,7 +43,7 @@ describe('staffRestoreService', () => {
         expect(result).toEqual({
             ok: false,
             error: 'validation',
-            message: 'update failed',
+            message: 'Не удалось сохранить изменения. Попробуйте ещё раз.',
             status: 400,
         });
     });

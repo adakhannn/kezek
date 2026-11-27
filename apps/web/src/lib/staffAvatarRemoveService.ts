@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { DATABASE_FAILURE_MESSAGES, databaseErrorMessage } from '@/lib/apiErrorHandler';
 import { logError, logWarn } from '@/lib/log';
 
 type StaffAvatarRemoveInput = {
@@ -63,7 +64,7 @@ export async function runStaffAvatarRemove({
             ok: false,
             status: 400,
             error: 'validation',
-            message: updateError.message,
+            message: databaseErrorMessage(updateError, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 

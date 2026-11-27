@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 
+import { publicErrorMessage } from '@/lib/apiErrorHandler';
 import {
     getWhatsAppAuthTemplateLanguage,
     getWhatsAppAuthTemplateName,
@@ -253,7 +254,7 @@ export async function runWhatsAppMobileStartRoute({
             ok: false,
             status: 500,
             error: 'internal',
-            message: error instanceof Error ? error.message : 'Не удалось создать OTP попытку',
+            message: publicErrorMessage(error, 'Не удалось создать OTP попытку'),
         };
     }
 

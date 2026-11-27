@@ -1,3 +1,4 @@
+import { publicErrorMessage } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import type { DbQueryClient } from '@/lib/supabaseTypes';
 
@@ -62,7 +63,7 @@ export async function runRatingsManualRecalculate({ admin, userId, body }: {
         logError('RatingsManualRecalculate', 'Could not persist audit result', error);
     }
     if (errorMessage !== null) {
-        return { ok: false, error: 'internal', message: errorMessage || 'Ошибка пересчёта рейтинга', status: 500 };
+        return { ok: false, error: 'internal', message: publicErrorMessage(errorMessage, 'Ошибка пересчёта рейтинга'), status: 500 };
     }
     return { ok: true, data: { ok: true, entity_type, entity_id, action } };
 }

@@ -36,7 +36,7 @@ describe('ratingsJobsService', () => {
         expect(result).toEqual({
             ok: false,
             error: 'internal',
-            message: 'db failed',
+            message: 'Не удалось загрузить данные. Попробуйте ещё раз.',
             status: 500,
         });
     });

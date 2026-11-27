@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { toNormalizedDateString } from '@/lib/dateUtils';
 import { logError } from '@/lib/log';
 import type { DbTableClient } from '@/lib/supabaseTypes';
@@ -74,7 +75,7 @@ export async function listBranchPromotions({
             ok: false,
             status: 500,
             error: 'internal',
-            message: promotionsError.message,
+            message: reportDatabaseError('BranchPromotions', promotionsError, DATABASE_FAILURE_MESSAGES.load),
         };
     }
 
@@ -167,7 +168,7 @@ export async function createBranchPromotion({
             ok: false,
             status: 500,
             error: 'internal',
-            message: insertError.message,
+            message: reportDatabaseError('BranchPromotions', insertError, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 

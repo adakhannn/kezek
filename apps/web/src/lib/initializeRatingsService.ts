@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, databaseErrorMessage } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 import type { DbRpcClient } from '@/lib/supabaseTypes';
 
@@ -31,7 +32,7 @@ export async function initializeRatings(
         ok: false,
         status: 500,
         error: 'internal',
-        message: error.message,
+        message: databaseErrorMessage(error, DATABASE_FAILURE_MESSAGES.internal),
       };
     }
 
@@ -87,7 +88,7 @@ export async function initializeRatings(
         ok: false,
         status: 500,
         error: 'internal',
-        message: error.message,
+        message: databaseErrorMessage(error, DATABASE_FAILURE_MESSAGES.internal),
       };
     }
 
@@ -126,7 +127,7 @@ export async function initializeRatings(
       ok: false,
       status: 500,
       error: 'internal',
-      message: error.message,
+      message: databaseErrorMessage(error, DATABASE_FAILURE_MESSAGES.internal),
     };
   }
 

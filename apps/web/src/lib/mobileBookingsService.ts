@@ -10,6 +10,7 @@ import type {
     ClientBookingsPageDto,
 } from '@shared-client/types';
 
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import { bookingCancellationError } from '@/lib/bookingCancellationError';
 import type { DbQueryClient } from '@/lib/supabaseTypes';
 
@@ -287,8 +288,7 @@ export async function listMobileBookings({
         return {
             ok: false,
             error: 'internal',
-            message: 'Не удалось загрузить бронирования',
-            details: error.message,
+            message: reportDatabaseError('MobileBookings', error, 'Не удалось загрузить бронирования'),
             status: 500,
         };
     }
@@ -411,16 +411,15 @@ export async function getMobileBookingDetails({
         .eq('id', bookingId)
         .maybeSingle();
 
-    const loadFailed = (details: unknown): ServiceFailure => ({
+    const loadFailed = (cause: unknown): ServiceFailure => ({
         ok: false,
         error: 'internal',
-        message: 'Не удалось загрузить бронирование',
-        details,
+        message: reportDatabaseError('MobileBookings', cause, 'Не удалось загрузить бронирование'),
         status: 500,
     });
 
     if (error) {
-        return loadFailed(error.message);
+        return loadFailed(error);
     }
 
     const notFound: ServiceFailure = {
@@ -439,7 +438,7 @@ export async function getMobileBookingDetails({
     try {
         viewerRole = await resolveDetailsViewer(row, userId, isBusinessManager);
     } catch (accessError) {
-        return loadFailed(accessError instanceof Error ? accessError.message : String(accessError));
+        return loadFailed(accessError);
     }
     // Someone else's booking reads as absent: its existence is not disclosed.
     if (!viewerRole) {
@@ -536,8 +535,7 @@ export async function cancelMobileBooking({
         return {
             ok: false,
             error: 'internal',
-            message: 'Не удалось загрузить бронирование',
-            details: readError.message,
+            message: reportDatabaseError('MobileBookings', readError, 'Не удалось загрузить бронирование'),
             status: 500,
         };
     }
@@ -566,8 +564,7 @@ export async function cancelMobileBooking({
         return {
             ok: false,
             error: 'internal',
-            message: 'Не удалось отменить бронирование',
-            details: updateError.message,
+            message: reportDatabaseError('MobileBookings', updateError, 'Не удалось отменить бронирование'),
             status: 500,
         };
     }

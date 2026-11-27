@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
+
 export type DashboardBranchesListResult =
   | { ok: true; data: Array<{ id: string; name: string }> }
   | { ok: false; error: 'server'; message: string; details?: unknown; status: number };
@@ -22,8 +24,7 @@ export async function listDashboardBranches({
     return {
       ok: false,
       error: 'server',
-      message: 'Failed to load branches',
-      details: error.message,
+      message: reportDatabaseError('DashboardBranchesList', error, 'Failed to load branches'),
       status: 500,
     };
   }

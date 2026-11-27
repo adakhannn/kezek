@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { toNormalizedDateString } from '@/lib/dateUtils';
 
 type PromotionType =
@@ -104,7 +105,7 @@ export async function updateBranchPromotion({
             ok: false,
             status: 500,
             error: 'internal',
-            message: updateError.message,
+            message: reportDatabaseError('BranchPromotion', updateError, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 
@@ -170,7 +171,7 @@ export async function deleteBranchPromotion({
             ok: false,
             status: 500,
             error: 'internal',
-            message: deleteError.message,
+            message: reportDatabaseError('BranchPromotion', deleteError, DATABASE_FAILURE_MESSAGES.delete),
         };
     }
 

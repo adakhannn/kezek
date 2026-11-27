@@ -1,6 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { publicErrorMessage } from '@/lib/apiErrorHandler';
 import { submitBusinessApplication, type BusinessApplicationInput } from '@/lib/businessApplicationService';
 import { notifyBusinessApplicationSubmitted } from '@/lib/businessRoleApplicationNotificationService';
 import { logError } from '@/lib/log';
@@ -70,7 +71,7 @@ export const POST = withLocalizedMessages(async function POST(request: Request) 
             }
             return Response.json({
                 ok: false,
-                message: error instanceof Error ? error.message : 'Не удалось отправить заявку',
+                message: publicErrorMessage(error, 'Не удалось отправить заявку'),
                 code: 'unexpected_error',
             }, { status: 500 });
         }

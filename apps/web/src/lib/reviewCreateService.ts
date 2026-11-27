@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbClient, DbInsert } from '@/lib/supabaseTypes';
 
 export type ReviewCreateBody = {
@@ -113,7 +114,7 @@ export async function createOrUpdateReview(params: {
         return {
           ok: false,
           error: 'validation',
-          message: error.message,
+          message: reportDatabaseError('ReviewCreate', error, DATABASE_FAILURE_MESSAGES.save),
           status: 400,
         };
       }
@@ -176,7 +177,7 @@ export async function createOrUpdateReview(params: {
     return {
       ok: false,
       error: 'validation',
-      message: error.message,
+      message: reportDatabaseError('ReviewCreate', error, DATABASE_FAILURE_MESSAGES.save),
       status: 400,
     };
   }

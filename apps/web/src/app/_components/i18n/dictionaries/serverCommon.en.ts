@@ -19,4 +19,7 @@ export const serverCommonEn = {
     'server.common.staffIdMissing': 'Staff ID is missing',
     'server.common.staffNotFoundOrForbidden': 'Staff member not found or access denied',
     'server.common.localeInvalid': 'Unknown language: use ru, ky or en',
+    'server.common.loadFailed': 'Could not load the data. Please try again.',
+    'server.common.saveFailed': 'Could not save the changes. Please try again.',
+    'server.common.deleteFailed': 'Could not delete. Please try again.',
 } as const;

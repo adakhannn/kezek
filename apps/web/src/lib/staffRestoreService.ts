@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbClient, DbTableClient } from '@/lib/supabaseTypes';
 
 type StaffRecord = {
@@ -58,7 +59,7 @@ export async function runStaffRestore({
         return {
             ok: false,
             error: 'validation',
-            message: updateError.message,
+            message: reportDatabaseError('StaffRestore', updateError, DATABASE_FAILURE_MESSAGES.save),
             status: 400,
         };
     }

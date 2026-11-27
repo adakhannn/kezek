@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { DATABASE_FAILURE_MESSAGES, databaseErrorMessage } from '@/lib/apiErrorHandler';
 import { loadBusinessTimeZone } from '@/lib/businessTimeZone';
 import { readStaffHistory } from '@/lib/finance/staffHistory';
 import { logError } from '@/lib/log';
@@ -98,7 +99,7 @@ export async function runDeprecatedStaffFinance({
             ok: false,
             status: 500,
             error: 'internal',
-            message: shiftError.message,
+            message: databaseErrorMessage(shiftError, DATABASE_FAILURE_MESSAGES.load),
         };
     }
 

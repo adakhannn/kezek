@@ -79,7 +79,7 @@ describe('staffFinanceStatsService', () => {
     });
     test('source failure is non-success, not a zero ledger', async () => {
         const { run, admin } = setup(); admin.rpc.mockResolvedValue({ data: null, error: { message: 'items unavailable' } });
-        expect(await run('period=day&date=2024-01-15')).toMatchObject({ ok: false, status: 500, message: 'items unavailable' });
+        expect(await run('period=day&date=2024-01-15')).toMatchObject({ ok: false, status: 500, message: 'Не удалось получить финансовую статистику' });
     });
     test('closed financial results are authoritative even if old item details differ', async () => {
         const { run } = setup([{ id: 'shift', status: 'closed', total_amount: 1000, consumables_amount: 100,

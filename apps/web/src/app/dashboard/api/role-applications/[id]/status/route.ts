@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
-import { withErrorHandler } from '@/lib/apiErrorHandler';
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError, withErrorHandler } from '@/lib/apiErrorHandler';
 import { releaseApplicationBlock } from '@/lib/applicationPolicy';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { notifyStaffApplicationApproved } from '@/lib/businessRoleApplicationNotificationService';
@@ -62,7 +62,10 @@ async function updateRoleApplicationStatus(request: Request, context: unknown): 
         .eq('id', applicationId)
         .maybeSingle();
     if (applicationError) {
-        return NextResponse.json({ ok: false, message: applicationError.message }, { status: 400 });
+        return NextResponse.json({
+            ok: false,
+            message: reportDatabaseError('DashboardRoleApplicationStatus', applicationError, DATABASE_FAILURE_MESSAGES.load),
+        }, { status: 400 });
     }
     if (!application || application.biz_id !== bizId) {
         return NextResponse.json({ ok: false, message: 'Заявка не найдена.' }, { status: 404 });

@@ -303,7 +303,7 @@ describe('telegramLoginService', () => {
         expect(result).toEqual({
             ok: false,
             error: 'internal',
-            message: 'create failed',
+            message: 'Ошибка создания пользователя',
             details: { code: 'auth_error' },
             status: 500,
         });

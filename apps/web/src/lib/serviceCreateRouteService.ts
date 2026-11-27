@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbTableClient } from '@/lib/supabaseTypes';
 
 export type ServiceCreateBody = {
@@ -105,7 +106,7 @@ export async function createServiceRouteEntry(params: {
     return {
       ok: false,
       error: 'validation',
-      message: brErr.message,
+      message: reportDatabaseError('ServiceCreate', brErr, DATABASE_FAILURE_MESSAGES.load),
       status: 400,
     };
   }
@@ -146,7 +147,7 @@ export async function createServiceRouteEntry(params: {
     return {
       ok: false,
       error: 'validation',
-      message: insErr.message,
+      message: reportDatabaseError('ServiceCreate', insErr, 'Не удалось сохранить услугу. Изменения не сохранены.'),
       status: 400,
     };
   }

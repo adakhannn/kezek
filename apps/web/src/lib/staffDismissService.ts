@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
@@ -66,7 +67,7 @@ export async function runStaffDismiss({
             ok: false,
             status: 400,
             error: 'validation',
-            message: bookingsError.message,
+            message: reportDatabaseError('StaffDismiss', bookingsError, DATABASE_FAILURE_MESSAGES.load),
         };
     }
 
@@ -90,7 +91,7 @@ export async function runStaffDismiss({
             ok: false,
             status: 400,
             error: 'validation',
-            message: deactivateError.message,
+            message: reportDatabaseError('StaffDismiss', deactivateError, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 
@@ -134,7 +135,7 @@ async function demoteUserToClient(userId: string, bizId: string): Promise<StaffD
             ok: false,
             status: 400,
             error: 'validation',
-            message: deleteError.message,
+            message: reportDatabaseError('StaffDismiss', deleteError, DATABASE_FAILURE_MESSAGES.delete),
         };
     }
 

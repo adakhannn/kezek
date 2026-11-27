@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { databaseErrorMessage, publicErrorMessage } from '@/lib/apiErrorHandler';
 import { isFinanceDate, readFinanceCalendar } from '@/lib/finance/calendar';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
@@ -79,7 +80,7 @@ export async function runOpenStaffShift({
             ok: false,
             status: rpcError.code === '40001' ? 409 : rpcError.code === '42501' ? 403 : 500,
             error: rpcError.code === '42501' ? 'forbidden' : rpcError.code === '40001' ? 'validation' : 'internal',
-            message: rpcError.message || 'Не удалось открыть смену',
+            message: databaseErrorMessage(rpcError, 'Не удалось открыть смену'),
         };
     }
 
@@ -91,7 +92,7 @@ export async function runOpenStaffShift({
             ok: false,
             status: 500,
             error: 'internal',
-            message: errorMessage,
+            message: publicErrorMessage(errorMessage, 'Не удалось открыть смену'),
         };
     }
 

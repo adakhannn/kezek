@@ -19,4 +19,7 @@ export const serverCommonRu = {
     'server.common.staffIdMissing': 'Отсутствует ID сотрудника',
     'server.common.staffNotFoundOrForbidden': 'Сотрудник не найден или доступ запрещен',
     'server.common.localeInvalid': 'Неизвестный язык: допустимы ru, ky и en',
+    'server.common.loadFailed': 'Не удалось загрузить данные. Попробуйте ещё раз.',
+    'server.common.saveFailed': 'Не удалось сохранить изменения. Попробуйте ещё раз.',
+    'server.common.deleteFailed': 'Не удалось удалить. Попробуйте ещё раз.',
 } as const;

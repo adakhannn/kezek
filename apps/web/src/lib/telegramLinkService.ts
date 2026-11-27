@@ -1,3 +1,4 @@
+import { databaseErrorMessage } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import type { DbClient } from '@/lib/supabaseTypes';
 import type { TelegramAuthData } from '@/lib/telegram/verify';
@@ -70,7 +71,7 @@ export async function linkTelegramAccount(params: {
     return {
       ok: false,
       error: 'internal',
-      message: profileUpdateError.message || 'Не удалось привязать Telegram',
+      message: databaseErrorMessage(profileUpdateError, 'Не удалось привязать Telegram'),
       details: { code: 'update_error' },
       status: 500,
     };

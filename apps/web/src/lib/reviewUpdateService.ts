@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { isValidReviewRating, REVIEW_RATING_MESSAGE } from '@/lib/reviewCreateService';
 
 type ReviewUpdateBody = {
@@ -102,7 +103,7 @@ export async function runReviewUpdate({
             ok: false,
             status: 400,
             error: 'validation',
-            message: error.message,
+            message: reportDatabaseError('ReviewUpdate', error, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 

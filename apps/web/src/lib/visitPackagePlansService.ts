@@ -1,3 +1,4 @@
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbTableClient, DbUpdate } from '@/lib/supabaseTypes';
 
 export type VisitPackagePlanRow = {
@@ -96,8 +97,7 @@ async function ensureVisitPackagePlanBelongsToBiz(params: {
     return {
       ok: false as const,
       error: 'server' as const,
-      message: 'Failed to load visit package plan',
-      details: error.message,
+      message: reportDatabaseError('VisitPackagePlans', error, 'Failed to load visit package plan'),
       status: 500,
     };
   }
@@ -128,8 +128,7 @@ export async function listVisitPackagePlans(params: {
     return {
       ok: false,
       error: 'server',
-      message: 'Failed to load visit package plans',
-      details: error.message,
+      message: reportDatabaseError('VisitPackagePlans', error, 'Failed to load visit package plans'),
       status: 500,
     };
   }
@@ -182,8 +181,7 @@ export async function createVisitPackagePlan(params: {
     return {
       ok: false,
       error: 'server',
-      message: 'Failed to create visit package plan',
-      details: error?.message,
+      message: reportDatabaseError('VisitPackagePlans', error, 'Failed to create visit package plan'),
       status: 500,
     };
   }
@@ -251,8 +249,7 @@ export async function updateVisitPackagePlan(params: {
     return {
       ok: false,
       error: 'server',
-      message: 'Failed to update visit package plan',
-      details: error?.message,
+      message: reportDatabaseError('VisitPackagePlans', error, 'Failed to update visit package plan'),
       status: 500,
     };
   }

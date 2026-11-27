@@ -1,4 +1,5 @@
 import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbTableClient } from '@/lib/supabaseTypes';
 
 export async function ensureSuperAdminAccess({
@@ -17,7 +18,7 @@ export async function ensureSuperAdminAccess({
         return {
             ok: false,
             error: 'internal',
-            message: superErr.message,
+            message: reportDatabaseError('RatingsDebugEntities', superErr, 'Не удалось проверить права доступа'),
             status: 400,
         };
     }

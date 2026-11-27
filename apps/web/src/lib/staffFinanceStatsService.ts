@@ -1,4 +1,5 @@
-﻿import { readFinanceReport, readFinanceReportToday, financeReportWorkedHours, type FinanceReport, type ReportClient } from '@/lib/finance/reportSnapshot';
+﻿import { publicErrorMessage } from '@/lib/apiErrorHandler';
+import { readFinanceReport, readFinanceReportToday, financeReportWorkedHours, type FinanceReport, type ReportClient } from '@/lib/finance/reportSnapshot';
 import type { StaffFinanceStatsPeriod, StaffFinanceStatsShiftItem } from '@/lib/finance/types';
 import { logDebug, logError } from '@/lib/log';
 
@@ -92,7 +93,7 @@ export async function runStaffFinanceStats({
     }
     catch (error) {
         logError('StaffFinanceStats', 'Failed to read complete shift snapshot', error);
-        return { ok: false, status: 500, error: 'internal', message: error instanceof Error ? error.message : 'Не удалось получить финансовую статистику' };
+        return { ok: false, status: 500, error: 'internal', message: publicErrorMessage(error, 'Не удалось получить финансовую статистику') };
     }
     const finalShifts = report.shifts;
     const shiftItemsMap: Record<string, StaffFinanceStatsShiftItem[]> = Object.fromEntries(finalShifts.map(shift => [shift.id, shift.items]));

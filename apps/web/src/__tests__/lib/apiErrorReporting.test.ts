@@ -42,7 +42,8 @@ describe('API error reporting', () => {
         expect(logError).toHaveBeenCalledTimes(1);
         expect(logError).toHaveBeenCalledWith('Bookings', 'API error', { error: cause, status: 500 }, { tags: { 'http.status_code': '500' } });
         expect(logWarn).toHaveBeenCalledWith('Bookings', 'API client error', { status: 400, error: 'Invalid date' });
-        await expect(clientError.json()).resolves.toEqual({ ok: false, error: 'validation', message: 'Invalid date' });
+        // The status still comes from the text; English library text is not shown (ENG-47).
+        await expect(clientError.json()).resolves.toEqual({ ok: false, error: 'validation', message: 'Ошибка валидации' });
     });
 
     test('withErrorHandler reports a handler-returned 5xx once, and a 2xx or an already reported 5xx not at all', async () => {

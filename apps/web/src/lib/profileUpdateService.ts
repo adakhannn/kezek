@@ -1,3 +1,4 @@
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbClient, DbInsert } from '@/lib/supabaseTypes';
 
 export type ProfileUpdateBody = {
@@ -82,7 +83,7 @@ export async function updateProfileSettings(params: {
     return {
       ok: false,
       error: 'validation',
-      message: profileError.message,
+      message: reportDatabaseError('ProfileUpdate', profileError, 'Не удалось обновить профиль'),
       status: 400,
     };
   }
@@ -99,7 +100,7 @@ export async function updateProfileSettings(params: {
       return {
         ok: false,
         error: 'validation',
-        message: notificationEmailError.message,
+        message: reportDatabaseError('ProfileUpdate', notificationEmailError, 'Не удалось обновить профиль'),
         status: 400,
       };
     }

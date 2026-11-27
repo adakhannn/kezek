@@ -1,5 +1,6 @@
 import { BusinessAccessReadError, managerAccessToBusiness } from './businessManagerAccess';
 
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbAuthClient, DbTableClient } from '@/lib/supabaseTypes';
 
 const ALLOWED_ROLE_KEYS = new Set(['owner', 'admin', 'manager']);
@@ -159,8 +160,7 @@ export async function setCurrentBusinessState({
         return {
             ok: false,
             error: 'internal',
-            message: 'Не удалось сохранить текущий бизнес',
-            details: upsertError.message,
+            message: reportDatabaseError('CurrentBusiness', upsertError, 'Не удалось сохранить текущий бизнес'),
             status: 500,
         };
     }

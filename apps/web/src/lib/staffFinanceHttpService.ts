@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, createSuccessResponse, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, DATABASE_FAILURE_MESSAGES, publicErrorMessage, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
 import { determineErrorType, getIpAddress, logApiMetric } from '@/lib/apiMetrics';
 import { logDebug, logError } from '@/lib/log';
 import { runStaffFinanceRoute } from '@/lib/staffFinanceRouteService';
@@ -96,6 +96,6 @@ export async function runStaffFinanceHttp(req: Request): Promise<NextResponse> {
             userAgent: req.headers.get('user-agent') || undefined,
         }).catch(() => {});
 
-        return access ?? createErrorResponse(statusCode === 401 ? 'auth' : 'internal', msg, undefined, statusCode);
+        return access ?? createErrorResponse(statusCode === 401 ? 'auth' : 'internal', publicErrorMessage(error, statusCode === 401 ? 'Не авторизован' : DATABASE_FAILURE_MESSAGES.internal), undefined, statusCode);
     }
 }

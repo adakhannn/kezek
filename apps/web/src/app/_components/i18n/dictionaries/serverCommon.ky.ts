@@ -19,4 +19,7 @@ export const serverCommonKy = {
     'server.common.staffIdMissing': 'Кызматкердин ID көрсөтүлгөн жок',
     'server.common.staffNotFoundOrForbidden': 'Кызматкер табылган жок же кирүү мүмкүн эмес',
     'server.common.localeInvalid': 'Белгисиз тил: ru, ky же en гана болот',
+    'server.common.loadFailed': 'Маалыматты жүктөө мүмкүн болгон жок. Кайра аракет кылыңыз.',
+    'server.common.saveFailed': 'Өзгөртүүлөрдү сактоо мүмкүн болгон жок. Кайра аракет кылыңыз.',
+    'server.common.deleteFailed': 'Өчүрүү мүмкүн болгон жок. Кайра аракет кылыңыз.',
 } as const;

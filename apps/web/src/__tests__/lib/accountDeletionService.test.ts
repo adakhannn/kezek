@@ -52,7 +52,10 @@ describe('accountDeletionService', () => {
         const admin = createAssessmentAdmin({});
         admin.rpc.mockResolvedValue({ data: null, error: { message: 'timeout' } });
 
-        await expect(assessAccountDeletion(admin as never, 'user-id')).rejects.toThrow('timeout');
+        await expect(assessAccountDeletion(admin as never, 'user-id')).rejects.toMatchObject({
+            message: 'Account deletion assessment failed',
+            cause: { message: 'timeout' },
+        });
     });
 
     test('rejects an unrecognized confirmation phrase before accessing persistence', async () => {

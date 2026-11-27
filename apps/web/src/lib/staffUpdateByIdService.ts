@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { DATABASE_FAILURE_MESSAGES, databaseErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
 import { todayDateString } from '@/lib/time';
@@ -147,7 +148,7 @@ export async function runStaffUpdateById({
             ok: false,
             status: 400,
             error: 'internal',
-            message: updateError.message,
+            message: databaseErrorMessage(updateError, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 
@@ -314,7 +315,7 @@ async function transferBranchAssignment({
             ok: false,
             status: 400,
             error: 'internal',
-            message: insertError.message,
+            message: reportDatabaseError('StaffUpdateById', insertError, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 
@@ -329,7 +330,7 @@ async function transferBranchAssignment({
             ok: false,
             status: 400,
             error: 'internal',
-            message: cacheError.message,
+            message: reportDatabaseError('StaffUpdateById', cacheError, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 

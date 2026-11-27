@@ -1,8 +1,92 @@
 import { NextResponse } from 'next/server';
 
+import { serverCommonRu } from '@/app/_components/i18n/dictionaries/serverCommon.ru';
 import { BizAccessError, StaffSelectionRequiredError } from '@/lib/authDiagnostics';
 import { logError, logWarn } from '@/lib/log';
-import { localizeApiResponse } from '@/lib/serverMessages';
+import { isServerMessage, localizeApiResponse } from '@/lib/serverMessages';
+
+/**
+ * Generic messages for a failed database or Supabase call (ENG-47). They are server dictionary
+ * values, so withErrorHandler / withLocalizedMessages answer them in ru, ky or en.
+ */
+export const DATABASE_FAILURE_MESSAGES = {
+    internal: serverCommonRu['server.common.internalError'],
+    load: serverCommonRu['server.common.loadFailed'],
+    save: serverCommonRu['server.common.saveFailed'],
+    delete: serverCommonRu['server.common.deleteFailed'],
+} as const;
+
+type DatabaseErrorShape = { code?: unknown; message?: unknown; details?: unknown; hint?: unknown };
+
+/**
+ * A PostgREST / Postgres / Supabase error object: a string `code` together with `details` or `hint`
+ * (PostgrestError), or a Supabase Auth / Storage error (`__isAuthError`, `__isStorageError`).
+ */
+export function isDatabaseError(error: unknown): error is DatabaseErrorShape {
+    if (!error || typeof error !== 'object') return false;
+    const value = error as DatabaseErrorShape & { __isAuthError?: unknown; __isStorageError?: unknown };
+    if (value.__isAuthError === true || value.__isStorageError === true) return true;
+    return typeof value.code === 'string' && ('details' in value || 'hint' in value);
+}
+
+/** The parts of a database error worth a log line. They stay on the server. */
+export function databaseErrorLogData(error: unknown): Record<string, unknown> {
+    if (!error || typeof error !== 'object') return { error: error === undefined ? undefined : String(error) };
+    const { code, message, details, hint } = error as DatabaseErrorShape;
+    return { code, message, details, hint };
+}
+
+/**
+ * The client-facing message for a failed database or Supabase call (ENG-47). The raw message,
+ * details and hint never go into a response: callers log them (reportDatabaseError does). Without
+ * a `fallback`, a well-known Postgres code gets its message («Конфликт данных» for 23505, ...);
+ * otherwise the fallback, by default «Внутренняя ошибка сервера».
+ */
+export function databaseErrorMessage(error: unknown, fallback?: string): string {
+    if (fallback) return fallback;
+    const code = error && typeof error === 'object' ? (error as DatabaseErrorShape).code : undefined;
+    const known = typeof code === 'string' ? DATABASE_ERRORS[code] : undefined;
+    return known ? known[1] : DATABASE_FAILURE_MESSAGES.internal;
+}
+
+/**
+ * Logs the raw database error under `scope` (a Sentry issue via logError) and returns the message a
+ * client may see (databaseErrorMessage). For a service that turns a failed query into a response.
+ */
+export function reportDatabaseError(
+    scope: string,
+    error: unknown,
+    fallback?: string,
+    context?: Record<string, unknown>,
+): string {
+    report(() => logError(scope, 'Database error', { ...context, ...databaseErrorLogData(error) }));
+    return databaseErrorMessage(error, fallback);
+}
+
+/**
+ * An Error to throw for a failed database call: its message is safe for a client, the raw error is
+ * its `cause`, which the logger of the catching code prints (ENG-47).
+ */
+export function databaseFailure(error: unknown, message: string = DATABASE_FAILURE_MESSAGES.internal): Error {
+    return new Error(message, { cause: error });
+}
+
+/**
+ * The message of a caught exception when it was written for people (a server dictionary message or
+ * Russian text thrown by our own code) or is a machine code (UNAUTHORIZED, NO_BIZ_ACCESS), else
+ * `fallback`. Raw database, network and library text (English prose, or any database error object)
+ * never reaches the client this way (ENG-47).
+ */
+export function publicErrorMessage(error: unknown, fallback: string): string {
+    if (isDatabaseError(error)) return fallback;
+    const message = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+    if (message && (isServerMessage(message) || CYRILLIC.test(message) || MACHINE_CODE.test(message))) return message;
+    return fallback;
+}
+
+const CYRILLIC = /[А-Яа-яЁё]/;
+/** UNAUTHORIZED, NO_BIZ_ACCESS, APPLICATION_POLICY:blocked: a code clients may match, not prose. */
+const MACHINE_CODE = /^[A-Z][A-Z0-9_]*(:[a-z0-9_]+)?$/;
 
 /**
  * Стандартный формат ответа об ошибке для API routes
@@ -221,30 +305,34 @@ function classifyApiError(error: unknown, defaultMessage?: string): NextResponse
     // Если это Error с известным типом
     if (error instanceof Error) {
         const message = error.message.toLowerCase();
+        // The status class comes from the text; the text itself reaches the client only when it was
+        // written for people or is a machine code (UNAUTHORIZED). Database, network and library text
+        // gets the message of its class (ENG-47).
+        const text = publicErrorMessage(error, '');
 
         // Ошибки авторизации
         if (message.includes('auth') || message.includes('unauthorized') || message.includes('не авторизован')) {
-            return buildErrorResponse('auth', error.message || defaultMessage || 'Не авторизован', undefined, 401);
+            return buildErrorResponse('auth', text || defaultMessage || 'Не авторизован', undefined, 401);
         }
 
         // Ошибки доступа
         if (message.includes('forbidden') || message.includes('доступ запрещен')) {
-            return buildErrorResponse('forbidden', error.message || defaultMessage || 'Доступ запрещен', undefined, 403);
+            return buildErrorResponse('forbidden', text || defaultMessage || 'Доступ запрещен', undefined, 403);
         }
 
         // Ошибки валидации
         if (message.includes('validation') || message.includes('invalid') || message.includes('неверный')) {
-            return buildErrorResponse('validation', error.message || defaultMessage || 'Ошибка валидации', undefined, 400);
+            return buildErrorResponse('validation', text || defaultMessage || 'Ошибка валидации', undefined, 400);
         }
 
         // Ошибки "не найдено"
         if (message.includes('not found') || message.includes('не найден')) {
-            return buildErrorResponse('not_found', error.message || defaultMessage || 'Ресурс не найден', undefined, 404);
+            return buildErrorResponse('not_found', text || defaultMessage || 'Ресурс не найден', undefined, 404);
         }
 
         // Конфликты
         if (message.includes('conflict') || message.includes('конфликт')) {
-            return buildErrorResponse('conflict', error.message || defaultMessage || 'Конфликт данных', undefined, 409);
+            return buildErrorResponse('conflict', text || defaultMessage || 'Конфликт данных', undefined, 409);
         }
     }
 
@@ -263,11 +351,10 @@ function classifyApiError(error: unknown, defaultMessage?: string): NextResponse
         );
     }
 
-    // Общая ошибка
-    const message = error instanceof Error ? error.message : String(error);
+    // Общая ошибка: its own text only when it was written for people (ENG-47).
     return buildErrorResponse(
         'internal',
-        defaultMessage || message || 'Внутренняя ошибка сервера',
+        defaultMessage || publicErrorMessage(error, DATABASE_FAILURE_MESSAGES.internal),
         process.env.NODE_ENV === 'development' ? error : undefined,
         500
     );

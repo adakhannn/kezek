@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbClient, DbTableClient } from '@/lib/supabaseTypes';
 
 type ManagerSupabaseLike = Pick<DbClient, 'auth' | 'from'>;
@@ -77,7 +78,7 @@ export async function runStaffSyncRoles({
         return {
             ok: false,
             error: 'internal',
-            message: staffError.message,
+            message: reportDatabaseError('StaffSyncRoles', staffError, DATABASE_FAILURE_MESSAGES.load),
             status: 400,
         };
     }

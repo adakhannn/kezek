@@ -1,4 +1,5 @@
-﻿import { hasUsableWhatsAppOtpHashSecret } from '@/lib/env';
+﻿import { reportDatabaseError } from '@/lib/apiErrorHandler';
+import { hasUsableWhatsAppOtpHashSecret } from '@/lib/env';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { issueMobileSessionGrant, MOBILE_CODE_CHALLENGE_RE } from '@/lib/mobileExchangeService';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
@@ -110,7 +111,7 @@ async function resolveOrCreateUser(admin: AdminLike, phoneE164: string): Promise
             ok: false,
             status: 500,
             error: 'internal',
-            message: error?.message || 'Не удалось создать пользователя',
+            message: reportDatabaseError('WhatsAppMobileVerify', error, 'Ошибка создания пользователя'),
         };
     }
 

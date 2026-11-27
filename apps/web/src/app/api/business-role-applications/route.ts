@@ -1,6 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import {
     notifyOwnerApplicationSubmitted,
     notifyStaffApplicationSubmitted,
@@ -29,7 +30,12 @@ export const GET = withLocalizedMessages(async function GET(request: Request) {
             .eq('requested_role', requestedRole)
             .eq('status', 'pending')
             .order('created_at', { ascending: false });
-        if (error) return Response.json({ ok: false, message: error.message }, { status: 400 });
+        if (error) {
+            return Response.json({
+                ok: false,
+                message: reportDatabaseError('BusinessRoleApplications', error, DATABASE_FAILURE_MESSAGES.load),
+            }, { status: 400 });
+        }
         return Response.json({ ok: true, items: data ?? [] });
     } catch (error) {
         logError('BusinessRoleApplications', 'Failed to load role applications', error);
@@ -79,9 +85,7 @@ export const POST = withLocalizedMessages(async function POST(request: Request) 
                 return Response.json({
                     ok: false,
                     code: 'service_unavailable',
-                    message: error instanceof Error
-                        ? error.message
-                        : 'Сервис заявок временно недоступен.',
+                    message: publicErrorMessage(error, 'Сервис заявок временно недоступен.'),
                 }, { status: 503 });
             }
 

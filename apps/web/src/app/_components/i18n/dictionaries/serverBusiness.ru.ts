@@ -94,4 +94,5 @@ export const serverBusinessRu = {
     'server.business.serviceLoadFailed': 'Не удалось загрузить услугу',
     'server.business.branchLoadFailed': 'Не удалось открыть филиал',
     'server.business.settingsLoadFailed': 'Не удалось загрузить настройки бизнеса',
+    'server.business.businessFromApplicationCreateFailed': 'Не удалось создать бизнес из заявки',
 } as const;

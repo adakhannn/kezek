@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbTableClient } from '@/lib/supabaseTypes';
 
 export async function getRatingsJobs({
@@ -20,7 +21,7 @@ export async function getRatingsJobs({
         return {
             ok: false,
             error: 'internal',
-            message: error.message,
+            message: reportDatabaseError('RatingsJobs', error, DATABASE_FAILURE_MESSAGES.load),
             status: 500,
         };
     }

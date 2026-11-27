@@ -115,6 +115,11 @@ function known(value: unknown): value is string {
     return typeof value === 'string' && value !== '' && lookup(value) !== null;
 }
 
+/** True for a message the server dictionaries know (exactly or by pattern): text written for people. */
+export function isServerMessage(value: unknown): value is string {
+    return known(value);
+}
+
 /** The body of a copy of the response, or null once it is longer than `limit` characters. */
 async function readUpTo(response: Response, limit: number): Promise<string | null> {
     const reader = response.clone().body?.getReader();

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { findAccountIdByConfirmedContact } from '@/lib/accountContactLookup';
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { notifyNewStaffInvitation } from '@/lib/staffInvitationNotification';
@@ -88,7 +89,7 @@ export async function runStaffCreate({
             ok: false,
             status: 400,
             error: 'validation',
-            message: error.message,
+            message: reportDatabaseError('StaffCreate', error, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 
@@ -291,7 +292,7 @@ async function initializeSchedule({
         scheduleResult = {
             success: false,
             daysCreated: 0,
-            error: errorMessage,
+            error: 'schedule_init_failed',
         };
     }
 

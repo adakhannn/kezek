@@ -11,7 +11,7 @@ function setup(data: unknown = empty(), error: unknown = null) {
     return { admin, run: () => runFinanceAllDashboard({ req: request(), supabase: admin, admin, bizId: 'biz-a' }) };
 }
 test('dependency failure is non-success rather than fabricated empty totals', async () => {
-    expect(await setup(null, { message: 'RPC error' }).run()).toMatchObject({ ok: false, statusCode: 500, errorType: 'internal', message: 'RPC error' });
+    expect(await setup(null, { message: 'RPC error' }).run()).toMatchObject({ ok: false, statusCode: 500, errorType: 'internal', message: 'Не удалось получить финансовую статистику' });
 });
 test.each([null, {}, { ...empty(), shifts: [{}] }, { ...empty(), staff: null }])('rejects incomplete report %j', async data => {
     expect(await setup(data).run()).toMatchObject({ ok: false, statusCode: 500 });

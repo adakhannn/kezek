@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, createSuccessResponse, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, DATABASE_FAILURE_MESSAGES, publicErrorMessage, staffAccessErrorResponse } from '@/lib/apiErrorHandler';
 import { determineErrorType, getIpAddress, logApiMetric } from '@/lib/apiMetrics';
 import { getStaffContextForRequest } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
@@ -86,6 +86,6 @@ export async function runStaffShiftOpenHttp(req: Request): Promise<NextResponse>
             userAgent: req.headers.get('user-agent') || undefined,
         }).catch(() => {});
 
-        return access ?? createErrorResponse(isAuthError ? 'auth' : 'internal', message, undefined, statusCode);
+        return access ?? createErrorResponse(isAuthError ? 'auth' : 'internal', publicErrorMessage(error, isAuthError ? 'Не авторизован' : DATABASE_FAILURE_MESSAGES.internal), undefined, statusCode);
     }
 }

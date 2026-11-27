@@ -94,4 +94,5 @@ export const serverBusinessKy = {
     'server.business.serviceLoadFailed': 'Кызматты жүктөө мүмкүн болгон жок',
     'server.business.branchLoadFailed': 'Филиалды ачуу мүмкүн болгон жок',
     'server.business.settingsLoadFailed': 'Бизнестин жөндөөлөрүн жүктөө мүмкүн болгон жок',
+    'server.business.businessFromApplicationCreateFailed': 'Арыздан бизнес түзүү мүмкүн болгон жок',
 } as const;

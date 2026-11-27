@@ -120,7 +120,8 @@ export async function initializeStaffSchedule(
         logError('StaffSchedule', 'Error during initialization', { staffId, error: errorMsg, originalError: error });
         // Не пробрасываем ошибку дальше, чтобы не сломать создание сотрудника.
         // Расписание задаётся в редакторе: «Применить часы филиала» или сохранение дня.
-        return { success: false, daysCreated: 0, error: errorMsg };
+        // The response carries a code, not the database text (ENG-47); the cause is logged above.
+        return { success: false, daysCreated: 0, error: 'schedule_init_failed' };
     }
 }
 

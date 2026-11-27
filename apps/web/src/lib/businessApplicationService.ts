@@ -1,3 +1,4 @@
+import { databaseFailure, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { mapApplicationPolicyError } from '@/lib/applicationPolicy';
 import { normalizeBusinessNameForMatch } from '@/lib/businessName';
 import { slugifyBusinessName } from '@/lib/businessSlug';
@@ -72,7 +73,7 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
         .maybeSingle();
 
     if (applicationError) {
-        return { ok: false as const, status: 400, message: applicationError.message };
+        return { ok: false as const, status: 400, message: reportDatabaseError('BusinessApplicationApproval', applicationError, 'Не удалось сохранить заявку') };
     }
     if (!application) {
         return { ok: false as const, status: 404, message: 'Заявка не найдена' };
@@ -91,7 +92,7 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
             .eq('id', row.id);
 
         if (updateExistingError) {
-            return { ok: false as const, status: 400, message: updateExistingError.message };
+            return { ok: false as const, status: 400, message: reportDatabaseError('BusinessApplicationApproval', updateExistingError, 'Не удалось сохранить заявку') };
         }
         return { ok: true as const, businessId: row.created_business_id, alreadyCreated: true };
     }
@@ -113,7 +114,7 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
             .maybeSingle();
 
         if (ownerRoleError) {
-            return { ok: false as const, status: 400, message: ownerRoleError.message };
+            return { ok: false as const, status: 400, message: reportDatabaseError('BusinessApplicationApproval', ownerRoleError, 'Не удалось сохранить заявку') };
         }
         if (!ownerRole?.id) {
             return { ok: false as const, status: 400, message: 'Основная роль владельца не найдена.' };
@@ -148,7 +149,9 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
         return {
             ok: false as const,
             status: 400,
-            message: createError?.message || 'Не удалось создать бизнес из заявки',
+            message: createError
+                ? reportDatabaseError('BusinessApplicationApproval', createError, 'Не удалось создать бизнес из заявки')
+                : 'Не удалось создать бизнес из заявки',
         };
     }
 
@@ -163,7 +166,7 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
 
         if (ownerRoleError && ownerRoleError.code !== '23505') {
             await params.admin.from('businesses').delete().eq('id', createdBusiness.id);
-            return { ok: false as const, status: 400, message: ownerRoleError.message };
+            return { ok: false as const, status: 400, message: reportDatabaseError('BusinessApplicationApproval', ownerRoleError, 'Не удалось сохранить заявку') };
         }
     }
 
@@ -181,7 +184,7 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
     if (updateApplicationError) {
         await params.admin.from('user_roles').delete().eq('biz_id', createdBusiness.id);
         await params.admin.from('businesses').delete().eq('id', createdBusiness.id);
-        return { ok: false as const, status: 400, message: updateApplicationError.message };
+        return { ok: false as const, status: 400, message: reportDatabaseError('BusinessApplicationApproval', updateApplicationError, 'Не удалось сохранить заявку') };
     }
 
     return { ok: true as const, businessId: createdBusiness.id, alreadyCreated: false };
@@ -201,7 +204,7 @@ async function makeUniqueBusinessSlug(admin: AdminLike, baseName: string): Promi
             .limit(1)
             .maybeSingle();
 
-        if (error) throw new Error(error.message || 'Не удалось проверить slug бизнеса');
+        if (error) throw databaseFailure(error, 'Не удалось проверить slug бизнеса');
         if (!data) return candidate;
     }
 
@@ -216,7 +219,7 @@ export async function resolveBusinessCategory(admin: AdminLike, rawCategory: str
         .eq('is_active', true)
         .order('name_ru', { ascending: true });
 
-    if (error) throw new Error(error.message || 'Не удалось загрузить категории');
+    if (error) throw databaseFailure(error, 'Не удалось загрузить категории');
 
     const categories = (data ?? []) as Array<{ slug: string; name_ru: string | null; is_active: boolean | null }>;
     if (!categories.length) throw new Error('Нет активных категорий для создания бизнеса');
@@ -262,7 +265,7 @@ export async function submitBusinessApplication(params: {
         .like('slug', `${slugPrefix}%`)
         .limit(25);
     if (businessLookupError) {
-        throw new Error(businessLookupError.message || 'Не удалось проверить название бизнеса');
+        throw databaseFailure(businessLookupError, 'Не удалось проверить название бизнеса');
     }
     const existingBusiness = (businessCandidates ?? []).find((candidate: { name?: string | null }) => (
         normalizeBusinessNameForMatch(candidate.name ?? '') === normalizedBusinessName
@@ -285,7 +288,7 @@ export async function submitBusinessApplication(params: {
         .in('status', ['new', 'contacted'])
         .limit(1)
         .maybeSingle();
-    if (duplicateError) throw new Error(duplicateError.message || 'Не удалось проверить заявку');
+    if (duplicateError) throw databaseFailure(duplicateError, 'Не удалось проверить заявку');
     if (duplicate) {
         return { ok: false as const, status: 409, code: 'recent_duplicate', message: 'Заявка с этим номером уже отправлена. Мы скоро свяжемся с вами.' };
     }
@@ -316,7 +319,7 @@ export async function submitBusinessApplication(params: {
                 message: 'Такая заявка уже ожидает рассмотрения.',
             };
         }
-        throw new Error(error.message || 'Не удалось сохранить заявку');
+        throw databaseFailure(error, 'Не удалось сохранить заявку');
     }
     return { ok: true as const, id: data?.id ?? null };
 }

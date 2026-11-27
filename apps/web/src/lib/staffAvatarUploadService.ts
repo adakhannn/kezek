@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { DATABASE_FAILURE_MESSAGES, databaseErrorMessage } from '@/lib/apiErrorHandler';
 import { isSupabaseServiceRoleConfigured } from '@/lib/env';
 import { logDebug, logError, logWarn } from '@/lib/log';
 
@@ -98,8 +99,7 @@ export async function runStaffAvatarUpload({
             ok: false,
             status: 400,
             error: 'validation',
-            message: uploadError.message,
-            details: uploadError,
+            message: databaseErrorMessage(uploadError, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 
@@ -119,7 +119,7 @@ export async function runStaffAvatarUpload({
             ok: false,
             status: 400,
             error: 'validation',
-            message: updateError.message,
+            message: databaseErrorMessage(updateError, DATABASE_FAILURE_MESSAGES.save),
         };
     }
 

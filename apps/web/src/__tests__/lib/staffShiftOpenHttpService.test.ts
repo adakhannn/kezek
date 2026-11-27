@@ -90,6 +90,6 @@ describe('staffShiftOpenHttpService', () => {
 
         expect(res.status).toBe(500);
         expect(data.error).toBe('internal');
-        expect(data.message).toBe('boom');
+        expect(data.message).toBe('Внутренняя ошибка сервера');
     });
 });

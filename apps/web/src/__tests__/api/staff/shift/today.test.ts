@@ -84,7 +84,7 @@ describe('/api/staff/shift/today', () => {
         mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: { message: 'shift load failed' } });
         const response = await GET(); const data = await response.json();
         expect(response.status).toBe(500); expect(data.ok).toBe(false); expect(data.error).toBe('internal');
-        expect(data.message).toBe('shift load failed'); expect(mockSupabase.rpc).toHaveBeenCalledTimes(1);
+        expect(data.message).toBe('Не удалось загрузить смену'); expect(mockSupabase.rpc).toHaveBeenCalledTimes(1);
     });
     test('returns 500 when loading aggregated stats fails', async () => {
         mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: null })

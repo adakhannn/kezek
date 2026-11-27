@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { type PublicContactFields, validatePublicContacts } from '@/lib/businessContacts';
 import { sanitizeDirectoryLinks, validateDirectoryLinks } from '@/lib/directoryLinks';
 import type { DbTableClient } from '@/lib/supabaseTypes';
@@ -33,7 +34,7 @@ export function branchCreateError(error: { message: string }) {
       status: 409,
     };
   }
-  return { error: 'validation' as const, message: error.message, status: 400 };
+  return { error: 'validation' as const, message: reportDatabaseError('BranchCreate', error, DATABASE_FAILURE_MESSAGES.save), status: 400 };
 }
 
 export async function createBranch(params: {

@@ -194,7 +194,7 @@ describe('/api/branches/create', () => {
 
             const res = await POST(req);
             const data = await expectErrorResponse(res, 400, 'validation');
-            expect(data.message).toBe('Database error');
+            expect(data.message).toBe('Не удалось сохранить изменения. Попробуйте ещё раз.');
         });
     });
 });

@@ -45,7 +45,6 @@ describe('dashboardBranchesListService', () => {
       ok: false,
       error: 'server',
       message: 'Failed to load branches',
-      details: 'db failed',
       status: 500,
     });
   });

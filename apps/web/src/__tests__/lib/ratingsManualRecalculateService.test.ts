@@ -103,7 +103,7 @@ describe('ratingsManualRecalculateService', () => {
         expect(result).toEqual({
             ok: false,
             error: 'internal',
-            message: 'rpc failed',
+            message: 'Ошибка пересчёта рейтинга',
             status: 500,
         });
     });

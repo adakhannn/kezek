@@ -1,5 +1,6 @@
 import { ACTIVE_BOOKING_STATUSES } from '@core-domain/booking';
 
+import { databaseFailure } from '@/lib/apiErrorHandler';
 import type { DbClient, DbUpdate } from '@/lib/supabaseTypes';
 
 export type AccountDeletionBlocker = {
@@ -16,13 +17,13 @@ const ACCOUNT_DELETION_CONFIRMATION_PHRASES = new Set(['УДАЛИТЬ', 'DELETE
 // Every store of the platform role (DB-10), not only user_roles: 1 when the account is a super admin.
 async function superAdminCount(admin: AdminLike, userId: string) {
     const { data, error } = await admin.rpc('super_admin_user_ids');
-    if (error) throw new Error(error.message || 'Account deletion assessment failed');
+    if (error) throw databaseFailure(error, 'Account deletion assessment failed');
     return (data ?? []).includes(userId) ? 1 : 0;
 }
 
 async function countQuery(query: PromiseLike<{ count: number | null; error: { message?: string } | null }>) {
     const { count, error } = await query;
-    if (error) throw new Error(error.message || 'Account deletion assessment failed');
+    if (error) throw databaseFailure(error, 'Account deletion assessment failed');
     return count ?? 0;
 }
 
@@ -51,7 +52,7 @@ export async function getAccountDeletionState(admin: AdminLike, userId: string) 
         admin.from('account_deletion_requests').select('status, requested_at, scheduled_for').eq('user_id', userId).maybeSingle(),
         assessAccountDeletion(admin, userId),
     ]);
-    if (error) throw new Error(error.message || 'Не удалось загрузить статус удаления аккаунта');
+    if (error) throw databaseFailure(error, 'Не удалось загрузить статус удаления аккаунта');
     return { request, blockers, eligible: blockers.length === 0 };
 }
 
@@ -71,7 +72,7 @@ export async function requestAccountDeletion(admin: AdminLike, userId: string, c
         .select('notify_email, notify_sms, notify_telegram, notify_whatsapp')
         .eq('id', userId)
         .maybeSingle();
-    if (preferencesError) throw new Error(preferencesError.message || 'Не удалось сохранить настройки уведомлений');
+    if (preferencesError) throw databaseFailure(preferencesError, 'Не удалось сохранить настройки уведомлений');
     const { error } = await admin.from('account_deletion_requests').upsert({
         user_id: userId,
         status: 'pending',
@@ -83,7 +84,7 @@ export async function requestAccountDeletion(admin: AdminLike, userId: string, c
         preference_snapshot: preferences ?? {},
         updated_at: requestedAt.toISOString(),
     }, { onConflict: 'user_id' });
-    if (error) throw new Error(error.message || 'Не удалось создать запрос на удаление');
+    if (error) throw databaseFailure(error, 'Не удалось создать запрос на удаление');
 
     await admin.from('profiles').update({
         notify_email: false,
@@ -100,7 +101,7 @@ export async function requestAccountDeletion(admin: AdminLike, userId: string, c
             account_deletion_scheduled_for: scheduledFor.toISOString(),
         },
     });
-    if (metadataError) throw new Error(metadataError.message || 'Не удалось пометить аккаунт на удаление');
+    if (metadataError) throw databaseFailure(metadataError, 'Не удалось пометить аккаунт на удаление');
     return { ok: true as const, scheduledFor: scheduledFor.toISOString() };
 }
 
@@ -112,9 +113,9 @@ export async function cancelAccountDeletion(admin: AdminLike, userId: string) {
         .eq('user_id', userId)
         .eq('status', 'pending')
         .maybeSingle();
-    if (requestError) throw new Error(requestError.message || 'Не удалось загрузить запрос на удаление');
+    if (requestError) throw databaseFailure(requestError, 'Не удалось загрузить запрос на удаление');
     const { error } = await admin.from('account_deletion_requests').update({ status: 'cancelled', cancelled_at: now, updated_at: now }).eq('user_id', userId).eq('status', 'pending');
-    if (error) throw new Error(error.message || 'Не удалось отменить удаление');
+    if (error) throw databaseFailure(error, 'Не удалось отменить удаление');
     const preferences = request?.preference_snapshot;
     if (preferences && typeof preferences === 'object' && !Array.isArray(preferences)) {
         const allowed = ['notify_email', 'notify_sms', 'notify_telegram', 'notify_whatsapp'] as const;
@@ -133,6 +134,6 @@ export async function cancelAccountDeletion(admin: AdminLike, userId: string) {
             account_deletion_scheduled_for: null,
         },
     });
-    if (metadataError) throw new Error(metadataError.message || 'Не удалось восстановить аккаунт');
+    if (metadataError) throw databaseFailure(metadataError, 'Не удалось восстановить аккаунт');
     return { ok: true as const };
 }

@@ -1,3 +1,4 @@
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import type { DbClient, DbTableClient } from '@/lib/supabaseTypes';
@@ -70,7 +71,7 @@ function mapApprovalError(error: { code?: string; message?: string }): ApprovalF
     if (message.includes('staff_role_not_found')) {
         return { ok: false, status: 500, message: 'Роль сотрудника не настроена в системе.' };
     }
-    return { ok: false, status: 400, message };
+    return { ok: false, status: 400, message: reportDatabaseError('StaffApplicationApproval', error, 'Не удалось принять сотрудника.') };
 }
 
 export async function approveStaffApplication(params: {

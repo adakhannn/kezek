@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, databaseErrorMessage } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import type { DbTableClient } from '@/lib/supabaseTypes';
 
@@ -51,7 +52,7 @@ export async function loadStaffFinanceAuditLog(params: {
         return {
             ok: false,
             error: 'internal',
-            message: error.message,
+            message: databaseErrorMessage(error, DATABASE_FAILURE_MESSAGES.load),
             status: 500,
         };
     }

@@ -1,3 +1,4 @@
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import {
     validatePublicContactPatch,
 } from '@/lib/businessContacts';
@@ -48,7 +49,7 @@ export async function updateBusinessContactSettings(params: {
             ok: false as const,
             status: 400,
             error: 'update_failed',
-            message: error.message,
+            message: reportDatabaseError('BusinessContactSettings', error, DATABASE_FAILURE_MESSAGES.save),
         };
     }
     if (!data) {

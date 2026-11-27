@@ -1,6 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { withLocalizedMessages } from '@/lib/serverMessages';
@@ -24,7 +25,12 @@ export const DELETE = withLocalizedMessages(async function DELETE(_request: Requ
         .select('id,applicant_user_id,biz_id,requested_role,status')
         .eq('id', applicationId)
         .maybeSingle();
-    if (applicationError) return Response.json({ ok: false, message: applicationError.message }, { status: 400 });
+    if (applicationError) {
+        return Response.json({
+            ok: false,
+            message: reportDatabaseError('BusinessRoleApplications', applicationError, DATABASE_FAILURE_MESSAGES.load),
+        }, { status: 400 });
+    }
     if (!application || application.applicant_user_id !== user.id) {
         return Response.json({ ok: false, message: 'Заявка не найдена.' }, { status: 404 });
     }
@@ -36,7 +42,12 @@ export const DELETE = withLocalizedMessages(async function DELETE(_request: Requ
         p_application_id: applicationId,
         p_user_id: user.id,
     });
-    if (cancelError) return Response.json({ ok: false, message: cancelError.message }, { status: 400 });
+    if (cancelError) {
+        return Response.json({
+            ok: false,
+            message: reportDatabaseError('BusinessRoleApplications', cancelError, DATABASE_FAILURE_MESSAGES.save),
+        }, { status: 400 });
+    }
     if (!cancelled) return Response.json({ ok: false, message: 'Заявка уже обработана.' }, { status: 409 });
 
     return Response.json({ ok: true });

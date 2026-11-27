@@ -94,4 +94,5 @@ export const serverBusinessEn = {
     'server.business.serviceLoadFailed': 'Could not load the service',
     'server.business.branchLoadFailed': 'Could not open the branch',
     'server.business.settingsLoadFailed': 'Could not load the business settings',
+    'server.business.businessFromApplicationCreateFailed': 'Could not create the business from the application',
 } as const;

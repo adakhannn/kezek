@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
+
 type UserUpdatePhoneFailure = {
     ok: false;
     status: 400 | 401 | 500;
@@ -81,11 +83,15 @@ export async function runUserUpdatePhone({
     });
 
     if (updateError) {
+        // Supabase Auth: the number belongs to another account (code phone_exists).
+        const taken = (updateError as { code?: unknown }).code === 'phone_exists';
         return {
             ok: false,
             status: 400,
             error: 'validation',
-            message: updateError.message,
+            message: taken
+                ? 'Этот номер телефона уже привязан к другому аккаунту.'
+                : reportDatabaseError('UserUpdatePhone', updateError, 'Не удалось обновить телефон'),
         };
     }
 

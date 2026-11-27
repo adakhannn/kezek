@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
-import { withErrorHandler } from '@/lib/apiErrorHandler';
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
@@ -33,10 +33,16 @@ async function readRoleApplications(): Promise<NextResponse> {
     ]);
 
     if (applicationsResult.error) {
-        return NextResponse.json({ ok: false, message: applicationsResult.error.message }, { status: 400 });
+        return NextResponse.json({
+            ok: false,
+            message: reportDatabaseError('DashboardRoleApplications', applicationsResult.error, DATABASE_FAILURE_MESSAGES.load),
+        }, { status: 400 });
     }
     if (branchesResult.error) {
-        return NextResponse.json({ ok: false, message: branchesResult.error.message }, { status: 400 });
+        return NextResponse.json({
+            ok: false,
+            message: reportDatabaseError('DashboardRoleApplications', branchesResult.error, DATABASE_FAILURE_MESSAGES.load),
+        }, { status: 400 });
     }
 
     const applications = applicationsResult.data ?? [];
@@ -51,7 +57,12 @@ async function readRoleApplications(): Promise<NextResponse> {
             .in('subject_user_id', userIds)
             .gt('blocked_until', new Date().toISOString())
             .is('released_at', null);
-        if (blockError) return NextResponse.json({ ok: false, message: blockError.message }, { status: 400 });
+        if (blockError) {
+            return NextResponse.json({
+                ok: false,
+                message: reportDatabaseError('DashboardRoleApplications', blockError, DATABASE_FAILURE_MESSAGES.load),
+            }, { status: 400 });
+        }
         blocks = (blockRows ?? []).filter((b): b is typeof b & { subject_user_id: string } => b.subject_user_id !== null);
     }
 

@@ -1,5 +1,6 @@
 import type { PublicBusinessDto } from '@shared-client/types';
 
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbTableClient } from '@/lib/supabaseTypes';
 
 type BusinessRow = {
@@ -68,8 +69,7 @@ export async function listMobileBusinesses({
         return {
             ok: false,
             error: 'internal',
-            message: 'Не удалось загрузить список бизнесов',
-            details: error.message,
+            message: reportDatabaseError('MobileBusinesses', error, 'Не удалось загрузить список бизнесов'),
             status: 500,
         };
     }

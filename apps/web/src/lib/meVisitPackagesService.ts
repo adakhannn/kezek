@@ -1,5 +1,6 @@
 import { resolveBusinessTimeZone } from '@shared-client/timezone';
 
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import type { DbTableClient } from '@/lib/supabaseTypes';
 import { todayDateString } from '@/lib/time';
 
@@ -93,8 +94,7 @@ export async function listCurrentUserVisitPackages({
         return {
             ok: false,
             error: 'server',
-            message: 'Не удалось загрузить пакеты',
-            details: error.message,
+            message: reportDatabaseError('MeVisitPackages', error, 'Не удалось загрузить пакеты'),
             status: 500,
         };
     }

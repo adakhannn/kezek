@@ -1,6 +1,7 @@
 import { resolveBusinessTimeZone } from '@shared-client/timezone';
 import { formatInTimeZone } from 'date-fns-tz';
 
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import type { DbTableClient } from '@/lib/supabaseTypes';
 
@@ -104,8 +105,7 @@ export async function listVisitPackages(params: {
     return {
       ok: false,
       error: 'server',
-      message: 'Failed to load visit packages',
-      details: planError.message,
+      message: reportDatabaseError('VisitPackages', planError, 'Failed to load visit packages'),
       status: 500,
     };
   }

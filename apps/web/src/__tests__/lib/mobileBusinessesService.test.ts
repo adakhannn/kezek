@@ -102,7 +102,6 @@ describe('mobileBusinessesService', () => {
             ok: false,
             error: 'internal',
             message: 'Не удалось загрузить список бизнесов',
-            details: 'db failed',
             status: 500,
         });
     });

@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 
+import { databaseErrorMessage } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import type { DbClient } from '@/lib/supabaseTypes';
 import { issueSessionForVerifiedUser, type VerifiedIdentitySession } from '@/lib/verifiedIdentitySession';
@@ -107,7 +108,7 @@ async function createNewTelegramUser(
         return {
             ok: false as const,
             error: 'internal',
-            message: authError?.message ?? 'Ошибка создания пользователя',
+            message: databaseErrorMessage(authError, 'Ошибка создания пользователя'),
             details: { code: 'auth_error' },
             status: 500,
         };

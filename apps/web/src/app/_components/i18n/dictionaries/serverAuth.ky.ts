@@ -100,4 +100,5 @@ export const serverAuthKy = {
     'server.auth.whatsappNumberTaken': 'Бул WhatsApp номери башка аккаунтта колдонулуп жатат. Ал аркылуу кириңиз же колдоо кызматына кайрылыңыз.',
     'server.auth.whatsappOwnerCheckFailed': 'WhatsApp номеринин ээсин текшерүү мүмкүн болгон жок. Кийинчерээк аракет кылыңыз.',
     'server.auth.profileUpdateFailed': 'Профилди жаңыртуу мүмкүн болгон жок',
+    'server.auth.phoneTaken': 'Бул телефон номери башка аккаунтка байланган.',
 } as const;

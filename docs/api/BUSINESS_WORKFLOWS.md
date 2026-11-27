@@ -75,7 +75,7 @@ Limiter normal/critical означает вызванный preset. С 2026-11-1
 | --- | --- |
 | Доступ/вход | Manager wrapper; query не читается; limiter отсутствует |
 | Успех | `data` — массив `{ id: string, name: string }` активных филиалов бизнеса, сортировка name |
-| Ошибки/ограничения | 401/403 контекста; 500 server с details ошибки БД. Нет пагинации, поэтому массив не гарантирует полноту при серверном ограничении строк |
+| Ошибки/ограничения | 401/403 контекста; 500 server без текста БД (он только в серверном логе, ENG-47). Нет пагинации, поэтому массив не гарантирует полноту при серверном ограничении строк |
 
 Источники: [route](../../apps/web/src/app/api/dashboard/branches/list/route.ts), [HTTP](../../apps/web/src/lib/dashboardBranchesListHttpService.ts), [service](../../apps/web/src/lib/dashboardBranchesListService.ts).
 
@@ -377,7 +377,7 @@ Manager-операции ниже используют manager wrapper. К ук�
 | --- | --- |
 | Вход/limiter | Query не читается; limiter отсутствует |
 | Успех | `data: { plans }`, все планы бизнеса по created_at убыванию; полный mapVisitPackagePlan ниже |
-| Ошибки/ограничения | 500 server с details при ошибке БД; активность не фильтруется; нет пагинации |
+| Ошибки/ограничения | 500 server при ошибке БД, без её текста (только в серверном логе, ENG-47); активность не фильтруется; нет пагинации |
 
 Источники: [route](../../apps/web/src/app/api/dashboard/visit-package-plans/route.ts), [HTTP](../../apps/web/src/lib/visitPackagePlansHttpService.ts), [VisitPackagePlanRow и mapVisitPackagePlan](../../apps/web/src/lib/visitPackagePlansService.ts).
 

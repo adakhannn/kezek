@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import {
     initializeRatings,
     type InitializeRatingsAdminLike,
@@ -50,7 +51,7 @@ export async function runInitializeRatingsRoute({
             ok: false,
             status: 400,
             error: 'internal',
-            message: superErr.message,
+            message: reportDatabaseError('InitializeRatings', superErr, 'Не удалось проверить права доступа'),
         };
     }
 

@@ -100,4 +100,5 @@ export const serverAuthRu = {
     'server.auth.whatsappNumberTaken': 'Этот WhatsApp номер уже используется другим аккаунтом. Войдите через него или обратитесь в поддержку.',
     'server.auth.whatsappOwnerCheckFailed': 'Не удалось проверить владельца WhatsApp номера. Попробуйте позже.',
     'server.auth.profileUpdateFailed': 'Не удалось обновить профиль',
+    'server.auth.phoneTaken': 'Этот номер телефона уже привязан к другому аккаунту.',
 } as const;

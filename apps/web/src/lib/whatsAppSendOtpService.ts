@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import {
   PROFILE_WHATSAPP_OTP_TTL_MS,
@@ -64,7 +65,7 @@ export async function sendProfileWhatsAppOtp(params: {
     return {
       ok: false,
       error: 'validation',
-      message: profileError.message,
+      message: reportDatabaseError('WhatsAppSendOtp', profileError, DATABASE_FAILURE_MESSAGES.load),
       details: { code: 'profile_error' },
       status: 400,
     };

@@ -100,4 +100,5 @@ export const serverAuthEn = {
     'server.auth.whatsappNumberTaken': 'This WhatsApp number is already used by another account. Sign in with it or contact support.',
     'server.auth.whatsappOwnerCheckFailed': 'Could not check the owner of the WhatsApp number. Please try again later.',
     'server.auth.profileUpdateFailed': 'Could not update the profile',
+    'server.auth.phoneTaken': 'This phone number is already linked to another account.',
 } as const;

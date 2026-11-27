@@ -118,7 +118,7 @@ it.each(['business_role_applications', 'branches'])('does not disguise %s read f
     results[table] = { data: null, error: { message: `unit ${table} error` } };
     const response = await GET();
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ ok: false, message: `unit ${table} error` });
+    expect(await response.json()).toEqual({ ok: false, message: 'Не удалось загрузить данные. Попробуйте ещё раз.' });
     expect(from).toHaveBeenCalledTimes(2);
 });
 
@@ -127,7 +127,7 @@ it('returns the block read failure without sending a successful partial list', a
     results.application_submission_blocks = { data: null, error: { message: 'unit block read error' } };
     const response = await GET();
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ ok: false, message: 'unit block read error' });
+    expect(await response.json()).toEqual({ ok: false, message: 'Не удалось загрузить данные. Попробуйте ещё раз.' });
 });
 
 it('maps a successful null block result to no active block', async () => {

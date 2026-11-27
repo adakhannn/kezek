@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { databaseErrorMessage } from '@/lib/apiErrorHandler';
 import { loadBusinessTimeZone } from '@/lib/businessTimeZone';
 import { readStaffHistory } from '@/lib/finance/staffHistory';
 import { logError } from '@/lib/log';
@@ -67,7 +68,7 @@ export async function runStaffShiftToday({
             ok: false,
             status: 500,
             error: 'internal',
-            message: shiftError.message,
+            message: databaseErrorMessage(shiftError, 'Не удалось загрузить смену'),
         };
     }
 
