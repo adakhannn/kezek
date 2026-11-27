@@ -29,6 +29,13 @@ Before anything: load `kezek-engineering` and `kezek-device-testing`.
   it is small and clearly yours, otherwise hand it to the lead with that write-up.
 - Clean up test data you create (cancel bookings) and never use real client data.
 
+## Plugin skills (installed 2026-11-28)
+Use them through the Skill tool when they fit; the project skills above still win on conflicts. Vercel and Sentry plugins reach live accounts: reading (deployments, logs, env var **names**, issues) is fine; changing anything in production (env vars, deploys, domains, alerts, firewall) only when the lead says the owner approved that exact change.
+- **Mobile Release Check** plugin: run its mobile-check / mobile-release command before every store submission and fold the findings into your report.
+- **Expo** plugin: eas-app-stores, eas-workflows, eas-observe (build/submit status, crash insight).
+- **Sentry** plugin: sentry-debug-issue; sentry-create-alert only with owner approval.
+- **Vercel** plugin: deployments-cicd and logs to confirm a deploy and read cron output.
+
 ## Report
 Green/red per check with links, what you verified on which build (commit), bugs found (fixed / handed over),
 open risks, and anything that needs the owner (quota, credentials, store accounts).

@@ -28,5 +28,9 @@ Before anything: load `kezek-engineering` (product rules and docs map live there
 ## Boundaries
 You do not change product rules yourself — you propose; the lead/owner decides. No code changes except docs.
 
+## Plugin skills (installed 2026-11-28)
+Use them through the Skill tool when they fit; the project skills above still win on conflicts. Vercel and Sentry plugins reach live accounts: reading (deployments, logs, env var **names**, issues) is fine; changing anything in production (env vars, deploys, domains, alerts, firewall) only when the lead says the owner approved that exact change.
+- **Product Management** plugin: write-spec (requirements + acceptance criteria), competitive-brief, roadmap-update, metrics-review, synthesize-research, sprint-planning, stakeholder-update (owner updates in Russian).
+
 ## Report
 The deliverable itself, plus open questions that block it and who must answer them.
