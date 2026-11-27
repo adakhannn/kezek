@@ -1,7 +1,7 @@
 {
   "ios": {
     "CFBundleDisplayName": "Kezek",
-    "NSLocationWhenInUseUsageDescription": "Kezek uses your location to show nearby branches.",
-    "NSPhotoLibraryUsageDescription": "Kezek opens your photo library so you can choose your master profile photo."
+    "NSLocationWhenInUseUsageDescription": "Kezek uses your location to show nearby branches and, for business owners, to place a branch on the map.",
+    "NSPhotoLibraryUsageDescription": "Kezek opens your photo library so you can choose a master's profile photo."
   }
 }

@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
 import { LanguageSwitcher, useLanguage, type MobileI18nKey } from '../../i18n';
+import { loadAppleAuthentication } from '../../lib/appleAuth';
 import { supabase } from '../../lib/supabase';
 import {
   getMobileApiUrl,
@@ -14,6 +15,7 @@ import {
 import AuthHeroBadge from './components/AuthHeroBadge';
 import { useAuthAppStateRecovery } from './hooks/useAuthAppStateRecovery';
 import { type AuthUiState, isBusyAuthState } from './hooks/authUiState';
+import { useAppleSignInFlow } from './hooks/useAppleSignInFlow';
 import { useGoogleSignInFlow } from './hooks/useGoogleSignInFlow';
 import { useTelegramSignInFlow } from './hooks/useTelegramSignInFlow';
 import { useWhatsAppSignInFlow } from './hooks/useWhatsAppSignInFlow';
@@ -38,6 +40,41 @@ const GOOGLE_STATUS_LABEL: Record<AuthUiState, MobileI18nKey | null> = {
   cancel: 'auth.google.status.cancel',
   expired: 'auth.google.status.expired',
 };
+
+const APPLE_STATUS_LABEL: Record<AuthUiState, MobileI18nKey | null> = {
+  idle: null,
+  loading: 'auth.apple.status.loading',
+  pending: null,
+  success: null,
+  error: 'auth.apple.status.error',
+  cancel: null,
+  expired: null,
+};
+
+/** Apple's own button (App Store guideline 4.8 and the HIG); rendered only where the module exists. */
+function AppleSignInButton({ disabled, onPress }: { disabled: boolean; onPress: () => void }) {
+  const { t } = useLanguage();
+  const AppleAuthentication = loadAppleAuthentication();
+  if (!AppleAuthentication) return null;
+  return (
+    <View
+      pointerEvents={disabled ? 'none' : 'auto'}
+      style={disabled ? styles.appleButtonDisabled : undefined}
+      testID="apple-sign-in"
+    >
+      <AppleAuthentication.AppleAuthenticationButton
+        buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+        buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+        cornerRadius={colors.layout.radiusMd}
+        style={styles.appleButton}
+        onPress={onPress}
+        accessibilityLabel={t('auth.signIn.apple')}
+        accessibilityHint={t('auth.signIn.appleHint')}
+        accessibilityState={{ disabled }}
+      />
+    </View>
+  );
+}
 
 export default function SignInScreen() {
   const { showToast } = useToast();
@@ -85,6 +122,7 @@ export default function SignInScreen() {
   });
 
   const { whatsAppMobileAuthEnabled, openWhatsAppSignIn } = useWhatsAppSignInFlow();
+  const { appleAvailable, appleState, handleAppleSignIn } = useAppleSignInFlow({ showToast });
 
   useAuthAppStateRecovery({
     onAppActive: useCallback(async () => {
@@ -93,7 +131,10 @@ export default function SignInScreen() {
     }, [recoverGoogleOnAppActive, recoverTelegramOnAppActive]),
   });
 
-  const anyBusyAuth = isBusyAuthState(googleState) || isBusyAuthState(telegramState);
+  const anyBusyAuth =
+    isBusyAuthState(googleState) || isBusyAuthState(telegramState) || isBusyAuthState(appleState);
+  const appleStatusKey = APPLE_STATUS_LABEL[appleState];
+  const appleStatusLabel = appleStatusKey ? t(appleStatusKey) : null;
   const googleStatusKey = GOOGLE_STATUS_LABEL[googleState];
   const telegramStatusKey = TELEGRAM_STATUS_LABEL[telegramState];
   const googleStatusLabel = googleStatusKey ? t(googleStatusKey) : null;
@@ -133,6 +174,15 @@ export default function SignInScreen() {
                   {googleStatusLabel}
                 </Text>
               ) : null}
+              {appleStatusLabel ? (
+                <Text
+                  accessibilityLiveRegion={appleState === 'error' ? 'assertive' : 'polite'}
+                  accessibilityRole={appleState === 'error' ? 'alert' : 'text'}
+                  style={styles.screenReaderStatus}
+                >
+                  {appleStatusLabel}
+                </Text>
+              ) : null}
 
               <View style={styles.methodsCaptionWrap}>
                 <View style={styles.methodsCaptionLine} />
@@ -141,6 +191,14 @@ export default function SignInScreen() {
               </View>
 
               <View style={styles.methodsButtons}>
+                {/* iOS only: first, so it is at least as prominent as Google (guideline 4.8). */}
+                {appleAvailable && (
+                  <AppleSignInButton
+                    disabled={anyBusyAuth}
+                    onPress={() => void handleAppleSignIn()}
+                  />
+                )}
+
                 <Button
                   title={t('auth.signIn.google')}
                   onPress={() => void handleGoogleSignIn()}

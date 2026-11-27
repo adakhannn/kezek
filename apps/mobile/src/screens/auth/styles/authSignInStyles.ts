@@ -87,6 +87,15 @@ export const authSignInStyles = StyleSheet.create({
     marginBottom: 0,
   },
 
+  // Apple draws its own colours and title; only the size is ours (the md Button height).
+  appleButton: {
+    width: '100%',
+    height: 48,
+  },
+  appleButtonDisabled: {
+    opacity: colors.interactive.disabledOpacity,
+  },
+
   telegramButton: {
     marginBottom: 0,
   },

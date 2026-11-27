@@ -16,3 +16,11 @@ export async function createMobileAuthProof() {
     const codeChallenge = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, codeVerifier);
     return { codeVerifier, codeChallenge };
 }
+
+/** Sign in with Apple: Apple signs the SHA-256 hex of the nonce, Supabase receives the raw nonce. */
+export async function createAppleNonce() {
+    const bytes = await Crypto.getRandomBytesAsync(32);
+    const rawNonce = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+    const hashedNonce = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, rawNonce);
+    return { rawNonce, hashedNonce };
+}
