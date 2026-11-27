@@ -20,7 +20,7 @@ export const selectBusinessEn = {
     'selectCabinet.subtitle': 'You have access to several workspaces.',
     'selectCabinet.title': 'How would you like to continue?',
     'selectCabinet.optionAdmin': 'Admin panel',
-    'selectCabinet.optionDashboard': 'Business cabinet',
-    'selectCabinet.optionStaff': 'Staff cabinet',
+    'selectCabinet.optionDashboard': 'Business dashboard',
+    'selectCabinet.optionStaff': 'Staff workspace',
     'selectCabinet.optionCabinet': 'My bookings',
 } as const;

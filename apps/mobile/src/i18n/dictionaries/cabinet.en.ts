@@ -221,7 +221,7 @@ export const cabinetEn: Record<keyof typeof cabinetRu, string> = {
     'cabinet.details.mapError': 'Could not open the map',
     'cabinet.details.client': 'Client',
     'cabinet.details.clientFallback': 'Client not specified',
-    'cabinet.details.staffViewNotice': 'You are viewing this booking as staff. Change it in the staff or business cabinet.',
+    'cabinet.details.staffViewNotice': 'You are viewing this booking as staff. Change it in the staff workspace or business dashboard.',
     // Reviews (C9)
     'cabinet.review.create': 'Leave review',
     'cabinet.review.edit': 'Edit review',
@@ -260,8 +260,8 @@ export const cabinetEn: Record<keyof typeof cabinetRu, string> = {
     'cabinet.invitations.decline': 'Decline',
     'cabinet.invitations.declineTitle': 'Decline the invitation?',
     'cabinet.invitations.declineMessage': 'The business can invite you again.',
-    'cabinet.invitations.accepted': 'You are on the team. The staff cabinet is open to you.',
-    'cabinet.invitations.acceptedInactive': 'You are on the team. The staff cabinet opens once the business activates your card.',
+    'cabinet.invitations.accepted': 'You are on the team. The staff workspace is open to you.',
+    'cabinet.invitations.acceptedInactive': 'You are on the team. The staff workspace opens once the business activates your card.',
     'cabinet.invitations.declined': 'Invitation declined',
     'cabinet.invitations.error': 'Could not process the invitation',
     // Cabinet cards and history paging (C11, B11)

@@ -71,16 +71,16 @@ describe('RoleAndBusinessSwitcher', () => {
     it('switches cabinets without duplicating the business selector', async () => {
         renderSwitcher(owner);
 
-        const trigger = await screen.findByRole('button', { name: 'Business cabinet' });
+        const trigger = await screen.findByRole('button', { name: 'Business dashboard' });
         expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
         fireEvent.click(trigger);
 
-        expect(screen.getByText('Switch cabinet')).toBeTruthy();
-        expect(screen.getByText('Cabinets')).toBeTruthy();
+        expect(screen.getByText('Switch workspace')).toBeTruthy();
+        expect(screen.getByText('Workspaces')).toBeTruthy();
         expect(screen.queryByText('Businesses')).toBeNull();
         expect(screen.queryByText('Owner / manager')).toBeNull();
 
-        const current = screen.getByRole('menuitem', { name: 'Business cabinet' });
+        const current = screen.getByRole('menuitem', { name: 'Business dashboard' });
         expect(current.getAttribute('aria-current')).toBe('page');
         expect(screen.getByRole('menuitem', { name: 'My bookings' })).toBeTruthy();
 
@@ -98,7 +98,7 @@ describe('RoleAndBusinessSwitcher', () => {
         pathname = '/';
         const { rerender } = renderSwitcher(owner);
         fireEvent.click(await screen.findByRole('button', { name: 'Owner' }));
-        expect(screen.getByRole('menuitem', { name: 'Business cabinet' })).toBeTruthy();
+        expect(screen.getByRole('menuitem', { name: 'Business dashboard' })).toBeTruthy();
 
         expect(mockAuthListener).toEqual(expect.any(Function));
         act(() => mockAuthListener!('SIGNED_IN', { user: { id: 'client-1' } }));
@@ -112,7 +112,7 @@ describe('RoleAndBusinessSwitcher', () => {
             </LanguageProvider>,
         );
         fireEvent.click(await screen.findByRole('button', { name: 'Client' }));
-        expect(screen.queryByRole('menuitem', { name: 'Business cabinet' })).toBeNull();
+        expect(screen.queryByRole('menuitem', { name: 'Business dashboard' })).toBeNull();
         expect(screen.getByRole('menuitem', { name: 'My bookings' })).toBeTruthy();
     });
 

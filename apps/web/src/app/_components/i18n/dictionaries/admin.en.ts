@@ -368,7 +368,7 @@ export const adminEn = {
     'admin.roleApplications.applicant': 'Applicant',
     'admin.roleApplications.created': 'Created',
     'admin.roleApplications.previousCount': 'Previous applications: {count}',
-    'admin.roleApplications.staffNotice': 'Staff applications are accepted by the business owner in their cabinet and require selecting a branch.',
+    'admin.roleApplications.staffNotice': 'Staff applications are accepted by the business owner in their dashboard and require selecting a branch.',
     'admin.roleApplications.approve': 'Approve',
     'admin.roleApplications.reject': 'Reject',
     'admin.roleApplications.rejectReason': 'Enter the rejection reason',

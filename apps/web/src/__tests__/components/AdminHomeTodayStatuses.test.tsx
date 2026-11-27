@@ -79,7 +79,7 @@ it('retains legacy canceled status presentation', async () => {
 
 it('combines cancellation spellings while preserving hold, confirmed and paid rows', async () => {
     const today = await renderToday(['cancelled', 'canceled', 'hold', 'confirmed', 'paid']);
-    for (const [label, count] of [['Отменено', 2], ['Ожидание', 1], ['Подтверждено', 1]] as const) {
+    for (const [label, count] of [['Отменено', 2], ['В ожидании', 1], ['Подтверждено', 1]] as const) {
         expect(today.getAllByText(label).some(node => node.parentElement?.textContent === `${label}${count}`)).toBe(true);
     }
     const table = within(today.getByRole('table'));

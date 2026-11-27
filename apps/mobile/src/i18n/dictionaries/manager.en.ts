@@ -14,7 +14,7 @@ export const managerEn: Record<keyof typeof managerRu, string> = {
     'manager.feed.clientUnknown': 'Client without a name',
     'manager.feed.staff': 'Master: {name}',
     'manager.feed.branch': 'Branch: {name}',
-    'manager.feed.webHint': 'Settings, staff and finance are in the web cabinet',
+    'manager.feed.webHint': 'Settings, staff and finance are in the web dashboard',
     'manager.manage.selectError': 'Could not open this business section. Check your connection and try again.',
     'manager.manage.sectionTitle': 'Manage',
     'manager.feed.allBookings': 'All bookings',
