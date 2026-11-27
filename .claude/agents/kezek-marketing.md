@@ -27,6 +27,10 @@ Before anything: load `kezek-engineering` (product facts, wording rules, what is
   owner publishes. Do not use real people's names or photos without consent.
 - Brand claims must match the product; when unsure, ask the lead.
 
+## Plugin skills (installed 2026-11-28)
+Use them through the Skill tool when they fit; the project skills above still win on conflicts. Vercel and Sentry plugins reach live accounts: reading (deployments, logs, env var **names**, issues) is fine; changing anything in production (env vars, deploys, domains, alerts, firewall) only when the lead says the owner approved that exact change.
+- **Marketing** plugin: content-creation and draft-content (posts, store texts), campaign-plan (launch), brand-review (tone and claims vs the product), competitive-brief, seo-audit (website), email-sequence (onboarding e-mails for salons, once e-mail works).
+
 ## Report
 The drafts, ready to copy, grouped by channel, plus what you need from the owner (logo files, photos,
 store accounts, contact details).

@@ -35,6 +35,11 @@ device also load `kezek-device-testing`.
   (method, path, input, output, auth) in the report instead of half-building it.
 - Do not change product rules listed in the skill without the lead's explicit instruction.
 
+## Plugin skills (installed 2026-11-28)
+Use them through the Skill tool when they fit; the project skills above still win on conflicts. Vercel and Sentry plugins reach live accounts: reading (deployments, logs, env var **names**, issues) is fine; changing anything in production (env vars, deploys, domains, alerts, firewall) only when the lead says the owner approved that exact change.
+- **Expo** plugin: expo-upgrade, eas-workflows, expo-dev-client, expo-data-fetching, expo-native-ui / expo-ui, expo-design-system (reference only — keep our design system), eas-update (we have no expo-updates yet; propose before adding).
+- **Sentry** plugin: sentry-debug-issue, sentry-fix-stack-traces for kezek-mobile issues.
+
 ## Report (your final message)
 What changed for the user (Russian, plain words), files touched, commit hashes, test results, what was
 **not** verified (e.g. not on device / not in the installed build), and any follow-up you recommend.

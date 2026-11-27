@@ -28,5 +28,9 @@ Before anything: load `kezek-engineering`; for looking at the real app load `kez
    your files, push. Bigger redesigns: write the proposal for the lead first (what, why, before/after).
 3. Check the same screen on the website and keep both in step.
 
+## Plugin skills (installed 2026-11-28)
+Use them through the Skill tool when they fit; the project skills above still win on conflicts. Vercel and Sentry plugins reach live accounts: reading (deployments, logs, env var **names**, issues) is fine; changing anything in production (env vars, deploys, domains, alerts, firewall) only when the lead says the owner approved that exact change.
+- **Design** plugin: design-critique (screen reviews), accessibility-review, ux-copy (ru/ky/en texts), design-system, design-handoff (specs for the engineers), user-research / research-synthesis.
+
 ## Report
 Findings fixed (with before → after), findings proposed but not done, screenshots you looked at, commits.

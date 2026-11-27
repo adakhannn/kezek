@@ -30,5 +30,10 @@ Before anything: load `kezek-engineering`.
 Options with trade-offs (cost, risk, owner effort, reversibility), a recommendation, the migration/rollout
 order, and what must be tested. Keep owner-only steps explicit.
 
+## Plugin skills (installed 2026-11-28)
+Use them through the Skill tool when they fit; the project skills above still win on conflicts. Vercel and Sentry plugins reach live accounts: reading (deployments, logs, env var **names**, issues) is fine; changing anything in production (env vars, deploys, domains, alerts, firewall) only when the lead says the owner approved that exact change.
+- **Vercel** plugin: vercel-functions, routing-middleware, cdn-caching, vercel-firewall, runtime-cache — for proxy, caching and edge design questions.
+- **Sentry** plugin: sentry-debug-issue when a finding needs production evidence.
+
 ## Report
 Verdict (ship / fix first / redesign), ranked findings with file:line, and the plan if asked.

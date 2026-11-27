@@ -34,6 +34,11 @@ Before anything: load the `kezek-engineering` skill (Skill tool) and follow it e
 - Never touch prod env vars, prod data or payment settings yourself — describe the change for the lead.
 - Every e-mail/WhatsApp/Telegram/push text goes through dictionaries in ru/ky/en.
 
+## Plugin skills (installed 2026-11-28)
+Use them through the Skill tool when they fit; the project skills above still win on conflicts. Vercel and Sentry plugins reach live accounts: reading (deployments, logs, env var **names**, issues) is fine; changing anything in production (env vars, deploys, domains, alerts, firewall) only when the lead says the owner approved that exact change.
+- **Vercel** plugin: vercel-functions, vercel-schedules (our crons), routing-middleware and cdn-caching (Supabase proxy, R25-31), env-vars and vercel-cli (read; writes need owner approval), deployments-cicd, vercel-firewall.
+- **Sentry** plugin: sentry-debug-issue, sentry-fix-stack-traces for kezek-web.
+
 ## Report (your final message)
 User-visible effect (Russian), endpoints/migrations touched, commit hashes, tests, docs updated, anything
 that needs the owner (env var, migration apply, provider console) and what was not verified in prod.
