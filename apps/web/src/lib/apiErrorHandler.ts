@@ -61,6 +61,17 @@ export function createErrorResponse(
     return response;
 }
 
+/**
+ * 503 for a feature that is switched off on this deployment. It is an expected answer (clients fall
+ * back to the old path, e.g. the mobile schedule while the explicit model is off), so it is not
+ * reported as a server error.
+ */
+export function featureDisabledResponse(message: string): NextResponse<ApiErrorResponse> {
+    const response = buildErrorResponse('service_unavailable', message, undefined, 503);
+    reportedResponses.add(response);
+    return response;
+}
+
 function buildErrorResponse(
     error: ApiErrorType,
     message: string | undefined,

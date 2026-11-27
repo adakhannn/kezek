@@ -495,6 +495,11 @@ async function collectHealthCheckAlerts({
     if (healthCheck.alerts.length > 0) {
         const emailResult = await sendAlertEmail(healthCheck.alerts);
         if (!emailResult.success) {
+            // Without the alert inbox each problem still reaches the owner as its own Sentry issue;
+            // otherwise Sentry only showed "failed to send alert email" with the details collapsed.
+            for (const alert of healthCheck.alerts) {
+                logError('HealthCheckAlert', `[${alert.type}] ${alert.message}`, alert.details);
+            }
             return {
                 ok: false,
                 error: 'internal',

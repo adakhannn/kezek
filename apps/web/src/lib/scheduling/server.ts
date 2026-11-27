@@ -4,7 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { explicitSchedulingEnabled } from './config';
 import { validDate, validatePublishSchedule, type ScheduleSnapshot } from './model';
 
-import { createErrorResponse, createSuccessResponse, handleApiError } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, featureDisabledResponse, handleApiError } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers, getStaffContextForRequest } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -28,7 +28,7 @@ export async function readSchedule(staffId: string, bizId: string, from: string,
 }
 
 export async function scheduleHttp(request: Request, staffId?: string) {
-    if (!explicitSchedulingEnabled()) return createErrorResponse('service_unavailable', 'Новая модель расписаний ещё не включена.', undefined, 503);
+    if (!explicitSchedulingEnabled()) return featureDisabledResponse('Новая модель расписаний ещё не включена.');
     try {
         // The employee's own schedule: the website's cookie or the app's Bearer token, the card named
         // by X-Kezek-Staff-Id or remembered (S3). Managers act through their cookie business context.

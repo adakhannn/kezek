@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, handleApiError, withErrorHandler } from '@/lib/apiErrorHandler';
+import { createErrorResponse, featureDisabledResponse, handleApiError, withErrorHandler } from '@/lib/apiErrorHandler';
 
 jest.mock('@/lib/log', () => ({ logError: jest.fn(), logWarn: jest.fn(), logDebug: jest.fn() }));
 
@@ -22,6 +22,14 @@ describe('API error reporting', () => {
             { status: 503, error: 'service_unavailable', message: 'Try later', details: { retryAfter: 5 } },
             { kind: 'api_response', tags: { 'http.status_code': '503' } },
         );
+    });
+
+    test('a switched-off feature answers 503 without a Sentry error, also through withErrorHandler', async () => {
+        const response = await withErrorHandler('Schedule', async () => featureDisabledResponse('Off'));
+
+        expect(response.status).toBe(503);
+        expect((await response.json()).error).toBe('service_unavailable');
+        expect(logError).not.toHaveBeenCalled();
     });
 
     test('handleApiError logs a server failure with its cause and tags, a client error as a warning only', async () => {

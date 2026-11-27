@@ -4,14 +4,14 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { explicitSchedulingEnabled } from './config';
 import { validDate } from './model';
 
-import { createErrorResponse, createSuccessResponse, handleApiError } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, featureDisabledResponse, handleApiError } from '@/lib/apiErrorHandler';
 import { BizAccessError, getBizContextForManagers } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function staffTimeOffHttp(request: Request, staffId: string) {
-    if (!explicitSchedulingEnabled()) return createErrorResponse('service_unavailable', 'Новая модель расписаний ещё не включена.', undefined, 503);
+    if (!explicitSchedulingEnabled()) return featureDisabledResponse('Новая модель расписаний ещё не включена.');
     try {
         if (!uuid.test(staffId)) return createErrorResponse('not_found', 'Сотрудник не найден.', undefined, 404);
         const context = await getBizContextForManagers();

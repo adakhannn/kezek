@@ -60,7 +60,7 @@ describe('recalculateRatingsCronService', () => {
             expect(result.data.rangeEnd).toBe('2026-03-26');
             expect(result.data.processedDays).toBe(1);
         }
-        expect(rpcMock).toHaveBeenCalledWith('recalculate_ratings_for_date', { p_date: null });
+        expect(rpcMock).toHaveBeenCalledWith('recalculate_ratings_for_date', { p_date: '2026-03-26' });
     });
 
     test('sends alert and returns failure when rpc result has error', async () => {

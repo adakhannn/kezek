@@ -1,6 +1,6 @@
 import { logDebug, logError } from '@/lib/log';
 import type { ServerOperation } from '@/lib/performanceCore';
-import { nullableArg, type DbQueryClient } from '@/lib/supabaseTypes';
+import { type DbQueryClient } from '@/lib/supabaseTypes';
 import { addDaysToDateString } from '@/lib/time';
 
 type AlertPayload = {
@@ -198,7 +198,9 @@ export async function runRecalculateRatingsCron({
         'recalculate_ratings',
         async () => {
             if (rangeStartStr === yesterdayStr) {
-                return supabase.rpc('recalculate_ratings_for_date', { p_date: nullableArg<string>(null) });
+                // The business day by the cron's time zone. An explicit null would not fall back to the
+                // SQL default: metric_date stayed null and the whole run failed (Sentry KEZEK-WEB-5).
+                return supabase.rpc('recalculate_ratings_for_date', { p_date: yesterdayStr });
             }
 
             return supabase.rpc('recalculate_ratings_for_date_range', {
