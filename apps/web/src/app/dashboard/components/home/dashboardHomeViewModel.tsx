@@ -26,18 +26,18 @@ export function getDashboardHomeViewModel(
 
     const onboardingItems = [
         props.branchesCount === 0
-            ? t('dashboard.onboarding.noBranches', 'Создай хотя бы один филиал, чтобы клиенты могли записываться.')
+            ? t('dashboard.onboarding.noBranches', 'Создайте хотя бы один филиал, чтобы клиенты могли записываться.')
             : null,
         props.servicesActive === 0
-            ? t('dashboard.onboarding.noServices', 'Добавь услуги и укажи продолжительность и цену.')
+            ? t('dashboard.onboarding.noServices', 'Добавьте услуги и укажите продолжительность и цену.')
             : null,
         props.staffActive === 0
-            ? t('dashboard.onboarding.noStaff', 'Добавь сотрудников и укажи, кто оказывает какие услуги.')
+            ? t('dashboard.onboarding.noStaff', 'Добавьте сотрудников и укажите, кто оказывает какие услуги.')
             : null,
         props.bookingsToday === 0
             ? t(
                   'dashboard.onboarding.noBookings',
-                  'Проверь «Календарь» — первые брони появятся здесь автоматически.',
+                  'Проверьте «Календарь» — первые брони появятся здесь автоматически.',
               )
             : null,
     ].filter((item): item is string => Boolean(item));

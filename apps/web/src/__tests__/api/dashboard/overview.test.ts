@@ -54,7 +54,7 @@ describe('GET /api/dashboard/overview (the /dashboard numbers for the mobile app
         expect(body.ok).toBe(true);
         expect(body.data).toMatchObject({
             staffApplications: { pending: 2 }, bizName: 'Low Fade', timezone: 'Asia/Bishkek', bookingsToday: 0, staffActive: 3,
-            servicesActive: 5, branchesCount: 1, needOnboarding: true, ratingScore: 61.5, ratingConfigScope: 'global',
+            servicesActive: 5, branchesCount: 1, needOnboarding: false, ratingScore: 61.5, ratingConfigScope: 'global',
             ratingWeights: { reviews: 40, productivity: 30, loyalty: 20, discipline: 10, windowDays: 30 },
         });
         expect(bookingCalls).toContainEqual(['eq', 'biz_id', 'biz-1']);

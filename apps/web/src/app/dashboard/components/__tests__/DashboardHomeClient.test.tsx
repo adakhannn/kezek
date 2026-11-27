@@ -84,9 +84,9 @@ describe('DashboardHomeClient', () => {
         );
 
         expect(screen.getByText('Ваш бизнес в Kezek')).toBeTruthy();
-        expect(screen.getByText('Давай доведём кабинет до рабочего состояния.')).toBeTruthy();
-        expect(screen.getAllByText('Создай хотя бы один филиал, чтобы клиенты могли записываться.').length).toBeGreaterThan(0);
-        expect(screen.getByText('Добавь услуги и укажи продолжительность и цену.')).toBeTruthy();
-        expect(screen.getByText('Добавь сотрудников и укажи, кто оказывает какие услуги.')).toBeTruthy();
+        expect(screen.getByText('Доведите кабинет до рабочего состояния.')).toBeTruthy();
+        expect(screen.getAllByText('Создайте хотя бы один филиал, чтобы клиенты могли записываться.').length).toBeGreaterThan(0);
+        expect(screen.getByText('Добавьте услуги и укажите продолжительность и цену.')).toBeTruthy();
+        expect(screen.getByText('Добавьте сотрудников и укажите, кто оказывает какие услуги.')).toBeTruthy();
     });
 });

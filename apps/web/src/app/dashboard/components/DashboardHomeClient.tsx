@@ -52,7 +52,7 @@ export function DashboardHomeClient(props: DashboardHomeClientProps) {
 
             {props.needOnboarding ? (
                 <DashboardOnboardingNotice
-                    title={t('dashboard.onboarding.title', 'Давай доведём кабинет до рабочего состояния.')}
+                    title={t('dashboard.onboarding.title', 'Доведите кабинет до рабочего состояния.')}
                     items={viewModel.onboardingItems}
                     summaryLabel={t('dashboard.onboarding.summary', 'Стартовая готовность')}
                     remainingLabel={t('dashboard.onboarding.remaining', 'Осталось: {count}')}

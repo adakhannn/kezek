@@ -136,7 +136,9 @@ export async function loadDashboardHomeData(
         staffActive,
         servicesActive,
         branchesCount,
-        needOnboarding: bookingsToday === 0 || staffActive === 0 || servicesActive === 0 || branchesCount === 0,
+        // Setup is missing data, not a quiet day: with branches, services and staff in place and no
+        // bookings today the home shows the "growth" focus instead of «Завершить настройку».
+        needOnboarding: staffActive === 0 || servicesActive === 0 || branchesCount === 0,
         ratingScore: biz?.rating_score ?? null,
         ratingConfigScope: effectiveRatingConfig ? (bizRatingConfig ? 'biz' : 'global') : null,
         ratingWeights: effectiveRatingConfig
