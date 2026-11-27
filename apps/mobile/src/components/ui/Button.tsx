@@ -96,7 +96,8 @@ export default function Button({
                     {leadingIcon}
                 </View>
             ) : null}
-            <Text style={textStyles}>{title}</Text>
+            {/* A label never breaks mid-word: it stays on one line and shrinks a little if it must. */}
+            <Text style={textStyles} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{title}</Text>
             {!loading && trailingIcon ? (
                 <View
                     style={styles.iconWrap}
@@ -179,6 +180,7 @@ const styles = StyleSheet.create({
     buttonSm: {
         minHeight: 44,
         paddingVertical: 10,
+        paddingHorizontal: colors.layout.space3,
     },
     buttonMd: {
         minHeight: 48,
