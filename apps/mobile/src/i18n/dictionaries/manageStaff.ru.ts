@@ -128,7 +128,7 @@ export const manageStaffRu = {
     'manageStaff.finance.staffStats.late': 'Опоздания',
     'manageStaff.finance.staffStats.noClients': 'В этой смене нет записей клиентов',
     'manageStaff.finance.staffStats.openedAt': 'Открыта',
-    'manageStaff.finance.staffStats.shifts': 'Смен',
+    'manageStaff.finance.staffStats.shifts': 'Смены',
     'manageStaff.finance.staffStats.shiftsPeriod': 'Смены за период',
     'manageStaff.finance.staffStats.shiftsPeriodDesc': 'Распределение сумм, гарантия и записи клиентов по каждой смене. При необходимости можно исправить часы.',
     'manageStaff.finance.staffStats.status.closed': 'Закрыта',

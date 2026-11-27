@@ -192,7 +192,7 @@ export function AllStaffFinanceStatsTotals({
             </div>
 
             <div className="bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl p-4 sm:p-6 text-white shadow-lg">
-                <div className="text-xs uppercase tracking-wide text-gray-100 mb-2">{t('finance.shifts', 'Смен')}</div>
+                <div className="text-xs uppercase tracking-wide text-gray-100 mb-2">{t('finance.shifts', 'Смены')}</div>
                 <div className="text-xl sm:text-2xl font-bold">{totalStats.totalShifts}</div>
                 <div className="text-xs text-gray-100 mt-1">
                     {totalStats.totalOpenShifts > 0 && (
@@ -266,7 +266,7 @@ export function AllStaffFinanceStatsTable({
                                 </div>
                                 <div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                        {t('finance.staffStats.shifts', 'Смен')}
+                                        {t('finance.staffStats.shifts', 'Смены')}
                                     </div>
                                     <div className="font-medium text-gray-900 dark:text-gray-100">
                                         {stat.shiftsCount}
@@ -328,7 +328,7 @@ export function AllStaffFinanceStatsTable({
                                 {t('finance.staffStats.toBusiness', 'Бизнесу')}
                             </th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                {t('finance.staffStats.shifts', 'Смен')}
+                                {t('finance.staffStats.shifts', 'Смены')}
                             </th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 {t('finance.staffStats.actions', 'Действия')}

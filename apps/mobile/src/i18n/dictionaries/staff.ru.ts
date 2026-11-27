@@ -61,7 +61,7 @@ export const staffRu = {
     'staff.shifts.staffShare': 'Доля сотрудника',
     'staff.shifts.businessShare': 'Доля бизнеса',
     'staff.shifts.percentOfRevenue': '{percent}% от выручки',
-    'staff.shifts.shiftsCount': 'Смен',
+    'staff.shifts.shiftsCount': 'Смены',
     'staff.shifts.late': 'Опоздания',
     'staff.shifts.clients': 'Клиентов',
     'staff.shifts.periodTitle': 'Смены за период',
