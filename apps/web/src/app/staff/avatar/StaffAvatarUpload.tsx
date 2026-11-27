@@ -11,6 +11,7 @@ import {ToastContainer} from '@/components/ui/Toast';
 import {useToast} from '@/hooks/useToast';
 import {logError} from '@/lib/log';
 import { staffSelectionHeaders } from '@/lib/staffSelection';
+import { displayAvatarUrl } from '@/lib/supabaseProxyClient';
 
 async function createImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
@@ -191,7 +192,7 @@ export default function StaffAvatarUpload({
                             unoptimized
                             width={96}
                             height={96}
-                            src={preview}
+                            src={displayAvatarUrl(preview)}
                             alt={t('staff.avatar.alt', 'Avatar')}
                             className="h-full w-full object-cover"
                             onError={(e) => {

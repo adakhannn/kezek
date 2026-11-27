@@ -2,7 +2,7 @@
 
 Статус: reference. Владелец: engineering. Статическая сверка: **2026-11-01**. Runtime с реальными внешними сервисами: **NOT_RUN**.
 
-Справочник покрывает 35 пар METHOD/path из текущего [каталога routes](ROUTE_CATALOG.md): дополнительные auth flows, мобильный каталог и брони, вкладку «Бизнес» приложения, запрос удаления аккаунта, email preferences, публичный поиск. Методы сверены по exports `route.ts` / `route.tsx`, HTTP adapters и services. Описанные запросы при этой работе не исполнялись; конфигурация среды, фактические права БД, доставка сообщений и применение миграций не проверялись.
+Справочник покрывает 42 пары METHOD/path из текущего [каталога routes](ROUTE_CATALOG.md): дополнительные auth flows, мобильный каталог и брони, вкладку «Бизнес» приложения, запрос удаления аккаунта, email preferences, публичный поиск и прокси Supabase `/sb/*`. Методы сверены по exports `route.ts` / `route.tsx`, HTTP adapters и services. Описанные запросы при этой работе не исполнялись; конфигурация среды, фактические права БД, доставка сообщений и применение миграций не проверялись.
 
 Связанные документы: [общий API-вход](../../API_DOCUMENTATION.md), [основные auth/integration endpoints](AUTH_AND_INTEGRATIONS.md), [бронирования и каталог](BOOKING_AND_CATALOG.md), [индекс документации](../README.md), [engineering findings](../ENGINEERING_FINDINGS.md). Этот справочник не изменяет WEB acceptance и не возобновляет закрытую кампанию.
 
@@ -482,6 +482,29 @@ Limiter: `public/shared` = 10 / 60 секунд, `normal/shared` = 30 / 60 се�
 | Success | Корневой `{ok:true,items,page,perPage}`, item `{id,email,phone,full_name}`; email/phone nullable. Нет data, total или hasMore |
 | Errors | 400 validation JSON/schema; ошибки management context по общему mapper; ошибки Auth list/profile lookup также бросаются в mapper; 429 |
 | Limiter / effects | `normal/shared`. Сначала загружает страницу платформенных Auth users, затем обогащает display name, исключает уже назначенных staff текущего бизнеса и фильтрует q **внутри этой страницы**. Это не глобальный поиск совпадений с корректной search-pagination. Возвращает контактные поля найденных аккаунтов; scope не ограничен прежними клиентами бизнеса. Ничего не изменяет |
+
+## Прокси Supabase (R25-31)
+
+<!-- api-contract: GET /sb/[...path] -->
+<!-- api-contract: HEAD /sb/[...path] -->
+<!-- api-contract: POST /sb/[...path] -->
+<!-- api-contract: PUT /sb/[...path] -->
+<!-- api-contract: PATCH /sb/[...path] -->
+<!-- api-contract: DELETE /sb/[...path] -->
+<!-- api-contract: OPTIONS /sb/[...path] -->
+### GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS `/sb/[...path]`
+
+Источники: [route](../../apps/web/src/app/sb/[...path]/route.ts) → [supabaseProxy.ts](../../apps/web/src/lib/supabaseProxy.ts); клиенты — [shared supabaseProxy.ts](../../packages/shared-client/src/supabaseProxy.ts). Назначение и включение — [SUPABASE_ACCESS_OPTIONS](../SUPABASE_ACCESS_OPTIONS.md).
+
+| Аспект | Контракт |
+| --- | --- |
+| Switch | Выключен по умолчанию: без серверной переменной `SUPABASE_PROXY_ENABLED=true` любой путь отвечает пустым 404 с `Cache-Control: private, no-store` и `x-kezek-sb-proxy: disabled`; наружу ничего не отправляется |
+| Auth / input | Не HTTP API Kezek, а прозрачная пересылка запросов supabase-js. `apikey` и `Authorization` клиента передаются как есть, RLS решает Supabase. Пересылаются только `accept`, `accept-profile`, `apikey`, `authorization`, `cache-control`, `content-profile`, `content-type`, `if-modified-since`, `if-none-match`, `prefer`, `range`, `user-agent`, `x-client-info`, `x-metadata`, `x-supabase-api-version`, `x-upsert`; cookies, `host`, `x-forwarded-*`, `sb-forwarded-for` отбрасываются |
+| Destination | Только origin из `NEXT_PUBLIC_SUPABASE_URL` (или `SUPABASE_URL`) сервера, https (http только loopback). Только `/sb/rest/v1/*`, `/sb/auth/v1/*` (кроме `/auth/v1/admin*`), `/sb/storage/v1/*`; `..`, закодированные `/` и `\`, `//` отклоняются |
+| Success | Статус, тело (поток) и белый список заголовков ответа Supabase. Redirect не следуется (`redirect: manual`). `Cache-Control: private, no-store` для всего, кроме успешного GET/HEAD публичного файла storage (`public, max-age=3600`); `CDN-Cache-Control` и `Vercel-CDN-Cache-Control: no-store` всегда. `set-cookie`, CORS, `content-encoding/length` не передаются |
+| Errors | 404 (выключено или путь вне списка, `{ error: "not_found" }`), 503 `proxy_misconfigured`, 413 `payload_too_large` (> 4,5 МБ), 502 `supabase_unreachable`, 504 `supabase_timeout` (30 с), 429 в формате Supabase Auth `{ code: 429, error_code: "over_request_rate_limit", msg }`. Не envelope `{ ok, error }` |
+| Limiter | Только POST `/auth/v1/otp`, `/verify`, `/signup`, `/recover`, `/resend`, `/magiclink`: 30 за 5 минут на клиента (`/sb/auth/v1/<path>`). Недоступный или ненастроенный limiter запрос **не** блокирует. Остальные пути без лимита на стороне Kezek |
+| Effects | Нет своих; эффекты — у вызванного метода Supabase. В логах только метод и префикс пути, без query |
 
 ## Не подтверждено этой работой
 

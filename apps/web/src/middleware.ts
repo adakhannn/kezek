@@ -86,6 +86,8 @@ async function handleRequest(req: NextRequest) {
     if (
         pathname.startsWith('/_next') ||
         pathname.startsWith('/api') ||
+        // The Supabase proxy (R25-31): a session refresh per proxied call would double the auth traffic.
+        pathname.startsWith('/sb/') ||
         pathname.startsWith('/auth/post-signup') ||
         pathname.startsWith('/auth/sign-in') ||
         pathname.startsWith('/auth/whatsapp') ||
