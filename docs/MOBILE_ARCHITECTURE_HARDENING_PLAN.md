@@ -299,7 +299,7 @@ Result on 2026-03-30:
 - [DashboardScreen.tsx](../apps/mobile/src/screens/DashboardScreen.tsx) now acts as a composition screen.
 - Owner/business loading moved into [useDashboardScreenData.ts](../apps/mobile/src/screens/dashboard/useDashboardScreenData.ts).
 - Presentation moved into [DashboardScreenSections.tsx](../apps/mobile/src/screens/dashboard/DashboardScreenSections.tsx).
-- Shared types and styles now live in [types.ts](../apps/mobile/src/screens/dashboard/types.ts) and [dashboardScreenStyles.ts](../apps/mobile/src/screens/dashboard/dashboardScreenStyles.ts).
+- Shared types and styles now live in [types.ts](../apps/mobile/src/screens/dashboard/types.ts) and `dashboardScreenStyles.ts` (removed 2026-11-27: the screen now uses the shared Screen and theme tokens).
 - Smoke coverage was added in [DashboardScreen.test.tsx](../apps/mobile/src/__tests__/screens/DashboardScreen.test.tsx).
 - Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --forceExit --runTestsByPath src/__tests__/screens/DashboardScreen.test.tsx src/__tests__/screens/ProfileScreen.test.tsx src/__tests__/screens/StaffScreen.test.tsx src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/screens/CabinetScreen.test.tsx src/__tests__/screens/ShiftsScreen.test.tsx src/__tests__/screens/ShiftQuickScreen.test.tsx`.
 

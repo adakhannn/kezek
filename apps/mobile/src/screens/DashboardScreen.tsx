@@ -1,10 +1,11 @@
-import { Alert, ScrollView } from 'react-native';
+import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ErrorState from '../components/ui/ErrorState';
+import Screen from '../components/ui/Screen';
+import { SkeletonCard, SkeletonList } from '../components/ui/Skeleton';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { useToast } from '../contexts/ToastContext';
 import { useNow } from '../hooks/useNow';
@@ -17,7 +18,6 @@ import { ensureCurrentBusiness } from './manage/currentBusiness';
 import type { ManageMenuItem, ManageRouteParams } from './manage/manageMenu';
 import type { ManagerBooking, ManagerBookingAction } from './dashboard/types';
 import { useDashboardScreenData } from './dashboard/useDashboardScreenData';
-import { styles } from './dashboard/dashboardScreenStyles';
 
 const ACTION_DONE: Record<ManagerBookingAction, MobileI18nKey> = {
     confirm: 'manager.action.confirmed',
@@ -34,39 +34,39 @@ export default function DashboardScreen() {
     const { now } = useNow();
     const data = useDashboardScreenData();
 
+    // The shape of the hub while the businesses load: the business card, the section tiles, the list.
     if (data.isLoading) {
-        return <LoadingSpinner message={t('common.loading')} />;
+        return (
+            <Screen tabBar testID="dashboard-loading">
+                <SkeletonCard lines={2} />
+                <SkeletonCard lines={4} />
+                <SkeletonList rows={3} avatar={false} />
+            </Screen>
+        );
     }
 
     if (data.loadError) {
         return (
-            <ScrollView style={styles.container}>
-                <EmptyState
-                    icon="alert-circle"
+            <Screen tabBar refreshing={data.refreshing} onRefresh={data.onRefresh}>
+                <ErrorState
                     title={t('staff.dashboard.loadError')}
                     message={t('staff.checkConnection')}
-                    action={
-                        <Button
-                            title={t('staff.retry')}
-                            onPress={() => void data.onRefresh()}
-                            variant="outline"
-                            fullWidth
-                        />
-                    }
+                    retryLabel={t('staff.retry')}
+                    onRetry={() => void data.onRefresh()}
                 />
-            </ScrollView>
+            </Screen>
         );
     }
 
     if (!data.isOwner) {
         return (
-            <ScrollView style={styles.container}>
+            <Screen tabBar refreshing={data.refreshing} onRefresh={data.onRefresh}>
                 <EmptyState
-                    icon="business"
+                    icon="business-outline"
                     title={t('staff.dashboard.notOwnerTitle')}
                     message={t('staff.dashboard.notOwnerMessage')}
                 />
-            </ScrollView>
+            </Screen>
         );
     }
 

@@ -296,7 +296,7 @@ Progress:
   [StaffScreenSections.tsx](../apps/mobile/src/screens/staff/StaffScreenSections.tsx),
   [staffScreenStyles.ts](../apps/mobile/src/screens/staff/staffScreenStyles.ts),
   [DashboardScreenSections.tsx](../apps/mobile/src/screens/dashboard/DashboardScreenSections.tsx),
-  [dashboardScreenStyles.ts](../apps/mobile/src/screens/dashboard/dashboardScreenStyles.ts),
+  `dashboardScreenStyles.ts` (removed 2026-11-27),
   [ShiftsScreenSections.tsx](../apps/mobile/src/screens/shifts/ShiftsScreenSections.tsx),
   and [RootNavigator.tsx](../apps/mobile/src/navigation/RootNavigator.tsx)
 - normalized booking-step states and common press interactions across
