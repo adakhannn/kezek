@@ -346,8 +346,7 @@ function BookingCard({ booking, isHistory, onReview }: { booking: Booking; isHis
             <View style={styles.whenRow}>
                 <Ionicons name={isHistory ? 'time-outline' : 'calendar-clear-outline'} size={16} color={colors.tone.accent.fg} />
                 <Text style={styles.whenText}>
-                    {formatDate(booking.start_at, locale, booking.business?.tz)} • {formatTime(booking.start_at, booking.business?.tz)} -{' '}
-                    {formatTime(booking.end_at, booking.business?.tz)}
+                    {formatDate(booking.start_at, locale, booking.business?.tz)} • {formatTime(booking.start_at, booking.business?.tz)}–{formatTime(booking.end_at, booking.business?.tz)}
                 </Text>
             </View>
 

@@ -148,7 +148,7 @@ describe('CabinetScreen', () => {
         renderWithProviders(<CabinetScreen />);
 
         // 14:00Z is 19:00 in Almaty (UTC+5); the Bishkek default would show 20:00.
-        expect(await screen.findByText(/19:00 - 19:30/)).toBeTruthy();
+        expect(await screen.findByText(/19:00–19:30/)).toBeTruthy();
         expect(screen.queryByText(/20:00/)).toBeNull();
     });
 

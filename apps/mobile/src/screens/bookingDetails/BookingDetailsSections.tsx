@@ -126,7 +126,7 @@ export function BookingDetailsSections({
                     <Text style={styles.date}>{formatDate(booking.start_at, locale, tz)}</Text>
                 </View>
                 <Text style={styles.time}>
-                    {formatTime(booking.start_at, tz)} - {formatTime(booking.end_at, tz)}
+                    {formatTime(booking.start_at, tz)}–{formatTime(booking.end_at, tz)}
                 </Text>
                 {booking.service?.duration_min ? (
                     <Text style={styles.duration}>

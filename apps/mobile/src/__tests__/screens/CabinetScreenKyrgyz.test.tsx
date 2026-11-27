@@ -83,7 +83,7 @@ describe('CabinetScreen in Kyrgyz', () => {
         expect(screen.getByText('Аккаунттан чыгуу')).toBeTruthy();
         // 14:00 UTC is 20:00 in Bishkek; the month is Kyrgyz, not Intl's.
         expect(screen.getByText('2099-ж., 2-декабрь, саат 20:00')).toBeTruthy();
-        expect(screen.getByText('2099-ж., 2-декабрь • 20:00 - 20:30')).toBeTruthy();
+        expect(screen.getByText('2099-ж., 2-декабрь • 20:00–20:30')).toBeTruthy();
         expect(screen.queryByText('Кабинет клиента')).toBeNull();
     });
 

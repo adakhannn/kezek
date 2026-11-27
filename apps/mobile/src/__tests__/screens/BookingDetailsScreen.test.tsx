@@ -100,7 +100,7 @@ describe('BookingDetailsScreen', () => {
     test('shows the booking time in Asia/Bishkek when the server sends no zone', async () => {
         renderWithProviders(<BookingDetailsScreen />);
 
-        expect(await screen.findByText('16:00 - 17:00')).toBeTruthy();
+        expect(await screen.findByText('16:00–17:00')).toBeTruthy();
     });
 
     test('shows the booking time in the business time zone (ARCH-11)', async () => {
@@ -121,8 +121,8 @@ describe('BookingDetailsScreen', () => {
         renderWithProviders(<BookingDetailsScreen />);
 
         // 10:00Z is 13:00 in Moscow (UTC+3); the Bishkek default would show 16:00.
-        expect(await screen.findByText('13:00 - 14:00')).toBeTruthy();
-        expect(screen.queryByText('16:00 - 17:00')).toBeNull();
+        expect(await screen.findByText('13:00–14:00')).toBeTruthy();
+        expect(screen.queryByText('16:00–17:00')).toBeNull();
     });
 
     test('renders repeat booking action', async () => {

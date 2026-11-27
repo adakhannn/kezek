@@ -150,8 +150,8 @@ describe('HomeScreen', () => {
         renderWithProviders(<HomeScreen />);
 
         // 14:00Z is 19:00 in Almaty (UTC+5); the Bishkek default would show 20:00.
-        expect(await screen.findByText(/ - 19:00$/)).toBeTruthy();
-        expect(screen.queryByText(/ - 20:00$/)).toBeNull();
+        expect(await screen.findByText(/ • 19:00$/)).toBeTruthy();
+        expect(screen.queryByText(/ • 20:00$/)).toBeNull();
     });
 
     test('renders loaded business list', async () => {

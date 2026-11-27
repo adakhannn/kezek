@@ -98,8 +98,7 @@ export function UpcomingBookingsSection({
                                     {booking.business?.name || t('booking.home.booking')}
                                 </Text>
                                 <Text style={styles.bookingWhen} numberOfLines={1}>
-                                    {formatDate(booking.start_at, locale, booking.business?.tz)} -{' '}
-                                    {formatTime(booking.start_at, booking.business?.tz)}
+                                    {formatDate(booking.start_at, locale, booking.business?.tz)} • {formatTime(booking.start_at, booking.business?.tz)}
                                 </Text>
                                 {meta ? <Text style={styles.bookingMeta} numberOfLines={1}>{meta}</Text> : null}
                             </View>
