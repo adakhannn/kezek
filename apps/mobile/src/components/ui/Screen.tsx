@@ -6,6 +6,8 @@ import {
     ScrollView,
     StyleSheet,
     View,
+    type NativeScrollEvent,
+    type NativeSyntheticEvent,
     type StyleProp,
     type ViewStyle,
 } from 'react-native';
@@ -30,6 +32,9 @@ type ScreenProps = {
     /** Render without a ScrollView (a screen that owns a FlatList). */
     scroll?: boolean;
     contentStyle?: StyleProp<ViewStyle>;
+    /** Scroll events of the page (load the next page near the end). Only with `scroll`. */
+    onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    scrollEventThrottle?: number;
     testID?: string;
 };
 
@@ -48,6 +53,8 @@ export default function Screen({
     gap = layout.sectionGap,
     scroll = true,
     contentStyle,
+    onScroll,
+    scrollEventThrottle,
     testID,
 }: ScreenProps) {
     // The navigators provide the insets; outside them (tests, previews) there is no inset.
@@ -67,6 +74,8 @@ export default function Screen({
             keyboardDismissMode={keyboard ? 'on-drag' : undefined}
             automaticallyAdjustKeyboardInsets={keyboard}
             testID={testID}
+            onScroll={onScroll}
+            scrollEventThrottle={scrollEventThrottle}
             refreshControl={onRefresh ? (
                 <RefreshControl
                     refreshing={!!refreshing}

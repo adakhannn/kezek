@@ -1,15 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useContext } from 'react';
 import {
     Pressable,
-    RefreshControl,
-    ScrollView,
     Text,
     View,
     type NativeScrollEvent,
     type NativeSyntheticEvent,
 } from 'react-native';
-import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import Avatar from '../../components/ui/Avatar';
 import { StatusPill } from '../../components/ui/Badge';
@@ -20,9 +16,10 @@ import ErrorState from '../../components/ui/ErrorState';
 import ListRow, { ListGroup } from '../../components/ui/ListRow';
 import MotionPressable from '../../components/ui/MotionPressable';
 import OfflineBanner from '../../components/ui/OfflineBanner';
+import Screen from '../../components/ui/Screen';
 import Section from '../../components/ui/Section';
 import { colors } from '../../constants/colors';
-import { layout, type Tone } from '../../constants/theme';
+import type { Tone } from '../../constants/theme';
 import { useLanguage } from '../../i18n';
 import { formatDate, formatTime } from '../../utils/format';
 import { getServiceName, getStatusText } from '../../utils/i18n';
@@ -113,7 +110,6 @@ export function CabinetScreenSections({
     isSigningOut,
 }: Props) {
     const { t, locale } = useLanguage();
-    const insets = useContext(SafeAreaInsetsContext);
     const isHistory = activeTab === 'history';
     const visibleBookings = isHistory ? pastBookings : upcomingBookings;
     const featuredBooking = upcomingBookings[0] ?? null;
@@ -127,21 +123,13 @@ export function CabinetScreenSections({
     };
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={[styles.content, { paddingBottom: layout.tabBarClearance + (insets?.bottom ?? 0) }]}
-            testID="cabinet-screen"
+        <Screen
+            tabBar
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             onScroll={handleScroll}
             scrollEventThrottle={200}
-            refreshControl={(
-                <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={() => void onRefresh()}
-                    tintColor={colors.accent.indigo}
-                    colors={[colors.accent.indigo]}
-                    progressBackgroundColor={colors.surface.card}
-                />
-            )}
+            testID="cabinet-screen"
         >
             <Pressable
                 onPress={onProfilePress}
@@ -312,7 +300,7 @@ export function CabinetScreenSections({
                     chevron={false}
                 />
             </ListGroup>
-        </ScrollView>
+        </Screen>
     );
 }
 

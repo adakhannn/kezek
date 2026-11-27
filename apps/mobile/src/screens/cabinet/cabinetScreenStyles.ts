@@ -5,12 +5,11 @@ import { colors } from '../../constants/colors';
 import { layout, radii, space, typeScale } from '../../constants/theme';
 
 /*
- * The client cabinet (docs/mobile/UI_GUIDE.md): page background, 16dp gutter, sections 24 apart,
- * one card level. The header says "Личный кабинет"; the screen opens with the person.
+ * The client cabinet (docs/mobile/UI_GUIDE.md): `Screen` gives the page background, the 16dp
+ * gutter and sections 24 apart; one card level. The header says "Личный кабинет"; the screen
+ * opens with the person.
  */
 export const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.surface.page },
-    content: { paddingHorizontal: layout.gutter, paddingTop: space.lg, gap: layout.sectionGap },
     pressed: { opacity: colors.interactive.pressedOpacity },
     banner: { marginBottom: 0 },
 
@@ -88,6 +87,4 @@ export const styles = StyleSheet.create({
     },
     footerHint: { ...typeScale.caption, color: colors.text.secondary, flexShrink: 1 },
     loadMore: { alignItems: 'center', gap: space.sm },
-
-    centered: { flex: 1, backgroundColor: colors.surface.page, padding: layout.gutter, gap: layout.itemGap },
 });
