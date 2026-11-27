@@ -234,6 +234,7 @@ export const staffKy: Record<keyof typeof staffRu, string> = {
     'staff.schedule.mainBranch': 'Филиал: {name}',
     'staff.schedule.temporaryBranch': 'Убактылуу филиал: {name}',
     'staff.schedule.loadError': 'Графикти жүктөө мүмкүн болгон жок',
+    'staff.schedule.emptyTitle': 'График азырынча коюлган эмес',
     'staff.schedule.managedByOwner': 'Графикти бизнестин жетекчиси белгилейт',
     'staff.schedule.unconfiguredHint': 'Графиги жок күнгө жетекчи саат белгилегенге чейин сизге жазылууга болбойт',
     'staff.schedule.dow.1': 'Дш',

@@ -7,7 +7,6 @@ import Badge, { StatusPill } from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import ErrorState from '../components/ui/ErrorState';
-import FeedbackBanner from '../components/ui/FeedbackBanner';
 import { ListGroup } from '../components/ui/ListRow';
 import Screen from '../components/ui/Screen';
 import Section from '../components/ui/Section';
@@ -118,15 +117,14 @@ export default function StaffScheduleScreen() {
 
     return (
         <Screen refreshing={data.refreshing} onRefresh={data.onRefresh} testID="staff-schedule-screen">
+            {/* No day has hours: two weeks of identical «Не настроено» rows say nothing the empty state does not. */}
             {allUnconfigured ? (
-                <FeedbackBanner
-                    variant="info"
-                    title={t('staff.schedule.notConfigured')}
-                    message={t('staff.schedule.unconfiguredHint')}
-
+                <EmptyState
+                    icon="calendar-outline"
+                    title={t('staff.schedule.emptyTitle')}
+                    message={`${t('staff.schedule.unconfiguredHint')}. ${t('staff.schedule.managedByOwner')}.`}
                 />
-            ) : null}
-            {data.weeks.map((week, index) => (
+            ) : data.weeks.map((week, index) => (
                 <Section
                     key={week[0]}
                     title={t(index === 0 ? 'staff.schedule.currentWeek' : 'staff.schedule.nextWeek')}

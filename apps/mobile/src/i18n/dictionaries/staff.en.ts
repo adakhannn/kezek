@@ -233,6 +233,7 @@ export const staffEn: Record<keyof typeof staffRu, string> = {
     'staff.schedule.mainBranch': 'Branch: {name}',
     'staff.schedule.temporaryBranch': 'Temporary branch: {name}',
     'staff.schedule.loadError': 'Could not load the schedule',
+    'staff.schedule.emptyTitle': 'No schedule yet',
     'staff.schedule.managedByOwner': 'The business manager sets the schedule',
     'staff.schedule.unconfiguredHint': 'Nobody can book you on a day without a schedule until the manager sets the hours',
     'staff.schedule.dow.1': 'Mon',

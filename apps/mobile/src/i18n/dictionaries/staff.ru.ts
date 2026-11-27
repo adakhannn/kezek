@@ -243,6 +243,7 @@ export const staffRu = {
     'staff.schedule.mainBranch': 'Филиал: {name}',
     'staff.schedule.temporaryBranch': 'Временный филиал: {name}',
     'staff.schedule.loadError': 'Не удалось загрузить расписание',
+    'staff.schedule.emptyTitle': 'График ещё не задан',
     'staff.schedule.managedByOwner': 'Расписание задаёт руководитель бизнеса',
     'staff.schedule.unconfiguredHint': 'На день без графика к вам не записываются, пока руководитель не задаст часы',
     'staff.schedule.dow.1': 'Пн',
