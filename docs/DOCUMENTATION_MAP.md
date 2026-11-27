@@ -8,7 +8,7 @@
 
 ## Руководства и справочники
 
-Документов: 106.
+Документов: 107.
 
 | Документ | Путь |
 | --- | --- |
@@ -107,6 +107,7 @@
 | [Полный каталог HTTP-маршрутов](api/ROUTE_CATALOG.md) | `docs/api/ROUTE_CATALOG.md` |
 | [API сотрудников, смен и финансов](api/STAFF_AND_FINANCE.md) | `docs/api/STAFF_AND_FINANCE.md` |
 | [История планов и аудитов Kezek](archive/README.md) | `docs/archive/README.md` |
+| [Kezek: store listings and launch copy](marketing/STORE_LISTINGS.md) | `docs/marketing/STORE_LISTINGS.md` |
 | [Mobile UI guide](mobile/UI_GUIDE.md) | `docs/mobile/UI_GUIDE.md` |
 | [@core-domain](../packages/core-domain/README.md) | `packages/core-domain/README.md` |
 | [Booking Domain Module](../packages/core-domain/src/booking/README.md) | `packages/core-domain/src/booking/README.md` |
