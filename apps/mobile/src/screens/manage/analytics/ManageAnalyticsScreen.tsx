@@ -134,7 +134,7 @@ export default function ManageAnalyticsScreen() {
                             <StatGrid>
                                 <StatTile icon="add-circle-outline" label={t('ops.analytics.kpi.created')} value={formatNumber(data.summary.bookings.created, t.locale)} />
                                 <StatTile icon="checkmark-circle-outline" label={t('ops.analytics.kpi.confirmed')} value={formatNumber(data.summary.bookings.confirmedOrPaid, t.locale)} tone="accent" />
-                                <StatTile icon="funnel-outline" label={t('ops.analytics.kpi.conversion')} value={`${data.summary.funnel.conversionHomeToBooking.toFixed(2)}%`} hint={t('ops.analytics.conversion')} />
+                                <StatTile icon="funnel-outline" label={t('ops.analytics.kpi.conversion')} value={`${formatNumber(data.summary.funnel.conversionHomeToBooking, t.locale)}%`} hint={t('ops.analytics.conversion')} />
                                 <StatTile icon="cash-outline" label={t('ops.analytics.kpi.revenue')} value={formatMoneyRounded(data.summary.revenue.total, t)} tone="success" />
                             </StatGrid>
 
@@ -160,7 +160,7 @@ export default function ManageAnalyticsScreen() {
                             <Section title={t('ops.analytics.revenueByDay')}>
                                 <StatGrid>
                                     <StatTile label={t('ops.analytics.promoRevenue')} value={formatMoneyRounded(data.summary.revenue.promoRevenue, t)} />
-                                    <StatTile label={t('ops.analytics.promoShare')} value={`${share.toFixed(2)}%`} />
+                                    <StatTile label={t('ops.analytics.promoShare')} value={`${formatNumber(share, t.locale)}%`} />
                                 </StatGrid>
                                 <Card variant="plain" padding="md">
                                     <BarList
