@@ -8,7 +8,7 @@
 
 ## Руководства и справочники
 
-Документов: 107.
+Документов: 108.
 
 | Документ | Путь |
 | --- | --- |
@@ -92,6 +92,7 @@
 | [Как считается рейтинг в Kezek](RATINGS_HOW_IT_WORKS.md) | `docs/RATINGS_HOW_IT_WORKS.md` |
 | [Документация Kezek](README.md) | `docs/README.md` |
 | [Service client и граница бизнеса](SERVICE_CLIENT_USAGE_GUIDE.md) | `docs/SERVICE_CLIENT_USAGE_GUIDE.md` |
+| [Доступ к Supabase из сетей, где он заблокирован (R25-31)](SUPABASE_ACCESS_OPTIONS.md) | `docs/SUPABASE_ACCESS_OPTIONS.md` |
 | [Подключение другого Telegram к текущему профилю](TELEGRAM_PROFILE_LINK.md) | `docs/TELEGRAM_PROFILE_LINK.md` |
 | [Telegram bot login с привязкой к браузеру](TELEGRAM_WEB_LOGIN.md) | `docs/TELEGRAM_WEB_LOGIN.md` |
 | [UI Definition Of Done](UI_DEFINITION_OF_DONE.md) | `docs/UI_DEFINITION_OF_DONE.md` |
@@ -122,7 +123,7 @@
 
 ## Архитектурные решения и сценарии
 
-Документов: 13.
+Документов: 15.
 
 | Документ | Путь |
 | --- | --- |
@@ -139,6 +140,8 @@
 | [Абонементы и пакеты визитов — описание фичи и план реализации](SUBSCRIPTIONS_AND_PACKAGES_FEATURE.md) | `docs/SUBSCRIPTIONS_AND_PACKAGES_FEATURE.md` |
 | [TELEGRAM_LINKING_ADR](TELEGRAM_LINKING_ADR.md) | `docs/TELEGRAM_LINKING_ADR.md` |
 | [UI Acceptance Checklist](UI_ACCEPTANCE_CHECKLIST.md) | `docs/UI_ACCEPTANCE_CHECKLIST.md` |
+| [Политика конфиденциальности Kezek — черновик](legal/PRIVACY_DRAFT.md) | `docs/legal/PRIVACY_DRAFT.md` |
+| [Условия использования Kezek — черновик](legal/TERMS_DRAFT.md) | `docs/legal/TERMS_DRAFT.md` |
 
 ## Исторические планы и отчёты
 
