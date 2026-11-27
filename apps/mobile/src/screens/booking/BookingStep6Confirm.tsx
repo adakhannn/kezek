@@ -49,6 +49,7 @@ export default function BookingStep6Confirm() {
         finishGuestBooking,
         signInInstead,
     } = useBookingStep6Confirm(navigation);
+    const selectedBranch = bookingData.branches.find((branch) => branch.id === bookingData.branchId);
     const { t } = useLanguage();
     const tz = resolveBusinessTimeZone(bookingData.business?.tz);
     const isMultiple = selectedServices.length > 1;
@@ -93,6 +94,12 @@ export default function BookingStep6Confirm() {
                         <Text style={styles.value} numberOfLines={2}>{bookingData.business?.name}</Text>
                         <RatingBadge rating={bookingData.business?.rating_score ?? null} size="small" />
                     </View>
+                    {/* Which branch and where: a business can have several. */}
+                    {selectedBranch ? (
+                        <Text style={styles.hint}>
+                            {[selectedBranch.name, selectedBranch.address?.trim()].filter(Boolean).join(' · ')}
+                        </Text>
+                    ) : null}
                 </SummaryRow>
                 <SummaryRow
                     icon="cut-outline"
@@ -119,9 +126,11 @@ export default function BookingStep6Confirm() {
                     {isAnyStaff ? <Text style={styles.hint}>{t('booking.step6.anyMasterAssigned')}</Text> : null}
                 </SummaryRow>
                 <SummaryRow icon="calendar-outline" label={t('booking.step6.dateTime')}>
-                    {dateLabel ? <Text style={styles.value}>{dateLabel.dayMonth}</Text> : null}
+                    {dateLabel ? <Text style={styles.value}>{`${dateLabel.weekday}, ${dateLabel.dayMonth}`}</Text> : null}
                     {bookingData.selectedSlot ? (
-                        <Text style={styles.time}>{formatTimeSlot(bookingData.selectedSlot.start_at, tz)}</Text>
+                        <Text style={styles.time}>
+                            {`${formatTimeSlot(bookingData.selectedSlot.start_at, tz)}–${formatTimeSlot(bookingData.selectedSlot.end_at, tz)}`}
+                        </Text>
                     ) : null}
                 </SummaryRow>
             </ListGroup>

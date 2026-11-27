@@ -21,6 +21,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import { ANY_STAFF } from './bookingSelection';
 import { BookingContextLine, BookingStepScreen, bookingStepStyles } from './BookingStepLayout';
+import { formatBookingDateLabel } from './bookingFormat';
 import { useBookingSessionUser } from './useBookingSessionUser';
 import { useBookingStep5Slots } from './useBookingStep5Slots';
 import { useClientDayBookings } from './useClientDayBookings';
@@ -53,6 +54,10 @@ export default function BookingStep5Time() {
         worksElsewhere,
     } = useBookingStep5Slots(bookingData);
     const isAny = bookingData.staffId === ANY_STAFF;
+    const slotColumns = isAny ? 3 : 4;
+    // The day the times belong to, next to the business: "Пн, 30 ноября".
+    const selectedDay = bookingData.selectedDate ? formatBookingDateLabel(bookingData.selectedDate, t.locale) : null;
+    const selectedDayLabel = selectedDay ? `${selectedDay.weekday}, ${selectedDay.dayMonth}` : null;
     const { userId } = useBookingSessionUser();
     const dayBookings = useClientDayBookings({
         bizId: bookingData.business?.id,
@@ -106,7 +111,7 @@ export default function BookingStep5Time() {
                 disabled: !bookingData.selectedSlot,
             } : undefined}
         >
-            <BookingContextLine name={bookingData.business?.name} />
+            <BookingContextLine name={bookingData.business?.name} detail={selectedDayLabel} />
 
             {showOfflineBanner ? <OfflineBanner onRetry={() => refetch()} style={bookingStepStyles.banner} /> : null}
 
@@ -182,6 +187,10 @@ export default function BookingStep5Time() {
                                 </Pressable>
                             );
                         })}
+                        {/* Invisible cells keep the last row on the grid instead of stretching its slots. */}
+                        {Array.from({ length: (slotColumns - (slots!.length % slotColumns)) % slotColumns }, (_, index) => (
+                            <View key={`spacer-${index}`} style={[styles.slot, styles.spacer, isAny ? styles.slotWide : null]} />
+                        ))}
                     </View>
                 </Section>
             ) : !showOfflineBanner && worksElsewhere ? (
@@ -248,6 +257,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     slotWide: { flexBasis: '30%' },
+    spacer: { opacity: 0, borderWidth: 0 },
     slotSelected: { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary },
     pressed: { opacity: colors.interactive.pressedOpacity },
     slotText: { ...typeScale.bodyStrong, color: colors.text.primary, fontVariant: ['tabular-nums'] },
