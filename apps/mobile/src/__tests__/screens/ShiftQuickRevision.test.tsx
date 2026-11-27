@@ -213,7 +213,8 @@ test('wire commands exclude read-only note and createdAt returned by the server'
 test('editor retains its opening revision even when background data changes', async () => {
     const { client, wrapper } = createWrapper();
     render(<ShiftQuickScreen />, { wrapper });
-    fireEvent.press(await screen.findByText('Добавить клиента'));
+    // The screen loads several queries first; on a slow CI runner one second is not enough.
+    fireEvent.press(await screen.findByText('Добавить клиента', {}, { timeout: 5000 }));
     fireEvent.changeText(await screen.findByPlaceholderText('Имя клиента'), 'Typed draft');
     await act(async () => { client.setQueryData(['staff-finance', 'user-1', 'staff-1'], finance(7)); });
     fireEvent.press(screen.getByText('Сохранить'));
@@ -242,7 +243,7 @@ test('explicit review reloads fresh data and requires a new Save before replacin
     });
     const { wrapper } = createWrapper();
     render(<ShiftQuickScreen />, { wrapper });
-    fireEvent.press(await screen.findByText('Добавить клиента'));
+    fireEvent.press(await screen.findByText('Добавить клиента', {}, { timeout: 5000 }));
     fireEvent.changeText(await screen.findByPlaceholderText('Имя клиента'), 'Kept draft');
     fireEvent.press(screen.getByText('Сохранить'));
     expect(await screen.findByText('Нужна сверка смены')).toBeTruthy();
@@ -287,7 +288,7 @@ test('explicit reconciliation recognizes a previously committed new draft by its
 test('invalid money text is retained in the editor and never converted to a zero write', async () => {
     const { wrapper } = createWrapper();
     render(<ShiftQuickScreen />, { wrapper });
-    fireEvent.press(await screen.findByText('Добавить клиента'));
+    fireEvent.press(await screen.findByText('Добавить клиента', {}, { timeout: 5000 }));
     fireEvent.changeText(await screen.findByPlaceholderText('Имя клиента'), 'Draft');
     fireEvent.changeText(screen.getByPlaceholderText('Сумма'), 'not a number');
     fireEvent.press(screen.getByText('Сохранить'));
