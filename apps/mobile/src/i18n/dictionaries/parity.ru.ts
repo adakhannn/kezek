@@ -202,7 +202,7 @@ export const parityRu = {
     'parity.roleApply.form.applicant.missingName': 'Укажите имя в профиле, чтобы владелец бизнеса понимал, кто отправил заявку.',
     'parity.roleApply.form.errors.emptyResponse': 'Сервис заявок вернул пустой ответ.',
     'parity.roleApply.form.errors.loadActive': 'Не удалось загрузить активные заявки.',
-    'parity.roleApply.form.errors.loadActiveRetry': 'Не удалось загрузить активные заявки. Попробуйте обновить страницу.',
+    'parity.roleApply.form.errors.loadActiveRetry': 'Не удалось загрузить активные заявки. Попробуйте обновить экран.',
     'parity.roleApply.form.errors.loadBusinesses': 'Не удалось загрузить бизнесы',
     'parity.roleApply.form.errors.signInFirst': 'Сначала войдите в аккаунт Kezek, чтобы заявка была привязана именно к вам.',
     'parity.roleApply.form.errors.selectBusiness': 'Выберите бизнес.',

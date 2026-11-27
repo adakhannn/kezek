@@ -320,6 +320,7 @@ export default function ShiftQuickScreen() {
     return (
         <ShiftQuickSections
             financeData={financeData}
+            timeZone={staffInfo.business?.tz ?? null}
             refreshing={refreshing}
             isProcessingQueue={isProcessingQueue}
             pendingQueueCount={pendingQueueCount}

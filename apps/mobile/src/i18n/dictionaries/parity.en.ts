@@ -199,7 +199,7 @@ export const parityEn: Record<keyof typeof parityRu, string> = {
     'parity.roleApply.form.applicant.missingName': 'Add your name to your profile so the business owner knows who is applying.',
     'parity.roleApply.form.errors.emptyResponse': 'The applications service returned an empty response.',
     'parity.roleApply.form.errors.loadActive': 'Could not load your active applications.',
-    'parity.roleApply.form.errors.loadActiveRetry': 'Could not load your active applications. Try refreshing the page.',
+    'parity.roleApply.form.errors.loadActiveRetry': 'Could not load the active applications. Try refreshing the screen.',
     'parity.roleApply.form.errors.loadBusinesses': 'Could not load businesses',
     'parity.roleApply.form.errors.signInFirst': 'Sign in to your Kezek account first so the application is linked to you.',
     'parity.roleApply.form.errors.selectBusiness': 'Choose a business.',

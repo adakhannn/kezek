@@ -278,7 +278,7 @@ export const cabinetRu = {
     // Profile: e-mail label, WhatsApp verification, Telegram (B5, C12)
     'cabinet.profile.email.label': 'Email',
     'cabinet.profile.notifications.whatsappNotVerified': 'Сначала подтвердите номер WhatsApp ниже: без этого уведомления в WhatsApp не приходят.',
-    'cabinet.profile.connections.title': 'Мессенджеры',
+    'cabinet.profile.connections.title': 'Способы входа',
     'cabinet.profile.whatsapp.title': 'WhatsApp',
     'cabinet.profile.whatsapp.verified': 'Номер {phone} подтверждён',
     'cabinet.profile.whatsapp.notVerified': 'Номер не подтверждён. Подтвердите его, чтобы получать уведомления.',

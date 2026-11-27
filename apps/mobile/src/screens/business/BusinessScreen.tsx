@@ -214,7 +214,7 @@ export function BusinessPageContent({
                 {business.address ? (
                     <View style={styles.metaRow}>
                         <Ionicons name="location-outline" size={16} color={colors.text.secondary} accessible={false} importantForAccessibility="no" />
-                        <Text style={styles.metaText}>{business.address}</Text>
+                        <Text style={styles.metaText} numberOfLines={2}>{business.address}</Text>
                     </View>
                 ) : null}
                 <ContactActions contacts={{ ...businessContacts, phone: businessPhone }} />
@@ -380,7 +380,7 @@ function BranchCard({ data, branch, onOpenMap }: { data: BusinessPageData; branc
                 {branch.address ? (
                     <View style={styles.metaRow}>
                         <Ionicons name="location-outline" size={16} color={colors.text.secondary} accessible={false} importantForAccessibility="no" />
-                        <Text style={styles.metaText}>{branch.address}</Text>
+                        <Text style={styles.metaText} numberOfLines={2}>{branch.address}</Text>
                     </View>
                 ) : null}
             </View>

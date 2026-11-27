@@ -176,8 +176,9 @@ describe('visit packages', () => {
 
     test('plan texts', () => {
         const plan = { discount_type: 'percent' as const, discount_value: 10, visit_count: 5, validity_days: 30, service_id: null, branch_ids: ['a', 'b'] };
-        expect(formatDiscount(plan)).toBe('10%');
-        expect(formatDiscount({ ...plan, discount_type: 'fixed_price', discount_value: 450 })).toBe('450');
+        expect(formatDiscount(plan, ru)).toBe('10%');
+        expect(formatDiscount({ ...plan, discount_type: 'fixed_price', discount_value: 450 }, ru)).toBe('450 сом');
+        expect(planTerms({ ...plan, discount_type: 'fixed_price', discount_value: 1500 }, ru)).toBe('Визиты: 5, Срок (дней): 30, Цена за визит: 1\u00a0500 сом');
         expect(formatBinding(plan, ru)).toBe('любая услуга, 2 фил.');
         expect(planTerms(plan, ru)).toBe('Визиты: 5, Срок (дней): 30, Скидка: 10%');
     });

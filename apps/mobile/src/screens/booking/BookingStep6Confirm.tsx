@@ -90,7 +90,7 @@ export default function BookingStep6Confirm() {
             <ListGroup inset>
                 <SummaryRow icon="business-outline" label={t('booking.step6.business')}>
                     <View style={styles.inline}>
-                        <Text style={styles.value}>{bookingData.business?.name}</Text>
+                        <Text style={styles.value} numberOfLines={2}>{bookingData.business?.name}</Text>
                         <RatingBadge rating={bookingData.business?.rating_score ?? null} size="small" />
                     </View>
                 </SummaryRow>

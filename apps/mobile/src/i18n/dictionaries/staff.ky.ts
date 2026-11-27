@@ -162,7 +162,7 @@ export const staffKy: Record<keyof typeof staffRu, string> = {
     'staff.shiftQuick.addSubtitle': 'Кызматты жана сумманы ашыкча кадамсыз тез белгилеңиз.',
     'staff.shiftQuick.addClient': 'Кардар кошуу',
     'staff.shiftQuick.checkForm': 'Форманы текшериңиз',
-    'staff.shiftQuick.clientNamePlaceholder': 'Кардардын аты *',
+    'staff.shiftQuick.clientNamePlaceholder': 'Кардардын аты',
     'staff.shiftQuick.amountPlaceholder': 'Сумма',
     'staff.shiftQuick.save': 'Сактоо',
     'staff.shiftQuick.saveChanges': 'Өзгөрүүлөрдү сактоо',

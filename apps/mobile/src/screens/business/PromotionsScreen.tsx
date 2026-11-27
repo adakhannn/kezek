@@ -121,7 +121,10 @@ export default function PromotionsScreen() {
                             {group.promotions.map((promotion) => {
                                 const tone = TONES[promotionTone(promotion.promotion_type)];
                                 const palette = colors.tone[tone.tone];
-                                const detail = promotionDetail(promotion, t);
+                                const title = promotionTitle(promotion, t);
+                                // An untitled promotion is named by its detail: the same line is not shown twice.
+                                const rawDetail = promotionDetail(promotion, t);
+                                const detail = rawDetail && rawDetail !== title ? rawDetail : null;
                                 const description = promotionDescription(promotion, locale);
                                 const period = promotionPeriod(promotion, t);
                                 return (
@@ -130,7 +133,7 @@ export default function PromotionsScreen() {
                                             <Ionicons name={tone.icon} size={18} color={palette.fg} />
                                         </View>
                                         <View style={styles.flex}>
-                                            <Text style={styles.cardTitle}>{promotionTitle(promotion, t)}</Text>
+                                            <Text style={styles.cardTitle}>{title}</Text>
                                             {detail ? <Text style={[styles.detail, { color: palette.fg }]}>{detail}</Text> : null}
                                             {description ? <Text style={styles.description}>{description}</Text> : null}
                                             {period ? <Text style={styles.period}>{period}</Text> : null}

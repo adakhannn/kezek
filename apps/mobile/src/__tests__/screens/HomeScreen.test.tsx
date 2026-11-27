@@ -225,7 +225,7 @@ describe('HomeScreen', () => {
             );
         });
         expect(await screen.findByText('Nearby Salon')).toBeTruthy();
-        expect(await screen.findByText('1.2 км')).toBeTruthy();
+        expect(await screen.findByText('1,2 км')).toBeTruthy();
     });
 
     test('falls back to last known location when current GPS lookup fails', async () => {

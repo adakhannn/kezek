@@ -265,7 +265,7 @@ describe('errors', () => {
             details: { total: 3, active: 1, cancelled: 2, bookings: [{ id: '12345678abcd', status: 'confirmed', client_name: 'Айбек' }] },
         });
         expect(hasBookingsMessage(error, 'service', ru)).toBe(
-            'Нельзя удалить услугу\n\nВсего броней: 3\nАктивных: 1\nОтменённых: 2\n\nПримеры броней:\n- Бронь #12345678 (confirmed) - Айбек'
+            'Нельзя удалить услугу\n\nВсего броней: 3\nАктивных: 1\nОтменённых: 2\n\nПримеры броней:\n- Бронь #12345678 (Подтверждено) - Айбек'
             + '\n\nСначала отмените или удалите все брони, связанные с этой услугой.',
         );
         expect(hasBookingsMessage(error, 'branch', ru)).toContain('Всего броней: 3');

@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 
 import { useLanguage } from '../../../i18n';
 import { trackMobileEvent } from '../../../lib/analytics';
+import { getErrorMessage } from '../../../lib/errors';
 import { GOOGLE_ACTIVE_FLOW_STORAGE_KEY } from '../../../lib/authStorageKeys';
 import { logDebug, logError, logWarn } from '../../../lib/log';
 import { supabase } from '../../../lib/supabase';
@@ -176,7 +177,8 @@ export function useGoogleSignInFlow({
             return t('auth.google.error.state');
         }
 
-        return raw || t('auth.google.status.error');
+        // A raw server or SDK code ("invalid_google_flow_payload") is not shown to the user.
+        return getErrorMessage(error, t('auth.google.status.error'), t);
     };
 
     const trackGoogleLoginEvent = (

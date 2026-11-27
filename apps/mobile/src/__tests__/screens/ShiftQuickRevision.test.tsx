@@ -214,7 +214,7 @@ test('editor retains its opening revision even when background data changes', as
     const { client, wrapper } = createWrapper();
     render(<ShiftQuickScreen />, { wrapper });
     fireEvent.press(await screen.findByText('Добавить клиента'));
-    fireEvent.changeText(await screen.findByPlaceholderText('Имя клиента *'), 'Typed draft');
+    fireEvent.changeText(await screen.findByPlaceholderText('Имя клиента'), 'Typed draft');
     await act(async () => { client.setQueryData(['staff-finance', 'user-1', 'staff-1'], finance(7)); });
     fireEvent.press(screen.getByText('Сохранить'));
     await waitFor(() => expect(payloads()).toHaveLength(1));
@@ -243,17 +243,17 @@ test('explicit review reloads fresh data and requires a new Save before replacin
     const { wrapper } = createWrapper();
     render(<ShiftQuickScreen />, { wrapper });
     fireEvent.press(await screen.findByText('Добавить клиента'));
-    fireEvent.changeText(await screen.findByPlaceholderText('Имя клиента *'), 'Kept draft');
+    fireEvent.changeText(await screen.findByPlaceholderText('Имя клиента'), 'Kept draft');
     fireEvent.press(screen.getByText('Сохранить'));
     expect(await screen.findByText('Нужна сверка смены')).toBeTruthy();
-    expect(screen.getByPlaceholderText('Имя клиента *').props.editable).toBe(false);
+    expect(screen.getByPlaceholderText('Имя клиента').props.editable).toBe(false);
     server = finance(8, [{ ...item, id: 'remote', clientName: 'Remote client' }]);
     fireEvent.press(screen.getByText('Загрузить актуальную смену'));
     await screen.findByText('Remote client');
     expect(payloads()).toHaveLength(1);
     expect((await getOfflineQueue())[0]).toMatchObject({ data: { expectedRevision: 3 } });
     fireEvent.press(screen.getByText('Сверить черновик в редакторе'));
-    await waitFor(() => expect(screen.getByPlaceholderText('Имя клиента *').props.value).toBe('Kept draft'));
+    await waitFor(() => expect(screen.getByPlaceholderText('Имя клиента').props.value).toBe('Kept draft'));
     await act(async () => {});
     expect(payloads()).toHaveLength(1);
     api.mockImplementation(async (path, options) => path === '/api/staff/finance' ? { ok: true, data: server } : response(JSON.parse(String(options?.body))));
@@ -288,7 +288,7 @@ test('invalid money text is retained in the editor and never converted to a zero
     const { wrapper } = createWrapper();
     render(<ShiftQuickScreen />, { wrapper });
     fireEvent.press(await screen.findByText('Добавить клиента'));
-    fireEvent.changeText(await screen.findByPlaceholderText('Имя клиента *'), 'Draft');
+    fireEvent.changeText(await screen.findByPlaceholderText('Имя клиента'), 'Draft');
     fireEvent.changeText(screen.getByPlaceholderText('Сумма'), 'not a number');
     fireEvent.press(screen.getByText('Сохранить'));
     expect(screen.getAllByText('Введите суммы от 0 до 100 000 000.').length).toBeGreaterThan(0);
@@ -304,7 +304,7 @@ test('explicit review cannot silently transfer yesterday\'s draft into a differe
     render(<ShiftQuickScreen />, { wrapper });
     fireEvent.press(await screen.findByText('Сверить черновик в редакторе'));
     await act(async () => {});
-    expect(screen.queryByPlaceholderText('Имя клиента *')).toBeNull();
+    expect(screen.queryByPlaceholderText('Имя клиента')).toBeNull();
     expect(payloads()).toHaveLength(0);
     expect(await getOfflineQueue()).toEqual([operation]);
 });

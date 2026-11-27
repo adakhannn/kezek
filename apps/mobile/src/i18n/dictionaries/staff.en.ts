@@ -161,7 +161,7 @@ export const staffEn: Record<keyof typeof staffRu, string> = {
     'staff.shiftQuick.addSubtitle': 'Record the service and amount quickly, with no extra steps.',
     'staff.shiftQuick.addClient': 'Add client',
     'staff.shiftQuick.checkForm': 'Check the form',
-    'staff.shiftQuick.clientNamePlaceholder': 'Client name *',
+    'staff.shiftQuick.clientNamePlaceholder': 'Client name',
     'staff.shiftQuick.amountPlaceholder': 'Amount',
     'staff.shiftQuick.save': 'Save',
     'staff.shiftQuick.saveChanges': 'Save changes',

@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
         borderRadius: 44,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(3, 7, 18, 0.55)',
+        backgroundColor: colors.surface.overlay,
     },
     cameraBadge: {
         position: 'absolute',

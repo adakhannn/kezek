@@ -3,6 +3,7 @@ import { AccessibilityInfo, Animated, StyleSheet, View, type DimensionValue, typ
 
 import { colors } from '../../constants/colors';
 import { radii, space } from '../../constants/theme';
+import { useLanguage } from '../../i18n';
 
 /** One pulsing placeholder block. Respects "reduce motion" (no pulse). */
 export function SkeletonBlock({ width = '100%', height = 14, radius = radii.sm, style }: {
@@ -33,8 +34,9 @@ export function SkeletonBlock({ width = '100%', height = 14, radius = radii.sm, 
 
 /** Placeholder of a list while it loads: `rows` lines with an avatar and two text lines. */
 export function SkeletonList({ rows = 4, avatar = true, testID }: { rows?: number; avatar?: boolean; testID?: string }) {
+    const { t } = useLanguage();
     return (
-        <View style={styles.group} accessibilityRole="progressbar" accessibilityLabel="…" testID={testID}>
+        <View style={styles.group} accessibilityRole="progressbar" accessibilityLabel={t('common.loading')} testID={testID}>
             {Array.from({ length: rows }, (_, index) => (
                 <View key={index} style={styles.row}>
                     {avatar ? <SkeletonBlock width={40} height={40} radius={20} /> : null}
@@ -50,8 +52,9 @@ export function SkeletonList({ rows = 4, avatar = true, testID }: { rows?: numbe
 
 /** Placeholder of a card (a summary block or a form section). */
 export function SkeletonCard({ lines = 3, testID }: { lines?: number; testID?: string }) {
+    const { t } = useLanguage();
     return (
-        <View style={[styles.group, styles.card]} accessibilityRole="progressbar" accessibilityLabel="…" testID={testID}>
+        <View style={[styles.group, styles.card]} accessibilityRole="progressbar" accessibilityLabel={t('common.loading')} testID={testID}>
             <SkeletonBlock width="45%" height={16} />
             {Array.from({ length: lines }, (_, index) => (
                 <SkeletonBlock key={index} width={index === lines - 1 ? '70%' : '100%'} height={12} />

@@ -1,3 +1,4 @@
+import { colors } from '../../../../constants/colors';
 import { MAP_PICKER_SOURCE, type MapPickerStart } from './mapPickerBridge';
 
 export type MapPickerPageConfig = {
@@ -27,8 +28,8 @@ export function scriptSafeJson(value: unknown): string {
 function markerSvg(accent: string): string {
     const svg =
         '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="56" viewBox="0 0 44 56">' +
-        `<path d="M22 54s18-17.4 18-31A18 18 0 0 0 4 23c0 13.6 18 31 18 31z" fill="${accent}" stroke="#ffffff" stroke-width="3"/>` +
-        '<circle cx="22" cy="23" r="7" fill="#ffffff"/></svg>';
+        `<path d="M22 54s18-17.4 18-31A18 18 0 0 0 4 23c0 13.6 18 31 18 31z" fill="${accent}" stroke="${colors.text.light}" stroke-width="3"/>` +
+        `<circle cx="22" cy="23" r="7" fill="${colors.text.light}"/></svg>`;
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 

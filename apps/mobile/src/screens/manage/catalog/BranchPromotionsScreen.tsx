@@ -21,6 +21,7 @@ import { useToast } from '../../../contexts/ToastContext';
 import { translatePlural, useLanguage } from '../../../i18n';
 import { getMobileApiUrl } from '../../../lib/apiUrl';
 import type { RootStackParamList } from '../../../navigation/types';
+import { formatYmd } from '../../../utils/format';
 import { catalogApi, catalogKeys, type Promotion } from './catalogApi';
 import { catalogErrorText } from './catalogErrors';
 import { ItemCard, QueryState, StatusPill, ui } from './catalogUi';
@@ -149,8 +150,8 @@ export default function BranchPromotionsScreen({ route }: Props) {
                                 const meta = [
                                     promotion.valid_from || promotion.valid_to
                                         ? t('catalog.branches.promotions.validPeriod', {
-                                            from: promotion.valid_from || t('catalog.branches.promotions.validPeriod.from'),
-                                            to: promotion.valid_to || t('catalog.branches.promotions.validPeriod.to'),
+                                            from: promotion.valid_from ? formatYmd(promotion.valid_from, t.locale) : t('catalog.branches.promotions.validPeriod.from'),
+                                            to: promotion.valid_to ? formatYmd(promotion.valid_to, t.locale) : t('catalog.branches.promotions.validPeriod.to'),
                                         })
                                         : null,
                                     typeof promotion.usage_count === 'number'
@@ -189,7 +190,7 @@ export default function BranchPromotionsScreen({ route }: Props) {
                                             icon="gift-outline"
                                             iconTone="warning"
                                             title={promotion.title_ru}
-                                            subtitle={[typeKey ? t(typeKey) : promotion.promotion_type, paramsText].filter(Boolean).join(' · ')}
+                                            subtitle={[typeKey ? t(typeKey) : null, paramsText].filter(Boolean).join(' · ')}
                                             numberOfLines={2}
                                             trailing={(
                                                 <StatusPill
@@ -312,6 +313,7 @@ function PromotionForm({ bizId, branchId, promotionId, initial, onCancel, onSave
                 ) : null}
                 <FormField
                     label={t('catalog.branches.promotions.titleRu.label')}
+                    required
                     value={form.title_ru}
                     onChangeText={(title_ru) => update({ title_ru })}
                     placeholder={t('catalog.branches.promotions.titleRu.placeholder')}

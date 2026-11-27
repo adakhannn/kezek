@@ -340,7 +340,7 @@ function DayRow({ date, today, rule, branches, homeBranchId, branchIntervals, ha
                     {!past ? (
                         <Text style={ui.muted}>
                             {branchId !== homeBranchId
-                                ? `✓ ${t('manageStaff.staff.schedule.transferHint', { branch: branches.find((branch) => branch.id === branchId)?.name ?? '' })}`
+                                ? t('manageStaff.staff.schedule.transferHint', { branch: branches.find((branch) => branch.id === branchId)?.name ?? '' })
                                 : t('manageStaff.staff.schedule.selectBranchForTransfer')}
                         </Text>
                     ) : null}

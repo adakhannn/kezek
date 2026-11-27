@@ -274,7 +274,7 @@ export const cabinetEn: Record<keyof typeof cabinetRu, string> = {
     // Profile: e-mail label, WhatsApp verification, Telegram (B5, C12)
     'cabinet.profile.email.label': 'Email',
     'cabinet.profile.notifications.whatsappNotVerified': 'Verify your WhatsApp number below first: without it no WhatsApp notifications are sent.',
-    'cabinet.profile.connections.title': 'Messengers',
+    'cabinet.profile.connections.title': 'Sign-in methods',
     'cabinet.profile.whatsapp.title': 'WhatsApp',
     'cabinet.profile.whatsapp.verified': 'Number {phone} verified',
     'cabinet.profile.whatsapp.notVerified': 'Number not verified. Verify it to receive notifications.',

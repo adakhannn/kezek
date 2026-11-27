@@ -113,7 +113,7 @@ export default function ManageVisitPackagesScreen() {
                 plans.isLoading ? <SkeletonList rows={3} avatar={false} testID="visit-plans-loading" /> : plans.error ? (
                     <LoadError title={t('ops.packages.loadError')} onRetry={() => void plans.refetch()} />
                 ) : planList.length === 0 ? (
-                    <EmptyState icon="pricetags-outline" title={t('ops.packages.empty')} action={createButton} />
+                    <EmptyState icon="pricetags-outline" title={t('ops.packages.empty')} message={t('ops.packages.emptyHint')} action={createButton} />
                 ) : (
                     <>
                         {createButton}
@@ -131,7 +131,7 @@ export default function ManageVisitPackagesScreen() {
                                         numberOfLines={2}
                                     />
                                     <View style={styles.terms}>
-                                        <Text style={ui.muted}>{t('ops.packages.discount')}: {formatDiscount(plan)}</Text>
+                                        <Text style={ui.muted}>{t('ops.packages.discount')}: {formatDiscount(plan, t)}</Text>
                                         <Text style={ui.muted}>{t('ops.packages.binding')}: {formatBinding(plan, t)}</Text>
                                     </View>
                                     {plan.is_active ? (

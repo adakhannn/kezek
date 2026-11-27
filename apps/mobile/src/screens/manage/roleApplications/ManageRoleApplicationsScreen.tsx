@@ -160,7 +160,7 @@ export default function ManageRoleApplicationsScreen() {
                 const editing = editingId === application.id;
                 const rejecting = rejectingId === application.id;
                 const busy = actionId !== null;
-                const contact = [application.applicant_email, application.applicant_phone].filter(Boolean).join(' · ') || application.applicant_user_id;
+                const contact = [application.applicant_email, application.applicant_phone].filter(Boolean).join(' · ') || undefined;
                 const name = application.applicant_name || t('ops.applications.userFallback');
                 const status = STATUS[application.status];
                 return (

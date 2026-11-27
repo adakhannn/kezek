@@ -150,7 +150,7 @@ export function ProfileScreenSections({ data }: Props) {
 
                         <View style={styles.switchRow}>
                             <View style={styles.switchLabelContainer}>
-                                <Text style={styles.switchLabel}>{t('cabinet.profile.notifications.whatsapp')}</Text>
+                                <Text style={[styles.switchLabel, data.whatsappVerified ? null : local.disabledLabel]}>{t('cabinet.profile.notifications.whatsapp')}</Text>
                                 <Text style={styles.switchHint}>
                                     {data.whatsappVerified
                                         ? t('cabinet.profile.notifications.whatsappHint')
@@ -170,7 +170,7 @@ export function ProfileScreenSections({ data }: Props) {
 
                         <View style={styles.switchRow}>
                             <View style={styles.switchLabelContainer}>
-                                <Text style={styles.switchLabel}>{t('parity.notifications.telegram')}</Text>
+                                <Text style={[styles.switchLabel, data.telegramLinked ? null : local.disabledLabel]}>{t('parity.notifications.telegram')}</Text>
                                 <Text style={styles.switchHint}>
                                     {data.telegramLinked
                                         ? data.telegramUsername
@@ -249,6 +249,8 @@ const local = StyleSheet.create({
         gap: space.sm,
     },
     dimmed: { opacity: 0.6 },
+    // A switch that cannot be turned on yet: its title is dimmed, its hint (the reason) stays readable.
+    disabledLabel: { color: colors.text.tertiary },
     emailRow: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
     emailAddress: { fontSize: 14, fontWeight: '500', color: colors.text.primary },
     emailError: { gap: 4 },

@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { formatRatingDisplayValue } from '@shared-client/rating';
 
+import { colors } from '../../constants/colors';
+import { radii, space } from '../../constants/theme';
 import { useLanguage } from '../../i18n';
 
 type RatingBadgeProps = {
@@ -45,7 +47,7 @@ export default function RatingBadge({ rating, size = 'medium' }: RatingBadgeProp
             <Ionicons
                 name="star"
                 size={iconSize}
-                color={isLow ? '#b45309' : '#f59e0b'}
+                color={isLow ? colors.tone.danger.fg : colors.tone.warning.fg}
                 accessible={false}
                 importantForAccessibility="no"
             />
@@ -58,33 +60,33 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-        borderRadius: 8,
+        gap: space.xs,
+        backgroundColor: colors.tone.warning.bg,
+        borderRadius: radii.sm,
         borderWidth: 1,
-        borderColor: 'rgba(245, 158, 11, 0.3)',
+        borderColor: colors.tone.warning.border,
     },
     containerLow: {
-        backgroundColor: 'rgba(245, 158, 11, 0.15)',
-        borderColor: 'rgba(180, 83, 9, 0.4)',
+        backgroundColor: colors.tone.danger.bg,
+        borderColor: colors.tone.danger.border,
     },
     containerNoRating: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(156, 163, 175, 0.15)',
-        borderRadius: 8,
+        backgroundColor: colors.tone.neutral.bg,
+        borderRadius: radii.sm,
         borderWidth: 1,
-        borderColor: 'rgba(107, 114, 128, 0.3)',
+        borderColor: colors.tone.neutral.border,
     },
     rating: {
         fontWeight: '600',
-        color: '#d97706',
+        color: colors.tone.warning.fg,
     },
     ratingLow: {
-        color: '#b45309',
+        color: colors.tone.danger.fg,
     },
     ratingNoRating: {
         fontWeight: '500',
-        color: '#6b7280',
+        color: colors.tone.neutral.fg,
     },
 });

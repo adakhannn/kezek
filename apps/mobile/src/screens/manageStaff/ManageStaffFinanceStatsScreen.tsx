@@ -25,6 +25,7 @@ import { radii, space, typeScale } from '../../constants/theme';
 import { useLanguage, type MobileI18nKey } from '../../i18n';
 import { translatePlural } from '../../i18n/plural';
 import type { RootStackParamList } from '../../navigation/types';
+import { monthLabel, shortDateTime } from '../manage/opsKit/format';
 import { fetchFinanceAuditLog, fetchFinanceStats, updateShiftHours } from './api';
 import { staffErrorMessage } from './errors';
 import {
@@ -66,7 +67,7 @@ export default function ManageStaffFinanceStatsScreen() {
 
     const money = (value: number) => t('manageStaff.finance.money', { amount: formatAmount(value, locale) });
     const shownDate = date ?? stats.data?.dateFrom ?? '';
-    const periodLabel = !shownDate ? '' : period === 'day' ? dmy(shownDate) : period === 'month' ? `${shownDate.slice(5, 7)}.${shownDate.slice(0, 4)}` : shownDate.slice(0, 4);
+    const periodLabel = !shownDate ? '' : period === 'day' ? dmy(shownDate) : period === 'month' ? monthLabel(shownDate, locale) : shownDate.slice(0, 4);
     const stepping = stats.isFetching;
 
     const refresh = async () => {
@@ -225,7 +226,7 @@ export default function ManageStaffFinanceStatsScreen() {
                                 <View style={styles.audit}>
                                     <View style={styles.auditTop}>
                                         <Text style={ui.strong} numberOfLines={1}>{entry.changed_by_name || t('manageStaff.finance.auditLog.unknownUser')}</Text>
-                                        <Text style={ui.muted}>{formatInTimeZone(new Date(entry.changed_at), tz, 'dd.MM.yyyy HH:mm')}</Text>
+                                        <Text style={ui.muted}>{shortDateTime(entry.changed_at, tz)}</Text>
                                     </View>
                                     {entry.field_changes.length > 0 ? entry.field_changes.map((change, changeIndex) => (
                                         <Text key={`${entry.id}-${changeIndex}`} style={ui.muted}>
@@ -322,7 +323,7 @@ function ShiftCard({ bizId, shift, onHoursUpdated }: { bizId: string; shift: Sta
                     <View style={ui.hairline} />
                     <KeyValueRow label={t('manageStaff.finance.staffStats.baseShare')} value={money(shift.base_master_share ?? shift.master_share)} />
                     <KeyValueRow label={t('manageStaff.finance.staffStats.guaranteedAmount')} value={money(shift.guaranteed_amount)} />
-                    <KeyValueRow label={t('manageStaff.finance.staffStats.hours')} value={shift.hours_worked !== null ? shift.hours_worked.toFixed(2) : '—'} />
+                    <KeyValueRow label={t('manageStaff.finance.staffStats.hours')} value={shift.hours_worked !== null ? t('staff.hours', { hours: formatAmount(shift.hours_worked, locale) }) : '—'} />
                     {shift.status === 'closed' || editing ? (
                         <View style={ui.gap}>
                             {!editing ? (

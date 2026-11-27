@@ -25,7 +25,7 @@ import StatTile, { StatGrid } from '../../components/ui/StatTile';
 import { colors } from '../../constants/colors';
 import { layout, radii, space, typeScale } from '../../constants/theme';
 import { translatePlural, useLanguage, type Translate } from '../../i18n';
-import { formatDate, formatPrice, formatTime } from '../../utils/format';
+import { formatDate, formatNumber, formatPrice, formatTime } from '../../utils/format';
 import type { FinanceData, ShiftItem, ShiftQuickMetrics } from './types';
 
 type AddClientFormState = {
@@ -50,6 +50,8 @@ type AddClientFormActions = {
 
 type ShiftQuickSectionsProps = {
     financeData: FinanceData;
+    /** businesses.tz of the master's business: today and the times are on its clock (ARCH-11). */
+    timeZone?: string | null;
     refreshing: boolean;
     isProcessingQueue: boolean;
     pendingQueueCount: number;
@@ -86,6 +88,7 @@ type ShiftStatusMeta = {
  */
 export function ShiftQuickSections({
     financeData,
+    timeZone,
     refreshing,
     isProcessingQueue,
     pendingQueueCount,
@@ -148,7 +151,7 @@ export function ShiftQuickSections({
             }}
         >
             {/* The header says "Моя смена": the screen starts with today's date. */}
-            <ScreenIntro>{formatDate(new Date(), locale)}</ScreenIntro>
+            <ScreenIntro>{formatDate(new Date(), locale, timeZone)}</ScreenIntro>
 
             {financeData.isDayOff && !isOpen && !shift ? (
                 <FeedbackBanner
@@ -187,11 +190,11 @@ export function ShiftQuickSections({
                 </View>
 
                 <View style={styles.timeline}>
-                    <KeyValueRow label={t('staff.shiftQuick.openedAt')} value={shift?.opened_at ? formatTime(shift.opened_at) : '—'} />
+                    <KeyValueRow label={t('staff.shiftQuick.openedAt')} value={shift?.opened_at ? formatTime(shift.opened_at, timeZone) : '—'} />
                     <KeyValueRow
                         label={t('staff.shiftQuick.worked')}
                         value={isOpen && financeData.currentHoursWorked != null
-                            ? t('staff.hours', { hours: financeData.currentHoursWorked.toFixed(1) })
+                            ? t('staff.hours', { hours: formatNumber(financeData.currentHoursWorked, locale, 1) })
                             : '—'}
                     />
                 </View>
@@ -351,6 +354,7 @@ export function ShiftQuickSections({
                         {items.map((item, index) => (
                             <ClientRow
                                 key={item.id || `${item.clientName}-${index}`}
+                                timeZone={timeZone}
                                 item={item}
                                 itemIndex={index}
                                 canEdit={isOpen && !commandsBlocked && !deletingClient}
@@ -440,10 +444,12 @@ function ClientRow({
     canEdit,
     onEditClient,
     onDeleteClient,
+    timeZone,
 }: {
     item: ShiftItem;
     itemIndex: number;
     canEdit: boolean;
+    timeZone?: string | null;
     onEditClient: (item: ShiftItem, itemIndex: number) => void;
     onDeleteClient?: (item: ShiftItem) => void;
 }) {
@@ -469,7 +475,7 @@ function ClientRow({
                             label={t(fromBooking ? 'staff.shiftQuick.fromBooking' : 'staff.shiftQuick.addedManually')}
                             tone={fromBooking ? 'success' : 'neutral'}
                         />
-                        {item.createdAt ? <Text style={styles.clientTime}>{formatTime(item.createdAt)}</Text> : null}
+                        {item.createdAt ? <Text style={styles.clientTime}>{formatTime(item.createdAt, timeZone)}</Text> : null}
                     </View>
                 </View>
                 <View style={styles.clientAmounts}>

@@ -199,7 +199,7 @@ export const parityKy: Record<keyof typeof parityRu, string> = {
     'parity.roleApply.form.applicant.missingName': 'Бизнес ээси арызды ким жөнөткөнүн билиши үчүн профилиңизге атыңызды жазыңыз.',
     'parity.roleApply.form.errors.emptyResponse': 'Арыздар кызматы бош жооп кайтарды.',
     'parity.roleApply.form.errors.loadActive': 'Активдүү арыздарды жүктөө мүмкүн болгон жок.',
-    'parity.roleApply.form.errors.loadActiveRetry': 'Активдүү арыздарды жүктөө мүмкүн болгон жок. Баракты жаңылап көрүңүз.',
+    'parity.roleApply.form.errors.loadActiveRetry': 'Активдүү өтүнмөлөр жүктөлгөн жок. Экранды жаңыртып көрүңүз.',
     'parity.roleApply.form.errors.loadBusinesses': 'Бизнестерди жүктөө мүмкүн болгон жок',
     'parity.roleApply.form.errors.signInFirst': 'Арыз так сизге байлансын үчүн адегенде Kezek аккаунтуна кириңиз.',
     'parity.roleApply.form.errors.selectBusiness': 'Бизнести тандаңыз.',

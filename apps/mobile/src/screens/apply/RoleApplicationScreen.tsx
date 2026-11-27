@@ -220,7 +220,7 @@ export default function RoleApplicationScreen() {
                     {selected ? (
                         <View style={[styles.option, styles.optionSelected]} accessibilityLabel={selected.name}>
                             <Ionicons name="checkmark-circle" size={20} color={colors.accent.indigo} />
-                            <Text style={styles.optionText}>{selected.name}{selected.slug ? ` / ${selected.slug}` : ''}</Text>
+                            <Text style={styles.optionText} numberOfLines={2}>{selected.name}</Text>
                         </View>
                     ) : searching ? (
                         <View style={styles.optionsList} accessibilityRole="list">
@@ -242,7 +242,7 @@ export default function RoleApplicationScreen() {
                                         testID={`business-option-${business.id}`}
                                     >
                                         <Ionicons name="business-outline" size={18} color={colors.text.secondary} />
-                                        <Text style={styles.optionText}>{business.name}{business.slug ? ` / ${business.slug}` : ''}</Text>
+                                        <Text style={styles.optionText} numberOfLines={2}>{business.name}</Text>
                                     </MotionPressable>
                                 ))
                             ) : (

@@ -43,6 +43,20 @@ const BRANCH_LABELS = {
     hint: 'catalog.branches.delete.error.firstCancel',
 } as const satisfies Record<string, MobileI18nKey>;
 
+const BOOKING_STATUS_KEYS: Record<string, MobileI18nKey> = {
+    hold: 'ops.bookings.status.hold',
+    confirmed: 'ops.bookings.status.confirmed',
+    paid: 'ops.bookings.status.paid',
+    cancelled: 'ops.bookings.status.cancelled',
+    no_show: 'ops.bookings.status.no_show',
+};
+
+/** The status word of an example booking ("Подтверждено"), not its code. */
+function bookingStatusText(status: string, t: Translate): string {
+    const key = BOOKING_STATUS_KEYS[status];
+    return key ? t(key) : status;
+}
+
 /**
  * A refused delete of a service or branch with bookings (HAS_BOOKINGS): the server message, the
  * counts and a few example bookings, worded like the website's DeleteServiceButton and
@@ -65,7 +79,7 @@ export function hasBookingsMessage(error: unknown, kind: 'service' | 'branch', t
             const ref = kind === 'service'
                 ? `${t(labels.booking)} #${booking.id.slice(0, 8)}`
                 : `${t(labels.booking)}${booking.id.slice(0, 8)}`;
-            text += `\n- ${ref} (${booking.status})${booking.client_name ? ` - ${booking.client_name}` : ''}`;
+            text += `\n- ${ref} (${bookingStatusText(booking.status, t)})${booking.client_name ? ` - ${booking.client_name}` : ''}`;
         }
     }
     return `${text}\n\n${t(labels.hint)}`;

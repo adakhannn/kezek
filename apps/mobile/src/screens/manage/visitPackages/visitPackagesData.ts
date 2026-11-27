@@ -3,6 +3,7 @@ import * as Crypto from 'expo-crypto';
 import type { Translate } from '../../../i18n';
 import { apiRequest } from '../../../lib/api';
 import { supabase } from '../../../lib/supabase';
+import { formatMoney } from '../opsKit/money';
 
 /*
  * Visit packages of the website (/dashboard/visit-packages, /new, /[id]): the package types sold
@@ -102,9 +103,9 @@ export function toggleBranch(branchIds: string[] | null, id: string): string[] |
     return ids.size === 0 ? null : Array.from(ids);
 }
 
-/** '10%' or the fixed price per visit. */
-export function formatDiscount(plan: Pick<VisitPackagePlan, 'discount_type' | 'discount_value'>): string {
-    return plan.discount_type === 'percent' ? `${plan.discount_value}%` : `${plan.discount_value}`;
+/** '10%' or the fixed price per visit ('450 сом'). */
+export function formatDiscount(plan: Pick<VisitPackagePlan, 'discount_type' | 'discount_value'>, t: Translate): string {
+    return plan.discount_type === 'percent' ? `${plan.discount_value}%` : formatMoney(plan.discount_value, t);
 }
 
 /** "any service, all branches" / "service, 2 br." (website formatBinding). */
@@ -124,7 +125,7 @@ export function planTerms(plan: Pick<VisitPackagePlan, 'visit_count' | 'validity
         `${t('ops.packages.sell.validityDaysLabel')}: ${plan.validity_days}`,
         plan.discount_type === 'percent'
             ? `${t('ops.packages.sell.discountLabel')}: ${plan.discount_value}%`
-            : `${t('ops.packages.sell.pricePerVisitLabel')}: ${plan.discount_value}`,
+            : `${t('ops.packages.sell.pricePerVisitLabel')}: ${formatMoney(plan.discount_value, t)}`,
     ].join(', ');
 }
 

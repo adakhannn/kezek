@@ -15,7 +15,7 @@ import type { FinanceData, ShiftItemEdit, ShiftLedgerSnapshot, ShiftQuickMetrics
 /** Commands replayed from the queue: all save the ledger with its revision, or close it. */
 const LEDGER_COMMANDS: readonly ShiftOfflineOperation['type'][] = ['addItem', 'updateItem', 'deleteItem', 'close'];
 
-type StaffInfo = { id: string; full_name: string };
+type StaffInfo = { id: string; full_name: string; business?: { tz?: string | null } | null };
 type MutationResult = { queued: boolean };
 
 export function useShiftQuickScreenData() {

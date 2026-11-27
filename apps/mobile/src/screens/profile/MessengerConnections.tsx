@@ -136,7 +136,8 @@ export function WhatsAppConnection({ verified, whatsappPhone, fallbackPhone, onV
                         onPress={() => sendCode.mutate()}
                         loading={sendCode.isPending}
                         disabled={busy}
-                        variant={codeSent ? 'outline' : 'primary'}
+                        // The profile's one primary button is Save; the WhatsApp steps are secondary.
+                        variant="outline"
                         size="sm"
                     />
                     {codeSent ? (
@@ -157,6 +158,7 @@ export function WhatsAppConnection({ verified, whatsappPhone, fallbackPhone, onV
                                 onPress={() => verifyCode.mutate()}
                                 loading={verifyCode.isPending}
                                 disabled={busy}
+                                variant="secondary"
                                 size="sm"
                             />
                         </>

@@ -3,7 +3,6 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
-import { formatInTimeZone } from 'date-fns-tz';
 import { resolveBusinessTimeZone } from '@shared-client/timezone';
 
 import Avatar from '../../components/ui/Avatar';
@@ -21,6 +20,8 @@ import { radii, space, typeScale } from '../../constants/theme';
 import { useToast } from '../../contexts/ToastContext';
 import { translatePlural, useLanguage, type MobileI18nKey } from '../../i18n';
 import type { ManageStaffRouteParams, RootStackParamList } from '../../navigation/types';
+import { formatNumber } from '../../utils/format';
+import { shortDateTime } from '../manage/opsKit/format';
 import { fetchStaffDetail } from './api';
 import { staffErrorMessage } from './errors';
 import { staffQueryKeys } from './queryKeys';
@@ -49,7 +50,7 @@ const FACTORS: { key: 'reviews' | 'productivity' | 'loyalty' | 'discipline'; lab
 export default function ManageStaffDetailScreen() {
     const navigation = useNavigation<Navigation>();
     const { params } = useRoute<RouteProp<RootStackParamList, 'ManageStaffDetail'>>();
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
     const { showToast } = useToast();
     const tz = resolveBusinessTimeZone(params.tz);
     const [refreshing, setRefreshing] = useState(false);
@@ -129,7 +130,7 @@ export default function ManageStaffDetailScreen() {
                     <KeyValueRow label={t('manageStaff.staff.detail.contact.email')} value={staff.email || '—'} />
                     <KeyValueRow
                         label={t('manageStaff.staff.detail.finance.share')}
-                        value={`${masterPercent}% / ${salonPercent}%${staff.hourly_rate ? ` · ${staff.hourly_rate}/h` : ''}`}
+                        value={`${masterPercent}% / ${salonPercent}%${staff.hourly_rate ? ` · ${formatNumber(staff.hourly_rate, locale)} ${t('manageStaff.form.perHour')}` : ''}`}
                     />
                 </View>
             </Card>
@@ -173,7 +174,7 @@ export default function ManageStaffDetailScreen() {
                 <KitStatTile
                     icon="pulse-outline"
                     label={t('manageStaff.staff.detail.overview.latestSignal')}
-                    value={latestReviewDate ? formatInTimeZone(new Date(latestReviewDate), tz, 'dd.MM.yyyy HH:mm') : t('manageStaff.staff.detail.overview.noSignals')}
+                    value={latestReviewDate ? shortDateTime(latestReviewDate, tz) : t('manageStaff.staff.detail.overview.noSignals')}
                 />
             </StatGrid>
 
@@ -241,7 +242,7 @@ export default function ManageStaffDetailScreen() {
                                 <View style={styles.review}>
                                     <View style={styles.reviewTop}>
                                         <Badge icon="star" label={`${review.rating}/5`} tone="warning" />
-                                        <Text style={ui.muted}>{formatInTimeZone(new Date(review.start_at), tz, 'dd.MM.yyyy HH:mm')}</Text>
+                                        <Text style={ui.muted}>{shortDateTime(review.start_at, tz)}</Text>
                                     </View>
                                     <Text style={ui.strong}>{review.service_name || t('manageStaff.staff.detail.reviews.serviceMissing')}</Text>
                                     <Text style={ui.muted}>{review.client_name || review.client_phone || t('manageStaff.staff.detail.reviews.client')}</Text>

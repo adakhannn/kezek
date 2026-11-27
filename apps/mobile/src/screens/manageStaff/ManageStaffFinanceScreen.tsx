@@ -505,7 +505,7 @@ export default function ManageStaffFinanceScreen() {
                     ) : null}
 
                     {items.length === 0 && shift ? (
-                        <EmptyState icon="people-outline" compact title={t('manageStaff.staff.finance.clients.empty')} />
+                        <EmptyState icon="people-outline" compact title={t('manageStaff.staff.finance.clients.empty')} message={t('manageStaff.staff.finance.clients.emptyHint')} />
                     ) : null}
                     {items.length > 0 ? (
                         <View style={styles.items}>

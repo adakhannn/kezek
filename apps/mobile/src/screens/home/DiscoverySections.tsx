@@ -18,7 +18,7 @@ import { colors } from '../../constants/colors';
 import { layout } from '../../constants/theme';
 import { translatePlural, useLanguage, type MobileI18nKey, type Translate } from '../../i18n';
 import { formatRatingDisplayValue } from '@shared-client/rating';
-import { formatPhone } from '../../utils/format';
+import { formatNumber, formatPhone } from '../../utils/format';
 
 import { categoryLabel } from './homeDiscovery';
 import { styles } from './homeScreenStyles';
@@ -203,7 +203,7 @@ function NearbyBranchRow({
         </Text>
       </View>
       <Text style={styles.nearbyDistance}>
-        {t('booking.home.distanceKm', { distance: branch.distanceKm.toFixed(1) })}
+        {t('booking.home.distanceKm', { distance: formatNumber(branch.distanceKm, t.locale, 1) })}
       </Text>
     </MotionPressable>
   );

@@ -188,7 +188,7 @@ export default function BusinessApplyScreen() {
                             autoComplete="tel"
                             {...field('phone')}
                         />
-                        <Input label="Email" keyboardType="email-address" autoCapitalize="none" autoComplete="email" {...field('email')} />
+                        <Input label={t('cabinet.profile.email.label')} keyboardType="email-address" autoCapitalize="none" autoComplete="email" {...field('email')} />
                         <Input label={t('parity.apply.field.businessName')} {...field('business_name')} />
 
                         <View>
