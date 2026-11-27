@@ -441,5 +441,5 @@ export const manageOpsRu = {
     'ops.packages.tabSold': 'Проданные пакеты',
     'ops.packages.title': 'Пакеты визитов',
     'ops.packages.validityDays': 'Срок (дней)',
-    'ops.packages.visits': 'Визитов',
+    'ops.packages.visits': 'Количество визитов',
 } as const;

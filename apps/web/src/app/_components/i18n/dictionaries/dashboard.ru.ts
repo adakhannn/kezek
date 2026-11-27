@@ -83,7 +83,7 @@ export const dashboardRu = {
     'dashboard.visitPackages.edit': 'Изменить',
     'dashboard.visitPackages.deactivate': 'Деактивировать',
     'dashboard.visitPackages.name': 'Название',
-    'dashboard.visitPackages.visits': 'Визитов',
+    'dashboard.visitPackages.visits': 'Визиты',
     'dashboard.visitPackages.validityDays': 'Срок (дней)',
     'dashboard.visitPackages.discount': 'Скидка',
     'dashboard.visitPackages.binding': 'Привязка',

@@ -63,7 +63,7 @@ export const staffRu = {
     'staff.shifts.percentOfRevenue': '{percent}% от выручки',
     'staff.shifts.shiftsCount': 'Смены',
     'staff.shifts.late': 'Опоздания',
-    'staff.shifts.clients': 'Клиентов',
+    'staff.shifts.clients': 'Клиенты',
     'staff.shifts.periodTitle': 'Смены за период',
     'staff.shifts.emptyTitle': 'Нет смен',
     'staff.shifts.emptyMessage': 'За выбранный период смен не найдено',

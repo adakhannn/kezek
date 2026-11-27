@@ -182,7 +182,7 @@ export default function VisitPackagesListClient() {
                                     {t('dashboard.visitPackages.name', 'Название')}
                                 </th>
                                 <th className="px-2 py-3 font-medium text-gray-700 dark:text-gray-300">
-                                    {t('dashboard.visitPackages.visits', 'Визитов')}
+                                    {t('dashboard.visitPackages.visits', 'Визиты')}
                                 </th>
                                 <th className="px-2 py-3 font-medium text-gray-700 dark:text-gray-300">
                                     {t('dashboard.visitPackages.validityDays', 'Срок (дней)')}
