@@ -6,6 +6,7 @@ import { addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { filterSlotsByContext, resolveScheduleContext } from '@core-domain/schedule';
 
+import SegmentedTabs from '../../../components/SegmentedTabs';
 import ActionBar from '../../../components/ui/ActionBar';
 import Avatar from '../../../components/ui/Avatar';
 import ChipGroup from '../../../components/ui/ChipGroup';
@@ -33,7 +34,6 @@ import {
     type BookingOptions,
     type FoundUser,
 } from './bookingsData';
-import type { BookingsTab } from './ManageBookingsScreen';
 import {
     canSubmitClient,
     createInternalBooking,
@@ -56,12 +56,10 @@ export default function QuickDeskTab({
     bizId,
     timezone,
     options,
-    onTabChange,
 }: {
     bizId: string;
     timezone: string;
     options: BookingOptions;
-    onTabChange: (tab: BookingsTab) => void;
 }) {
     const { t, locale } = useLanguage();
     const { showToast } = useToast();
@@ -205,7 +203,6 @@ export default function QuickDeskTab({
             testID="quickdesk-tab"
             footer={(
                 <ActionBar
-                    secondary={{ title: t('ops.desk.goToCalendar'), onPress: () => onTabChange('calendar'), disabled: creating }}
                     primary={{
                         title: creating ? t('ops.desk.creating') : t('ops.desk.create'),
                         onPress: () => void create(),
@@ -217,7 +214,7 @@ export default function QuickDeskTab({
             )}
         >
             {/* The visit: branch → day → master → service → time, each step opens after the previous one. */}
-            <Section title={t('ops.desk.visit')} gap={space.lg}>
+            <Section title={t('ops.desk.visit')} caption={branchId ? undefined : t('ops.desk.description')} gap={space.lg}>
                 <Field label={t('ops.desk.branch')}>
                     {options.branches.length === 0 ? <Text style={ui.muted}>{t('ops.desk.noBranches')}</Text> : (
                         <ChipGroup
@@ -293,16 +290,15 @@ export default function QuickDeskTab({
                 title={t('ops.desk.client')}
                 caption={t(clientMode === 'none' ? 'ops.desk.clientNone.hint' : clientMode === 'existing' ? 'ops.desk.clientExisting.searchHint' : 'ops.desk.clientNew.formHint')}
             >
-                <ChipGroup
-                    options={[
+                {/* Three short choices share the width instead of chips running off the screen. */}
+                <SegmentedTabs
+                    tabs={[
                         { key: 'none', label: t('ops.desk.clientNone') },
                         { key: 'existing', label: t('ops.desk.clientExisting') },
                         { key: 'new', label: t('ops.desk.clientNew') },
                     ]}
                     value={clientMode}
-                    onChange={setClientMode}
-                    disabled={creating}
-                    accessibilityLabel={t('ops.desk.client')}
+                    onChange={(mode) => { if (!creating) setClientMode(mode); }}
                     testID="desk-client-mode"
                 />
                 {clientMode === 'existing' ? (

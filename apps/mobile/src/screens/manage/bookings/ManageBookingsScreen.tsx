@@ -58,7 +58,7 @@ export default function ManageBookingsScreen() {
             ) : tab === 'list' ? (
                 <BookingsListTab bizId={params.bizId} timezone={timezone} branches={options.data.branches} />
             ) : (
-                <QuickDeskTab bizId={params.bizId} timezone={timezone} options={options.data} onTabChange={setTab} />
+                <QuickDeskTab bizId={params.bizId} timezone={timezone} options={options.data} />
             )}
         </View>
     );
