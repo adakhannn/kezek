@@ -25,6 +25,9 @@ export type DashboardStaffRow = {
     branch_id: string;
     /** Public photo URL (the master uploads it in the staff cabinet); null shows initials. */
     avatar_url: string | null;
+    /** Contacts the owner already sees on the card; the app uses them to tell apart namesakes. */
+    email: string | null;
+    phone: string | null;
     // join объектом, а не массивом
     branches: { name: string } | null;
 };
@@ -42,7 +45,7 @@ export async function loadDashboardStaffList(ctx: DashboardStaffContext): Promis
 
     const { data: rows, error } = await supabase
         .from('staff')
-        .select('id,full_name,is_active,branch_id,avatar_url,branches(name)')
+        .select('id,full_name,is_active,branch_id,avatar_url,email,phone,branches(name)')
         .eq('biz_id', bizId)
         .order('full_name')
         .returns<DashboardStaffRow[]>();

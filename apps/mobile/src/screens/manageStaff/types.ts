@@ -10,6 +10,9 @@ export type StaffRow = {
     branch_id: string;
     /** The master's photo; an older server does not send it (initials are shown). */
     avatar_url?: string | null;
+    /** Sent by newer servers; shown only to tell apart masters with the same name. */
+    email?: string | null;
+    phone?: string | null;
     branches: { name: string } | null;
 };
 

@@ -50,7 +50,7 @@ describe('ServicesScreen (/dashboard/services)', () => {
         renderWith(<ServicesScreen {...props(params)} />);
         expect(await screen.findByText('Стрижка')).toBeTruthy();
         // One row per service: duration and price in the subtitle, branches on the meta line.
-        expect(screen.getByText('Центр, Юг (2)')).toBeTruthy();
+        expect(screen.getByText('Центр, Юг')).toBeTruthy();
         expect(screen.getByText('Активна')).toBeTruthy();
         expect(screen.getByText('Скрыта')).toBeTruthy();
         expect(screen.getByText('45 мин · 500–700 сом')).toBeTruthy();

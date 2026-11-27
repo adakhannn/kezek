@@ -56,6 +56,15 @@ export default function ManageStaffListScreen() {
     const filtered = useMemo(() => filterStaffRows(rows, query, status), [rows, query, status]);
     const counts = useMemo(() => staffCounts(rows), [rows]);
     const paged = pageOf(filtered, page);
+    // Names shared by more than one card in this business (lower-cased).
+    const namesakes = useMemo(() => {
+        const seen = new Map<string, number>();
+        for (const row of rows) {
+            const key = row.full_name.trim().toLowerCase();
+            seen.set(key, (seen.get(key) ?? 0) + 1);
+        }
+        return new Set([...seen].filter(([, count]) => count > 1).map(([key]) => key));
+    }, [rows]);
 
     const refresh = async () => {
         setRefreshing(true);
@@ -216,7 +225,11 @@ export default function ManageStaffListScreen() {
                                     <ListRow
                                         leading={<Avatar name={row.full_name} uri={row.avatar_url} size={44} />}
                                         title={row.full_name}
-                                        subtitle={row.branches?.name ?? t('manageStaff.staff.card.branchNotSet')}
+                                        subtitle={[
+                                            row.branches?.name ?? t('manageStaff.staff.card.branchNotSet'),
+                                            // Two cards with one name: the contact tells which person each is.
+                                            namesakes.has(row.full_name.trim().toLowerCase()) ? (row.email || row.phone || null) : null,
+                                        ].filter(Boolean).join(' · ')}
                                         trailing={<StatusPill label={statusLabel} tone={row.is_active ? 'success' : 'neutral'} />}
                                         onPress={() => openCard(row)}
                                         accessibilityHint={t('manageStaff.staff.card.open')}

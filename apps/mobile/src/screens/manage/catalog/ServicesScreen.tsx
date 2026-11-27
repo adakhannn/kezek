@@ -162,7 +162,6 @@ export default function ServicesScreen({ navigation, route }: Props) {
                                                     <Ionicons name="storefront-outline" size={14} color={colors.text.tertiary} />
                                                     <Text style={ui.itemMetaText} numberOfLines={2}>
                                                         {names || '—'}
-                                                        {service.branch_ids.length > 1 ? ` (${service.branch_ids.length})` : ''}
                                                     </Text>
                                                 </View>
                                             </ItemCard>
