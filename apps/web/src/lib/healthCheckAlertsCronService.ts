@@ -97,6 +97,8 @@ async function collectHealthCheckAlerts({
                   checks: Record<string, unknown>;
               };
               alertSent: boolean;
+              /** Why the alert e-mail was not sent; the alerts went to Sentry instead. */
+              emailError?: string;
           };
       }
     | {
@@ -500,16 +502,9 @@ async function collectHealthCheckAlerts({
             for (const alert of healthCheck.alerts) {
                 logError('HealthCheckAlert', `[${alert.type}] ${alert.message}`, alert.details);
             }
-            return {
-                ok: false,
-                error: 'internal',
-                message: 'Health check found issues, but failed to send alert email',
-                details: {
-                    healthCheck,
-                    emailError: emailResult.error,
-                },
-                status: 500,
-            };
+            // The check itself ran and its findings reached Sentry: answering 500 here made the cron
+            // record the health check as failed every day it found something (last success 17 Nov).
+            return { ok: true, data: { healthCheck, alertSent: false, emailError: emailResult.error } };
         }
     }
 

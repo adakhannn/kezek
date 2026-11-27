@@ -80,8 +80,12 @@ describe('healthCheckAlertsCronService', () => {
         expect(result.data.alertSent).toBe(false);
     });
 
-    test('sends alert email when issues are found', async () => {
-        const sendAlertEmail = jest.fn().mockResolvedValue({ success: true });
+    test.each([
+        ['sends alert email when issues are found', { success: true }, true, undefined],
+        // Without the alert inbox the run still succeeds: the findings went to Sentry instead.
+        ['succeeds without the alert inbox and says why no e-mail went out', { success: false, error: 'ALERT_EMAIL_TO or EMAIL_FROM not configured' }, false, 'ALERT_EMAIL_TO or EMAIL_FROM not configured'],
+    ] as const)('%s', async (_title, emailResult, alertSent, emailError) => {
+        const sendAlertEmail = jest.fn().mockResolvedValue(emailResult);
         const admin = {
             from: jest.fn((table: string) => {
                 if (table === 'staff_shifts') {
@@ -153,7 +157,8 @@ describe('healthCheckAlertsCronService', () => {
         expect(result.ok).toBe(true);
         if (!result.ok) return;
         expect(result.data.healthCheck.ok).toBe(false);
-        expect(result.data.alertSent).toBe(true);
+        expect(result.data.alertSent).toBe(alertSent);
+        expect(result.data.emailError).toBe(emailError);
         expect(sendAlertEmail).toHaveBeenCalled();
     });
 
