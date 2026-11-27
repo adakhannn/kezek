@@ -104,22 +104,25 @@ function ContactsForm({ bizId, initial }: { bizId: string; initial: BusinessSett
 
     return (
         <View style={styles.block}>
-            <FieldGroup title={t('catalog.business.contactSettings.heading')} caption={t('catalog.business.contactSettings.description')}>
-                {FIELDS.map(({ field, label, hint, placeholder, keyboard }) => (
-                    <FormField
-                        key={field}
-                        label={t(label)}
-                        value={form[field]}
-                        onChangeText={(value) => setForm((current) => ({ ...current, [field]: value }))}
-                        placeholder={placeholder}
-                        hint={hint ? t(hint) : undefined}
-                        keyboardType={keyboard}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        testID={`settings-${field}`}
-                    />
-                ))}
-            </FieldGroup>
+            {/* A page section like «Часовой пояс» below, not a small form eyebrow. */}
+            <Section title={t('catalog.business.contactSettings.heading')} caption={t('catalog.business.contactSettings.description')}>
+                <FieldGroup>
+                    {FIELDS.map(({ field, label, hint, placeholder, keyboard }) => (
+                        <FormField
+                            key={field}
+                            label={t(label)}
+                            value={form[field]}
+                            onChangeText={(value) => setForm((current) => ({ ...current, [field]: value }))}
+                            placeholder={placeholder}
+                            hint={hint ? t(hint) : undefined}
+                            keyboardType={keyboard}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            testID={`settings-${field}`}
+                        />
+                    ))}
+                </FieldGroup>
+            </Section>
             {message ? <FeedbackBanner variant={message.variant} message={message.text} compact /> : null}
             <Button title={t('catalog.business.contactSettings.save')} onPress={() => void save()} loading={saving} fullWidth />
         </View>
