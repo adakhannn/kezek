@@ -38,7 +38,9 @@ describe('WhatsAppScreen', () => {
     test('должен отрендериться без ошибок', () => {
         render(<WhatsAppScreen />);
 
-        expect(screen.getByText('Вход через WhatsApp')).toBeTruthy();
+        // The header carries the title; the screen opens with the step.
+        expect(screen.getByText('Введите номер телефона, на него придёт код в WhatsApp.')).toBeTruthy();
+        expect(screen.queryByText('Вход через WhatsApp')).toBeNull();
     });
 
     test('должен отображать поле ввода телефона на первом шаге', () => {

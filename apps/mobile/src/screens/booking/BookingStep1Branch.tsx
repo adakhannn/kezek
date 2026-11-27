@@ -115,6 +115,7 @@ export default function BookingStep1Branch({ initialData }: BookingStep1BranchPr
                             <BookingOptionRow
                                 key={branch.id}
                                 title={branch.name}
+                                subtitle={branch.address?.trim() || null}
                                 selected={bookingData.branchId === branch.id}
                                 onPress={() => handleSelectBranch(branch.id)}
                                 footer={<RatingBadge rating={branch.rating_score ?? null} size="small" />}

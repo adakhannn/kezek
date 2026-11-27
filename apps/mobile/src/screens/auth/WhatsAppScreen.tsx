@@ -340,7 +340,7 @@ export default function WhatsAppScreen() {
             keyboardDismissMode="on-drag"
             automaticallyAdjustKeyboardInsets
         >
-            <Text style={styles.title}>{t('auth.whatsapp.title')}</Text>
+            {/* The header says "Вход через WhatsApp": the screen opens with the step. */}
             <Text style={styles.subtitle}>{step === 'phone' ? t('auth.whatsapp.phoneStepSubtitle') : t('auth.whatsapp.otpStepSubtitle')}</Text>
 
             {step === 'phone' ? (
@@ -481,13 +481,8 @@ const styles = StyleSheet.create({
     content: {
         flexGrow: 1,
         paddingHorizontal: layout.gutter,
-        paddingTop: space.xxl,
+        paddingTop: space.lg,
         paddingBottom: space.xxxl,
-    },
-    title: {
-        ...typeScale.title,
-        marginBottom: space.sm,
-        color: colors.text.primary,
     },
     subtitle: {
         ...typeScale.body,

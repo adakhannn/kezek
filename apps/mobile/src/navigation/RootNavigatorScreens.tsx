@@ -112,7 +112,10 @@ function ParityStackScreens(Stack: RootStack, t: Translate) {
             <Stack.Screen
                 name="RoleApplication"
                 component={RoleApplicationScreen}
-                options={detail(t('parity.nav.roleApplication'), t('parity.nav.eyebrowBusiness'))}
+                options={({ route }) => detail(
+                    t(route.params.mode === 'owner' ? 'parity.nav.roleApplicationOwner' : 'parity.nav.roleApplicationStaff'),
+                    t('parity.nav.eyebrowBusiness'),
+                )}
             />
             <Stack.Screen
                 name="StaffCreateBooking"

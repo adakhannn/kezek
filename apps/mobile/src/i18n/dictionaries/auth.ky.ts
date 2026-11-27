@@ -2,7 +2,6 @@ import type { authRu } from './auth.ru';
 
 export const authKy: Record<keyof typeof authRu, string> = {
     // SignInScreen
-    'auth.signIn.title': 'Kezek\'ке кирүү',
     'auth.signIn.subtitle': 'Сыр сөзсүз тез кирүү',
     'auth.signIn.helper': 'Ыңгайлуу кирүү ыкмасын тандаңыз. Ырастагандан кийин сессияңызды автоматтык түрдө калыбына келтиребиз.',
     'auth.signIn.methodsCaption': 'Тез кирүү ыкмалары',

@@ -117,8 +117,8 @@ export default function SignInScreen() {
             {/* The language can be chosen before signing in (KG / RU / EN). */}
             <LanguageSwitcher style={styles.languageSwitcher} />
             <View style={styles.header}>
+              {/* The header says "Вход": the card leads with the promise, not a second title. */}
               <AuthHeroBadge />
-              <Text style={styles.title}>{t('auth.signIn.title')}</Text>
               <Text style={styles.subtitle}>{t('auth.signIn.subtitle')}</Text>
               <Text style={styles.helper}>{t('auth.signIn.helper')}</Text>
             </View>

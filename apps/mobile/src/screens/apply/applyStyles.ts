@@ -12,7 +12,6 @@ export const applyStyles = StyleSheet.create({
     flex: { flex: 1, minWidth: 0 },
     center: { textAlign: 'center' },
     eyebrow: { ...typeScale.overline, color: colors.tone.accent.fg },
-    title: { ...typeScale.title, color: colors.text.primary },
     description: { ...typeScale.body, color: colors.text.secondary },
     sectionTitle: { ...typeScale.headline, color: colors.text.primary },
     label: { ...typeScale.callout, color: colors.text.primary, marginBottom: space.sm },

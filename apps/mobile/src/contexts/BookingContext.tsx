@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 type Branch = {
     id: string;
     name: string;
+    address?: string | null;
     rating_score: number | null;
 };
 

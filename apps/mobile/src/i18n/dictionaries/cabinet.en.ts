@@ -129,7 +129,7 @@ export const cabinetEn: Record<keyof typeof cabinetRu, string> = {
     'cabinet.details.when': 'Date and time',
     'cabinet.details.duration': 'Duration: {minutes} min',
     'cabinet.details.price': 'Price',
-    'cabinet.details.priceRange': '{from} - {to} som',
+    'cabinet.details.priceRange': '{from}–{to} som',
     'cabinet.details.priceFrom': 'from {from} som',
     'cabinet.details.priceTo': 'up to {to} som',
     'cabinet.details.repeat': 'Book again',

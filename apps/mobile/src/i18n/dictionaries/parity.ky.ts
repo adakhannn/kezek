@@ -139,8 +139,6 @@ export const parityKy: Record<keyof typeof parityRu, string> = {
     'parity.apply.newApplication': 'Дагы бир арыз жөнөтүү',
 
     // Role applications (web /business/role-apply, owner-apply, staff-apply)
-    'parity.roleApply.eyebrow': 'Бизнеске жеткилик',
-    'parity.roleApply.title': 'Сизге кайсы жеткилик керек?',
     'parity.roleApply.description': 'Ар бир арыз керектүү адамга жетиши үчүн, ээси менен кызматкердин арыздарын бөлдүк.',
     'parity.roleApply.owner.eyebrow': 'Ээси үчүн',
     'parity.roleApply.owner.title': 'Мен бар бизнестин ээсімин',
@@ -153,11 +151,7 @@ export const parityKy: Record<keyof typeof parityRu, string> = {
     'parity.roleApply.open': 'Арызды ачуу',
     'parity.roleApply.newBusiness.prefix': 'Эгер бизнес Kezekте али жок болсо,',
     'parity.roleApply.newBusiness.link': 'жаңы бизнести кошуу барагын',
-    'parity.roleApply.staffPage.eyebrow': 'Командага кошулуу',
-    'parity.roleApply.staffPage.title': 'Кызматкердин арызы',
     'parity.roleApply.staffPage.description': 'Бар бизнести тандап, ээсине ал жерде ким болуп иштей турганыңызды айтыңыз. Текшерүүдөн кийин ээси филиалды дайындап, иш кабинетиңизди иштетет.',
-    'parity.roleApply.ownerPage.eyebrow': 'Ээсин ырастоо',
-    'parity.roleApply.ownerPage.title': 'Бар бизнестин ээсинин арызы',
     'parity.roleApply.ownerPage.description': 'Kezekте бар бизнести тандап, арыз жөнөтүңүз. Текшерүүдөн кийин супер-админ аккаунтуңузга ээнин жеткилигин берет.',
     'parity.roleApply.form.auth.title': 'Кирүү керек',
     'parity.roleApply.form.auth.ownerMessage': 'Ээсинин арызы аккаунтуңузга байланат. Улантуу үчүн кирип, бул жерге кайтыңыз.',
@@ -277,6 +271,7 @@ export const parityKy: Record<keyof typeof parityRu, string> = {
     'parity.nav.promotions': 'Акциялар',
     'parity.nav.businessApply': 'Бизнести кошуу',
     'parity.nav.roleApply': 'Бизнеске кирүү',
-    'parity.nav.roleApplication': 'Арыз',
+    'parity.nav.roleApplicationOwner': 'Ээсинин арызы',
+    'parity.nav.roleApplicationStaff': 'Кызматкердин арызы',
     'parity.nav.eyebrowBusiness': 'Бизнес үчүн',
 };

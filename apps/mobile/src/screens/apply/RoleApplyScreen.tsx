@@ -24,9 +24,8 @@ export default function RoleApplyScreen() {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="role-apply-screen">
+            {/* The header says "Доступ к бизнесу": the screen opens with one line of context. */}
             <View style={styles.intro}>
-                <Text style={styles.eyebrow}>{t('parity.roleApply.eyebrow')}</Text>
-                <Text style={styles.title} accessibilityRole="header">{t('parity.roleApply.title')}</Text>
                 <Text style={styles.description}>{t('parity.roleApply.description')}</Text>
             </View>
 

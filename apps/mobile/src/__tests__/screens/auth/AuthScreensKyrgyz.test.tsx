@@ -41,11 +41,10 @@ describe('auth screens in Kyrgyz', () => {
             </LanguageProvider>,
         );
 
-        expect(await screen.findByText('WhatsApp аркылуу кирүү', {}, { timeout: 5000 })).toBeTruthy();
-        expect(screen.getByText('Телефон номериңизди жазыңыз, ага WhatsApp аркылуу код келет.')).toBeTruthy();
+        expect(await screen.findByText('Телефон номериңизди жазыңыз, ага WhatsApp аркылуу код келет.', {}, { timeout: 5000 })).toBeTruthy();
         expect(screen.getByText('Кодду жөнөтүү')).toBeTruthy();
         expect(screen.getByText('Башка кирүү ыкмаларына кайтуу')).toBeTruthy();
-        expect(screen.queryByText('Вход через WhatsApp')).toBeNull();
+        expect(screen.queryByText('Введите номер телефона, на него придёт код в WhatsApp.')).toBeNull();
     });
 
     test('the sign-in screen offers the switcher and changes language in place', async () => {
@@ -55,12 +54,12 @@ describe('auth screens in Kyrgyz', () => {
             </LanguageProvider>,
         );
 
-        expect(await screen.findByText('Kezek\'ке кирүү', {}, { timeout: 5000 })).toBeTruthy();
+        expect(await screen.findByText('Сыр сөзсүз тез кирүү', {}, { timeout: 5000 })).toBeTruthy();
         expect(screen.getByText('Google аркылуу улантуу')).toBeTruthy();
         expect(screen.getByLabelText('Кыргызча').props.accessibilityState).toMatchObject({ selected: true });
 
         fireEvent.press(screen.getByText('RU'));
-        expect(screen.getByText('Вход в Kezek')).toBeTruthy();
+        expect(screen.getByText('Быстрый вход без пароля')).toBeTruthy();
         expect(screen.getByText('Продолжить с Google')).toBeTruthy();
         expect(SecureStore.setItemAsync).toHaveBeenCalledWith(LOCALE_STORAGE_KEY, 'ru');
     });

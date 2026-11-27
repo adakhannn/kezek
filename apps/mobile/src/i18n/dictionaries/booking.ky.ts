@@ -14,7 +14,7 @@ export const bookingKy: Record<keyof typeof bookingRu, string> = {
     'booking.price.value': '{price} сом',
     'booking.price.from': '{price} сомдон',
     'booking.price.upTo': '{price} сомго чейин',
-    'booking.price.range': '{from} - {to} сом',
+    'booking.price.range': '{from}–{to} сом',
     'booking.price.rangeCompact': '{from}–{to} сом',
     'booking.error.businessNotFound': 'Бизнес табылган жок',
     'booking.error.noBookingNumber': 'Түзүлгөн жазылуунун номерин алуу мүмкүн болгон жок',
@@ -129,7 +129,7 @@ export const bookingKy: Record<keyof typeof bookingRu, string> = {
 
     // Home: header, search and list
     'booking.home.heroTitle': 'Өзүңүзгө ылайыктуу кызматты табыңыз',
-    'booking.home.heroSubtitle': 'Ош шаарындагы салондорго жана студияларга бир нече басуу менен жазылыңыз - чалуусуз жана кат алышуусуз',
+    'booking.home.heroSubtitle': 'Ош шаарындагы салондорго жана студияларга бир нече басуу менен жазылыңыз — чалуусуз жана кат алышуусуз',
     'booking.home.searchPlaceholder': 'Аталышы же дареги боюнча издөө...',
     'booking.home.clearSearch': 'Издөөнү тазалоо',
     'booking.home.loadingMore': 'Дагы жүктөп жатабыз...',

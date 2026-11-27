@@ -21,6 +21,7 @@ export type BookingInitialData = {
     branches: {
         id: string;
         name: string;
+        address?: string | null;
         rating_score: number | null;
     }[];
 };
@@ -73,7 +74,7 @@ export function useBookingScreenData({ slug }: Options) {
 
             const branches = await supabase
                 .from('branches')
-                .select('id, name, rating_score')
+                .select('id, name, address, rating_score')
                 .eq('biz_id', biz.id)
                 .eq('is_active', true)
                 .order('rating_score', { ascending: false, nullsFirst: false })

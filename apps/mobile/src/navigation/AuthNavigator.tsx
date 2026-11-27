@@ -66,7 +66,7 @@ export default function AuthNavigator() {
                 options={{ title: t('nav.signIn'), headerLeft: () => <AuthCloseButton /> }}
             />
             <Stack.Screen name="Verify" component={VerifyScreen} options={{ title: t('nav.verify') }} />
-            <Stack.Screen name="WhatsApp" component={WhatsAppScreen} options={{ title: 'WhatsApp' }} />
+            <Stack.Screen name="WhatsApp" component={WhatsAppScreen} options={{ title: t('auth.whatsapp.title') }} />
         </Stack.Navigator>
     );
 }

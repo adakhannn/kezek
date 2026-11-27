@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../../../constants/colors';
+import { space, typeScale } from '../../../constants/theme';
 import { typography } from '../../../constants/typography';
 
 export const authSignInStyles = StyleSheet.create({
@@ -45,18 +46,12 @@ export const authSignInStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: colors.layout.space5,
   },
-  title: {
-    ...typography.pageTitle,
+  subtitle: {
+    ...typeScale.headline,
     color: colors.text.primary,
     textAlign: 'center',
-    marginTop: colors.layout.space3,
-    marginBottom: colors.layout.space1,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.text.secondary,
-    textAlign: 'center',
-    marginBottom: colors.layout.space2,
+    marginTop: space.md,
+    marginBottom: space.sm,
   },
   helper: {
     ...typography.caption,

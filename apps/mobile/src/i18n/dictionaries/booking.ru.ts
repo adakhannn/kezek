@@ -14,7 +14,7 @@ export const bookingRu = {
     'booking.price.value': '{price} сом',
     'booking.price.from': 'от {price} сом',
     'booking.price.upTo': 'до {price} сом',
-    'booking.price.range': '{from} - {to} сом',
+    'booking.price.range': '{from}–{to} сом',
     'booking.price.rangeCompact': '{from}–{to} сом',
     'booking.error.businessNotFound': 'Бизнес не найден',
     'booking.error.noBookingNumber': 'Не удалось получить номер созданной записи',
@@ -129,7 +129,7 @@ export const bookingRu = {
 
     // Home: header, search and list
     'booking.home.heroTitle': 'Найдите свой сервис',
-    'booking.home.heroSubtitle': 'Запись в салоны и студии города Ош за пару кликов - без звонков и переписок',
+    'booking.home.heroSubtitle': 'Запись в салоны и студии города Ош за пару кликов — без звонков и переписок',
     'booking.home.searchPlaceholder': 'Поиск по названию или адресу...',
     'booking.home.clearSearch': 'Очистить поиск',
     'booking.home.loadingMore': 'Загружаем ещё...',

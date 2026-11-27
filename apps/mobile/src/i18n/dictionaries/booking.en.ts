@@ -14,7 +14,7 @@ export const bookingEn: Record<keyof typeof bookingRu, string> = {
     'booking.price.value': '{price} KGS',
     'booking.price.from': 'from {price} KGS',
     'booking.price.upTo': 'up to {price} KGS',
-    'booking.price.range': '{from} - {to} KGS',
+    'booking.price.range': '{from}–{to} KGS',
     'booking.price.rangeCompact': '{from}–{to} KGS',
     'booking.error.businessNotFound': 'Business not found',
     'booking.error.noBookingNumber': 'Could not get the number of the created booking',
@@ -129,7 +129,7 @@ export const bookingEn: Record<keyof typeof bookingRu, string> = {
 
     // Home: header, search and list
     'booking.home.heroTitle': 'Find your service',
-    'booking.home.heroSubtitle': 'Book salons and studios in Osh in a couple of taps - no calls or messages',
+    'booking.home.heroSubtitle': 'Book salons and studios in Osh in a couple of taps — no calls or messages',
     'booking.home.searchPlaceholder': 'Search by name or address...',
     'booking.home.clearSearch': 'Clear search',
     'booking.home.loadingMore': 'Loading more...',

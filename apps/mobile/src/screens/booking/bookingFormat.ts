@@ -32,13 +32,15 @@ export function formatBookingDateLabel(dateString: string, locale: Locale): Book
         return { day, month, weekday: format(date, 'EEE', { locale: enUS }), dayMonth: `${month} ${day}` };
     }
 
-    const { day, month } = formatDateLabelShared(dateString, 'ru-RU');
+    const { day } = formatDateLabelShared(dateString, 'ru-RU');
+    // The chip stacks the month under the day number, so it reads "27 ноября": genitive, as in dayMonth.
+    const month = format(date, 'MMMM', { locale: ruLocale });
     const weekday = date.toLocaleDateString('ru-RU', { weekday: 'short' });
     return {
         day,
         month,
         weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1),
-        // "30 ноября": with a day number the month is in the genitive (a lone chip label keeps "ноябрь").
+        // "30 ноября": with a day number the month is in the genitive.
         dayMonth: format(date, 'd MMMM', { locale: ruLocale }),
     };
 }

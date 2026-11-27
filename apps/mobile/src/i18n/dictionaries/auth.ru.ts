@@ -1,7 +1,6 @@
 /** Sign-in screens (screens/auth): SignIn, Verify, WhatsApp and their hooks. */
 export const authRu = {
     // SignInScreen
-    'auth.signIn.title': 'Вход в Kezek',
     'auth.signIn.subtitle': 'Быстрый вход без пароля',
     'auth.signIn.helper': 'Выберите удобный способ авторизации. Мы восстановим сессию автоматически после подтверждения.',
     'auth.signIn.methodsCaption': 'Быстрые способы входа',
@@ -74,7 +73,7 @@ export const authRu = {
 
     // WhatsAppScreen
     'auth.whatsapp.title': 'Вход через WhatsApp',
-    'auth.whatsapp.phoneStepSubtitle': 'Введите номер телефона, на него придет код в WhatsApp.',
+    'auth.whatsapp.phoneStepSubtitle': 'Введите номер телефона, на него придёт код в WhatsApp.',
     'auth.whatsapp.otpStepSubtitle': 'Введите код из сообщения WhatsApp.',
     'auth.whatsapp.phoneLabel': 'Номер телефона',
     'auth.whatsapp.phoneHelper': 'Формат: +996XXXXXXXXX',

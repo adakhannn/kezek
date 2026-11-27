@@ -142,9 +142,8 @@ export default function RoleApplicationScreen() {
                 automaticallyAdjustKeyboardInsets
                 testID="role-application-screen"
             >
+                {/* The header names the application (owner / employee); one line of context here. */}
                 <View style={styles.intro}>
-                    <Text style={styles.eyebrow}>{t(`${page}.eyebrow`)}</Text>
-                    <Text style={styles.title} accessibilityRole="header">{t(`${page}.title`)}</Text>
                     <Text style={styles.description}>{t(`${page}.description`)}</Text>
                 </View>
 

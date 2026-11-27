@@ -133,7 +133,7 @@ export const cabinetRu = {
     'cabinet.details.when': 'Дата и время',
     'cabinet.details.duration': 'Продолжительность: {minutes} мин',
     'cabinet.details.price': 'Стоимость',
-    'cabinet.details.priceRange': '{from} - {to} сом',
+    'cabinet.details.priceRange': '{from}–{to} сом',
     'cabinet.details.priceFrom': 'от {from} сом',
     'cabinet.details.priceTo': 'до {to} сом',
     'cabinet.details.repeat': 'Повторить запись',

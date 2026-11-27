@@ -129,7 +129,7 @@ export const cabinetKy: Record<keyof typeof cabinetRu, string> = {
     'cabinet.details.when': 'Күнү жана убактысы',
     'cabinet.details.duration': 'Узактыгы: {minutes} мүн',
     'cabinet.details.price': 'Баасы',
-    'cabinet.details.priceRange': '{from} - {to} сом',
+    'cabinet.details.priceRange': '{from}–{to} сом',
     'cabinet.details.priceFrom': '{from} сомдон баштап',
     'cabinet.details.priceTo': '{to} сомго чейин',
     'cabinet.details.repeat': 'Кайра жазылуу',

@@ -5,6 +5,7 @@ import { isBusinessNotFoundError, useBusinessWithBranches } from '../../hooks/us
 type Branch = {
     id: string;
     name: string;
+    address?: string | null;
     rating_score: number | null;
 };
 

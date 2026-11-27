@@ -149,13 +149,14 @@ describe('SignInScreen', () => {
 
     test('рендерится без ошибок', () => {
         render(<SignInScreen />);
-        expect(screen.getByText(/Kezek/i)).toBeTruthy();
+        expect(screen.getByText('Быстрый вход без пароля')).toBeTruthy();
     });
 
     test('ui-level: отображает новую иерархию auth-хедера и секции быстрых способов', () => {
         render(<SignInScreen />);
 
-        expect(screen.getByText('Вход в Kezek')).toBeTruthy();
+        // The header says "Вход": no second title in the card.
+        expect(screen.queryByText('Вход в Kezek')).toBeNull();
         expect(screen.getByText('Быстрый вход без пароля')).toBeTruthy();
         expect(
             screen.getByText(

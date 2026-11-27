@@ -2,7 +2,6 @@ import type { authRu } from './auth.ru';
 
 export const authEn: Record<keyof typeof authRu, string> = {
     // SignInScreen
-    'auth.signIn.title': 'Sign in to Kezek',
     'auth.signIn.subtitle': 'Quick sign-in without a password',
     'auth.signIn.helper': 'Choose a convenient sign-in method. We restore your session automatically after confirmation.',
     'auth.signIn.methodsCaption': 'Quick sign-in options',

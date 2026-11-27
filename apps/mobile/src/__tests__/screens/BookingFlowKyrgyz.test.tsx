@@ -129,7 +129,7 @@ describe('booking formatters', () => {
         const ru = createTranslate('ru');
         expect(formatBookingPrice({ price_from: 500, price_to: null }, ru)).toBe('от 500 сом');
         expect(formatBookingPrice({ price_from: 500, price_to: null }, ru, { compact: true })).toBe('500 сом');
-        expect(formatBookingPrice({ price_from: 500, price_to: 800 }, ru)).toBe('500 - 800 сом');
+        expect(formatBookingPrice({ price_from: 500, price_to: 800 }, ru)).toBe('500–800 сом');
         expect(formatBookingPrice({ price_from: null, price_to: 800 }, ru, { compact: true })).toBe('до 800 сом');
     });
 });

@@ -139,8 +139,6 @@ export const parityEn: Record<keyof typeof parityRu, string> = {
     'parity.apply.newApplication': 'Send another application',
 
     // Role applications (web /business/role-apply, owner-apply, staff-apply)
-    'parity.roleApply.eyebrow': 'Business access',
-    'parity.roleApply.title': 'What access do you need?',
     'parity.roleApply.description': 'We separate owner and employee applications so each request reaches the right person.',
     'parity.roleApply.owner.eyebrow': 'For owners',
     'parity.roleApply.owner.title': 'I own an existing business',
@@ -153,11 +151,7 @@ export const parityEn: Record<keyof typeof parityRu, string> = {
     'parity.roleApply.open': 'Open application',
     'parity.roleApply.newBusiness.prefix': 'If the business is not yet on Kezek, use the',
     'parity.roleApply.newBusiness.link': 'new business application page',
-    'parity.roleApply.staffPage.eyebrow': 'Join the team',
-    'parity.roleApply.staffPage.title': 'Employee application',
     'parity.roleApply.staffPage.description': 'Choose an existing business and tell its owner about your role. After review, the owner will assign a branch and activate your workspace.',
-    'parity.roleApply.ownerPage.eyebrow': 'Ownership confirmation',
-    'parity.roleApply.ownerPage.title': 'Owner application for an existing business',
     'parity.roleApply.ownerPage.description': 'Choose a business already on Kezek and submit an application. After review, the super admin will grant your account owner access.',
     'parity.roleApply.form.auth.title': 'Sign-in required',
     'parity.roleApply.form.auth.ownerMessage': 'An owner application is linked to your account. Sign in and return here to continue.',
@@ -277,6 +271,7 @@ export const parityEn: Record<keyof typeof parityRu, string> = {
     'parity.nav.promotions': 'Promotions',
     'parity.nav.businessApply': 'Add your business',
     'parity.nav.roleApply': 'Business access',
-    'parity.nav.roleApplication': 'Application',
+    'parity.nav.roleApplicationOwner': 'Owner application',
+    'parity.nav.roleApplicationStaff': 'Employee application',
     'parity.nav.eyebrowBusiness': 'For business',
 };

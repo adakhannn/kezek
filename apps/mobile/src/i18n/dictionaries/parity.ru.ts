@@ -142,8 +142,6 @@ export const parityRu = {
     'parity.apply.newApplication': 'Отправить ещё одну заявку',
 
     // Role applications (web /business/role-apply, owner-apply, staff-apply)
-    'parity.roleApply.eyebrow': 'Доступ к бизнесу',
-    'parity.roleApply.title': 'Какой доступ вам нужен?',
     'parity.roleApply.description': 'Мы разделили заявки владельцев и сотрудников, чтобы каждая заявка попадала к нужному человеку.',
     'parity.roleApply.owner.eyebrow': 'Для владельца',
     'parity.roleApply.owner.title': 'Я владелец существующего бизнеса',
@@ -156,11 +154,7 @@ export const parityRu = {
     'parity.roleApply.open': 'Открыть заявку',
     'parity.roleApply.newBusiness.prefix': 'Если бизнеса ещё нет в Kezek, используйте',
     'parity.roleApply.newBusiness.link': 'страницу подключения нового бизнеса',
-    'parity.roleApply.staffPage.eyebrow': 'Присоединиться к команде',
-    'parity.roleApply.staffPage.title': 'Заявка сотрудника',
     'parity.roleApply.staffPage.description': 'Выберите существующий бизнес и расскажите владельцу, кем вы там работаете. После проверки владелец назначит филиал и активирует рабочий кабинет.',
-    'parity.roleApply.ownerPage.eyebrow': 'Подтверждение владельца',
-    'parity.roleApply.ownerPage.title': 'Заявка владельца существующего бизнеса',
     'parity.roleApply.ownerPage.description': 'Выберите бизнес, который уже есть в Kezek, и отправьте заявку. После проверки супер-админ выдаст вашему аккаунту доступ владельца.',
     'parity.roleApply.form.auth.title': 'Нужно войти',
     'parity.roleApply.form.auth.ownerMessage': 'Заявка владельца привязывается к вашему аккаунту. Войдите и вернитесь сюда, чтобы продолжить.',
@@ -280,6 +274,7 @@ export const parityRu = {
     'parity.nav.promotions': 'Акции',
     'parity.nav.businessApply': 'Подключить бизнес',
     'parity.nav.roleApply': 'Доступ к бизнесу',
-    'parity.nav.roleApplication': 'Заявка',
+    'parity.nav.roleApplicationOwner': 'Заявка владельца',
+    'parity.nav.roleApplicationStaff': 'Заявка сотрудника',
     'parity.nav.eyebrowBusiness': 'Для бизнеса',
 } as const;
