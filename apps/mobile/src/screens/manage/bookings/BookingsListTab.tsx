@@ -244,11 +244,14 @@ export default function BookingsListTab({ bizId, timezone, branches }: { bizId: 
                                         title={serviceLabel || '—'}
                                         subtitle={`${day} · ${start}–${end}`}
                                         numberOfLines={2}
-                                        trailing={<StatusPill label={t(bookingStatusLabelKey(row.status, row.start_at, now))} tone={STATUS_TONE[row.status]} />}
+                                        // The status sits under the card's text: as a trailing pill it squeezed the service name.
                                         onPress={() => navigation.navigate('BookingDetails', { id: row.id })}
                                         accessibilityHint={`${t('ops.bookings.calendar.openBooking')} #${row.id.slice(0, 8)}`}
                                     />
                                     <View style={styles.people}>
+                                        <View style={styles.statusRow}>
+                                            <StatusPill label={t(bookingStatusLabelKey(row.status, row.start_at, now))} tone={STATUS_TONE[row.status]} />
+                                        </View>
                                         {branchName ? (
                                             <View style={styles.person}>
                                                 <Ionicons name="location-outline" size={14} color={colors.text.tertiary} />
@@ -303,6 +306,7 @@ const styles = StyleSheet.create({
         gap: space.sm,
     },
     people: { gap: space.xs },
+    statusRow: { flexDirection: "row", marginBottom: space.xs },
     person: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
     personText: { flexShrink: 1 },
     id: { marginTop: space.xxs },

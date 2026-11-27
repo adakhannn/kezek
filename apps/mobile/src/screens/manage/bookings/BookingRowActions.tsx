@@ -63,19 +63,21 @@ export default function BookingRowActions({
         if (accepted) onAction(bookingId, action);
     };
 
+    // MotionPressable styles its inner view, so the equal width lives on a wrapping cell.
     const button = (action: ManagerBookingAction) => (
+        <View key={action} style={styles.cell}>
         <Button
-            key={action}
             title={t(label[action])}
             onPress={() => void run(action)}
             size="sm"
             variant={action === 'confirm' || action === 'attended' ? 'secondary' : 'outline'}
-            style={styles.action}
+            fullWidth
             textStyle={action === 'cancel' ? styles.danger : undefined}
             loading={pending}
             disabled={pending}
             accessibilityLabel={`${t(label[action])} #${bookingId.slice(0, 8)}`}
         />
+        </View>
     );
     // One row of equal buttons (two rows on a narrow phone); the destructive cancel comes last.
     return <View style={styles.bar}>{actions.map(button)}</View>;
@@ -91,6 +93,6 @@ const styles = StyleSheet.create({
         borderTopColor: colors.border.subtle,
     },
     // Equal widths; below ~88dp a button moves to the next line instead of squeezing its label.
-    action: { flexGrow: 1, flexBasis: 0, minWidth: 88 },
+    cell: { flexGrow: 1, flexBasis: 0, minWidth: 88 },
     danger: { color: colors.tone.danger.fg },
 });
