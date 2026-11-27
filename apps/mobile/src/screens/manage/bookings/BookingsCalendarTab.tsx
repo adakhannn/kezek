@@ -121,6 +121,10 @@ export default function BookingsCalendarTab({ bizId, timezone, options }: { bizI
                             <ListRow
                                 leading={<Avatar name={member.full_name} size={40} />}
                                 title={member.full_name}
+                                // With all branches shown, the branch tells apart a master who works in several.
+                                subtitle={branchId === 'all' && options.branches.length > 1
+                                    ? options.branches.find((branch) => branch.id === member.branch_id)?.name
+                                    : undefined}
                                 trailing={bookings.length > 0
                                     ? <Badge label={String(bookings.length)} tone="accent" size="md" />
                                     : <Badge label={t('ops.bookings.calendar.free')} tone="neutral" />}

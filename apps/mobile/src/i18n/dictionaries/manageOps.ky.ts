@@ -322,7 +322,7 @@ export const manageOpsKy: Record<keyof typeof manageOpsRu, string> = {
     'ops.home.rating.factor.reviews': 'Пикирлер',
     'ops.home.rating.hint': 'Рейтинг жогору болгон сайын бизнес, филиалдар жана кызматкерлер издөөдө жогору чыгат.',
     'ops.home.rating.lowRatingHint': 'төмөн рейтинг',
-    'ops.home.rating.moreInfo': 'Рейтинг кантип эсептелет →',
+    'ops.home.rating.moreInfo': 'Толугураак',
     'ops.home.rating.noRating': 'Рейтинг жок',
     'ops.home.rating.scope.biz': 'Бул бизнес үчүн өзүнчө рейтинг формуласы колдонулат.',
     'ops.home.rating.scope.global': 'Платформанын жалпы рейтинг формуласы колдонулууда.',

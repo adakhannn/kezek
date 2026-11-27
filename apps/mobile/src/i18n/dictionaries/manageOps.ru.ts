@@ -324,7 +324,7 @@ export const manageOpsRu = {
     'ops.home.rating.factor.reviews': 'Отзывы',
     'ops.home.rating.hint': 'Чем выше рейтинг, тем выше позиция бизнеса, филиалов и сотрудников в выдаче.',
     'ops.home.rating.lowRatingHint': 'низкий рейтинг',
-    'ops.home.rating.moreInfo': 'Как считается рейтинг →',
+    'ops.home.rating.moreInfo': 'Подробнее',
     'ops.home.rating.noRating': 'Недостаточно данных для рейтинга',
     'ops.home.rating.scope.biz': 'Для этого бизнеса действует своя формула рейтинга.',
     'ops.home.rating.scope.global': 'Сейчас используется глобальная формула рейтинга платформы.',

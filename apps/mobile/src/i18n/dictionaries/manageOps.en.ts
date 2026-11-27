@@ -322,7 +322,7 @@ export const manageOpsEn: Record<keyof typeof manageOpsRu, string> = {
     'ops.home.rating.factor.reviews': 'Reviews',
     'ops.home.rating.hint': 'The higher the rating, the higher the position of the business, branches and staff in listings.',
     'ops.home.rating.lowRatingHint': 'low rating',
-    'ops.home.rating.moreInfo': 'How the rating is calculated →',
+    'ops.home.rating.moreInfo': 'Learn more',
     'ops.home.rating.noRating': 'Not enough data for rating',
     'ops.home.rating.scope.biz': 'This business uses its own rating formula.',
     'ops.home.rating.scope.global': 'The global platform rating formula is used now.',
