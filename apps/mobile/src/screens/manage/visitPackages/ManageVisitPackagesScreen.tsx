@@ -19,7 +19,7 @@ import { colors } from '../../../constants/colors';
 import { radii, space } from '../../../constants/theme';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useToast } from '../../../contexts/ToastContext';
-import { useLanguage, type MobileI18nKey } from '../../../i18n';
+import { translatePlural, useLanguage, type MobileI18nKey } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/types';
 import { shortDate, useCurrentBusinessReady } from '../opsKit/format';
 import { LoadError, ScreenSkeleton, ui } from '../opsKit/ui';
@@ -124,14 +124,16 @@ export default function ManageVisitPackagesScreen() {
                                         icon="pricetags-outline"
                                         iconTone={plan.is_active ? 'accent' : 'neutral'}
                                         title={planName(plan, locale)}
-                                        subtitle={`${t('ops.packages.visits')}: ${plan.visit_count} · ${t('ops.packages.validityDays')}: ${plan.validity_days}`}
+                                        subtitle={`${translatePlural(t, 'ops.packages.visitCount', plan.visit_count)} · ${t('ops.packages.validFor', { days: translatePlural(t, 'common.days', plan.validity_days) })}`}
                                         trailing={<StatusPill label={t(plan.is_active ? 'ops.packages.active' : 'ops.packages.inactive')} tone={plan.is_active ? 'success' : 'neutral'} />}
                                         onPress={() => navigation.navigate('ManageVisitPackagePlan', { ...routeParams, planId: plan.id })}
                                         accessibilityHint={t('ops.packages.edit')}
                                         numberOfLines={2}
                                     />
                                     <View style={styles.terms}>
-                                        <Text style={ui.muted}>{t('ops.packages.discount')}: {formatDiscount(plan, t)}</Text>
+                                        <Text style={ui.muted}>
+                                            {plan.discount_value > 0 ? `${t('ops.packages.discount')}: ${formatDiscount(plan, t)}` : t('ops.packages.noDiscount')}
+                                        </Text>
                                         <Text style={ui.muted}>{t('ops.packages.binding')}: {formatBinding(plan, t)}</Text>
                                     </View>
                                     {plan.is_active ? (

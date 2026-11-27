@@ -41,6 +41,8 @@ describe('plural forms', () => {
             'manageStaff.shiftCount',
             'ops.applications.approved.scheduled',
             'ops.finance.staffStats.shiftCount',
+            'ops.packages.bindingBranchCount',
+            'ops.packages.visitCount',
             'staff.shiftQuick.operationsQueued',
             'staff.shifts.clientsCount',
         ]);

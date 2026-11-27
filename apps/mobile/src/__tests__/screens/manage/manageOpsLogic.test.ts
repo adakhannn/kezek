@@ -179,7 +179,7 @@ describe('visit packages', () => {
         expect(formatDiscount(plan, ru)).toBe('10%');
         expect(formatDiscount({ ...plan, discount_type: 'fixed_price', discount_value: 450 }, ru)).toBe('450 сом');
         expect(planTerms({ ...plan, discount_type: 'fixed_price', discount_value: 1500 }, ru)).toBe('Визиты: 5, Срок (дней): 30, Цена за визит: 1\u00a0500 сом');
-        expect(formatBinding(plan, ru)).toBe('любая услуга, 2 фил.');
+        expect(formatBinding(plan, ru)).toBe('любая услуга, 2 филиала');
         expect(planTerms(plan, ru)).toBe('Визиты: 5, Срок (дней): 30, Скидка: 10%');
     });
 

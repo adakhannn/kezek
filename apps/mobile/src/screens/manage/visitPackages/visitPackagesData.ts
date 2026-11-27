@@ -1,6 +1,6 @@
 import * as Crypto from 'expo-crypto';
 
-import type { Translate } from '../../../i18n';
+import { translatePlural, type Translate } from '../../../i18n';
 import { apiRequest } from '../../../lib/api';
 import { supabase } from '../../../lib/supabase';
 import { formatMoney } from '../opsKit/money';
@@ -108,12 +108,12 @@ export function formatDiscount(plan: Pick<VisitPackagePlan, 'discount_type' | 'd
     return plan.discount_type === 'percent' ? `${plan.discount_value}%` : formatMoney(plan.discount_value, t);
 }
 
-/** "any service, all branches" / "service, 2 br." (website formatBinding). */
+/** "any service, all branches" / "service, 2 branches" (website formatBinding). */
 export function formatBinding(plan: Pick<VisitPackagePlan, 'service_id' | 'branch_ids'>, t: Translate): string {
     return [
         plan.service_id ? t('ops.packages.bindingService') : t('ops.packages.bindingAnyService'),
         plan.branch_ids && plan.branch_ids.length > 0
-            ? t('ops.packages.bindingBranches', { count: plan.branch_ids.length })
+            ? translatePlural(t, 'ops.packages.bindingBranchCount', plan.branch_ids.length)
             : t('ops.packages.bindingAllBranches'),
     ].join(', ');
 }
