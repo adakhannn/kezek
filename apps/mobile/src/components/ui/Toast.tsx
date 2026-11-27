@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { colors } from '../../constants/colors';
 import { motion } from '../../constants/motion';
+import { elevation, layout, radii, space, typeScale } from '../../constants/theme';
 
 type ToastProps = {
     message: string;
@@ -15,6 +17,9 @@ type ToastProps = {
 
 export default function Toast({ message, type = 'info', visible, onHide, duration = 3000 }: ToastProps) {
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    // Below the status bar / notch and inside the side cut-outs. Outside a SafeAreaProvider
+    // (tests) there is no inset.
+    const insets = useContext(SafeAreaInsetsContext) ?? { top: 0, bottom: 0, left: 0, right: 0 };
 
     useEffect(() => {
         if (visible) {
@@ -81,6 +86,9 @@ export default function Toast({ message, type = 'info', visible, onHide, duratio
             style={[
                 styles.container,
                 {
+                    top: insets.top + space.sm,
+                    left: layout.gutter + insets.left,
+                    right: layout.gutter + insets.right,
                     opacity: fadeAnim,
                     transform: [
                         {
@@ -112,23 +120,19 @@ export default function Toast({ message, type = 'info', visible, onHide, duratio
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        top: 56,
-        left: 16,
-        right: 16,
         zIndex: 9999,
     },
     toast: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        padding: colors.layout.space4,
-        borderRadius: colors.layout.radiusLg,
-        ...colors.shadow.lg,
+        padding: space.lg,
+        borderRadius: radii.lg,
+        ...elevation.floating,
     },
     message: {
-        marginLeft: colors.layout.space3,
-        fontSize: 14,
-        fontWeight: '500',
+        ...typeScale.callout,
+        marginLeft: space.md,
         flex: 1,
     },
 });

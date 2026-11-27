@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { ConfirmProvider } from './src/contexts/ConfirmContext';
 import { ToastProvider } from './src/contexts/ToastContext';
@@ -23,18 +24,21 @@ export default function App() {
     useAppStateQueryFocus();
 
     // LanguageProvider outside ErrorBoundary: the crash screen (ErrorDisplay) is in the chosen language.
+    // SafeAreaProvider at the root: the toast above the navigator reads the insets too.
     return (
-        <LanguageProvider>
-            <ErrorBoundary>
-                <QueryClientProvider client={queryClient}>
-                    <ConfirmProvider>
-                        <ToastProvider>
-                            <RootNavigator />
-                            <StatusBar style="light" backgroundColor={colors.surface.page} />
-                        </ToastProvider>
-                    </ConfirmProvider>
-                </QueryClientProvider>
-            </ErrorBoundary>
-        </LanguageProvider>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            <LanguageProvider>
+                <ErrorBoundary>
+                    <QueryClientProvider client={queryClient}>
+                        <ConfirmProvider>
+                            <ToastProvider>
+                                <RootNavigator />
+                                <StatusBar style="light" backgroundColor={colors.surface.page} />
+                            </ToastProvider>
+                        </ConfirmProvider>
+                    </QueryClientProvider>
+                </ErrorBoundary>
+            </LanguageProvider>
+        </SafeAreaProvider>
     );
 }

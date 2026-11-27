@@ -19,6 +19,9 @@ jest.mock('../../navigation/RootNavigator', () => ({
 
 jest.mock('../../utils/debug', () => ({ logEnvVars: jest.fn() }));
 
+// App's root SafeAreaProvider waits for native insets; the library's mock provides them at once.
+jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
+
 describe('the crash screen', () => {
     let consoleError: jest.SpyInstance;
 

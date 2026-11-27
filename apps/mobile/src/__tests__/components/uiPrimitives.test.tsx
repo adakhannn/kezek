@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -70,6 +71,17 @@ describe('UI primitive behavior contracts', () => {
             jest.advanceTimersByTime(2100);
         });
         expect(onHide).toHaveBeenCalledTimes(1);
+    });
+
+    test('Toast sits below the status bar / notch and inside the side insets', () => {
+        render(
+            <SafeAreaInsetsContext.Provider value={{ top: 47, bottom: 34, left: 10, right: 12 }}>
+                <Toast message="Не сохранено" type="error" visible onHide={jest.fn()} />
+            </SafeAreaInsetsContext.Provider>,
+        );
+
+        const style = StyleSheet.flatten(screen.UNSAFE_getByProps({ accessibilityRole: 'alert' }).props.style);
+        expect(style).toEqual(expect.objectContaining({ top: 55, left: 26, right: 28 }));
     });
 
     test('FeedbackBanner provides an accessible close action', () => {
