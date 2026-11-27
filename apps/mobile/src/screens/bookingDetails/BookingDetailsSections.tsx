@@ -10,7 +10,7 @@ import Screen from '../../components/ui/Screen';
 import Section from '../../components/ui/Section';
 import { colors } from '../../constants/colors';
 import { useLanguage } from '../../i18n';
-import { formatDate, formatTime } from '../../utils/format';
+import { formatDate, formatPhone, formatTime } from '../../utils/format';
 import { getLocalizedText, getServiceName, getStatusText } from '../../utils/i18n';
 import { bookingStatusTone } from '../cabinet/CabinetScreenSections';
 import { styles } from './bookingDetailsStyles';
@@ -97,7 +97,8 @@ export function BookingDetailsSections({
     return (
         <Screen
             testID="booking-details-screen"
-            footer={isStaffView ? undefined : (
+            // "Повторить запись" belongs to a visit that is over; an upcoming one is managed by its own actions.
+            footer={isStaffView || canCancel || canReschedule ? undefined : (
                 <ActionBar primary={{ title: t('cabinet.details.repeat'), onPress: onRepeat }} />
             )}
         >
@@ -161,7 +162,7 @@ export function BookingDetailsSections({
                     <KeyValueRow label={t('cabinet.details.business')} value={booking.business.name} />
                 ) : null}
                 {businessPhone ? (
-                    <KeyValueRow label={t('cabinet.profile.phone.label')} value={businessPhone} />
+                    <KeyValueRow label={t('cabinet.profile.phone.label')} value={formatPhone(businessPhone)} />
                 ) : null}
                 {booking.staff ? (
                     <KeyValueRow label={t('cabinet.details.staff')} value={booking.staff.full_name} />

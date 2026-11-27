@@ -77,10 +77,6 @@ export const bookingKy: Record<keyof typeof bookingRu, string> = {
     'booking.confirm.failed': 'Жазылууну түзүү мүмкүн болгон жок. Кайра аракет кылыңыз.',
     'booking.confirm.selectTime': 'Убакытты тандаңыз',
     'booking.confirm.incomplete': 'Брондоо маалыматтары толук эмес',
-    'booking.confirm.title': 'Ырастоо',
-    'booking.confirm.message': 'Жазылуу түзүлсүнбү?',
-    'booking.confirm.create': 'Түзүү',
-    'booking.confirm.cancel': 'Жокко чыгаруу',
 
     // Booking parity with the website: errors, several services, any master, guest booking
     'booking.error.loadBusiness': 'Бизнести жүктөө мүмкүн болгон жок',

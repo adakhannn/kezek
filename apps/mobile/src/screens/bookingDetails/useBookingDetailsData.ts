@@ -60,6 +60,17 @@ export function useBookingDetailsData({ bookingId, onCancelled, onRescheduled }:
             });
         },
         onSuccess: () => {
+            // The cabinet is shown right after this; mark the visit cancelled in its cached pages so it
+            // does not linger as the next visit until the refetch over a slow network lands.
+            queryClient.setQueriesData<{ pages?: { items: { id: string; status?: string }[] }[] }>(
+                { queryKey: ['bookings'] },
+                (old) => old?.pages
+                    ? { ...old, pages: old.pages.map((page) => ({
+                        ...page,
+                        items: page.items.map((item) => (item.id === bookingId ? { ...item, status: 'cancelled' } : item)),
+                    })) }
+                    : old,
+            );
             queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
             showToast(t('cabinet.details.cancelled'), 'success');

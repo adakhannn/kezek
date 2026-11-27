@@ -77,10 +77,6 @@ export const bookingEn: Record<keyof typeof bookingRu, string> = {
     'booking.confirm.failed': 'Could not create the booking. Please try again.',
     'booking.confirm.selectTime': 'Choose a time',
     'booking.confirm.incomplete': 'The booking details are incomplete',
-    'booking.confirm.title': 'Confirmation',
-    'booking.confirm.message': 'Create the booking?',
-    'booking.confirm.create': 'Create',
-    'booking.confirm.cancel': 'Cancel',
 
     // Booking parity with the website: errors, several services, any master, guest booking
     'booking.error.loadBusiness': 'Could not load the business',

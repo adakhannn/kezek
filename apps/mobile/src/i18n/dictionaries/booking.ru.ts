@@ -77,10 +77,6 @@ export const bookingRu = {
     'booking.confirm.failed': 'Не удалось создать запись. Попробуйте снова.',
     'booking.confirm.selectTime': 'Выберите время',
     'booking.confirm.incomplete': 'Данные бронирования неполные',
-    'booking.confirm.title': 'Подтверждение',
-    'booking.confirm.message': 'Создать запись?',
-    'booking.confirm.create': 'Создать',
-    'booking.confirm.cancel': 'Отмена',
 
     // Booking parity with the website: errors, several services, any master, guest booking
     'booking.error.loadBusiness': 'Не удалось загрузить бизнес',

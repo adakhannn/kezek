@@ -9,6 +9,9 @@ import {
 
 import Avatar from '../../components/ui/Avatar';
 import { StatusPill } from '../../components/ui/Badge';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
@@ -21,6 +24,7 @@ import Section from '../../components/ui/Section';
 import { colors } from '../../constants/colors';
 import type { Tone } from '../../constants/theme';
 import { useLanguage } from '../../i18n';
+import type { RootStackParamList } from '../../navigation/types';
 import { formatDate, formatTime } from '../../utils/format';
 import { getServiceName, getStatusText } from '../../utils/i18n';
 import { styles } from './cabinetScreenStyles';
@@ -110,6 +114,7 @@ export function CabinetScreenSections({
     isSigningOut,
 }: Props) {
     const { t, locale } = useLanguage();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const isHistory = activeTab === 'history';
     const visibleBookings = isHistory ? pastBookings : upcomingBookings;
     const featuredBooking = upcomingBookings[0] ?? null;
@@ -264,6 +269,14 @@ export function CabinetScreenSections({
                                 ? t('cabinet.empty.historyMessage')
                                 : t('cabinet.empty.upcomingMessage')
                         }
+                        action={isHistory ? undefined : (
+                            <Button
+                                title={t('cabinet.empty.upcomingAction')}
+                                onPress={() => navigation.navigate('Main', { screen: 'Home' })}
+                                size="sm"
+                                testID="cabinet-empty-find-service"
+                            />
+                        )}
                     />
                 )}
                 {isHistory && (hasMoreBookings || isFetchingMore || loadMoreFailed) ? (

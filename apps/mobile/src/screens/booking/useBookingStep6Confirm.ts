@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useBooking } from '../../contexts/BookingContext';
-import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirmBooking } from '../../hooks/useConfirmBooking';
 import { useGuestBooking } from '../../hooks/useGuestBooking';
@@ -30,7 +29,6 @@ const EMPTY_CONTACTS: GuestContacts = { name: '', phone: '', email: '' };
 export function useBookingStep6Confirm(navigation: NavigationProp) {
     const { bookingData, reset } = useBooking();
     const { showToast } = useToast();
-    const { confirm } = useConfirm();
     const { isOffline } = useNetworkStatus();
     const { locale, t } = useLanguage();
     const session = useBookingSessionUser();
@@ -114,17 +112,7 @@ export function useBookingStep6Confirm(navigation: NavigationProp) {
             return;
         }
 
-        const shouldCreate = await confirm({
-            title: t('booking.confirm.title'),
-            message: t('booking.confirm.message'),
-            confirmLabel: t('booking.confirm.create'),
-            cancelLabel: t('booking.confirm.cancel'),
-        });
-
-        if (!shouldCreate) {
-            return;
-        }
-
+        // This step is the summary the client confirms; a second «Создать запись?» dialog only added a tap.
         createBooking(body);
     };
 

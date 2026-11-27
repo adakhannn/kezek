@@ -125,7 +125,22 @@ describe('BookingDetailsScreen', () => {
         expect(screen.queryByText('16:00–17:00')).toBeNull();
     });
 
-    test('renders repeat booking action', async () => {
+    test('offers to repeat a finished visit, not an upcoming one', async () => {
+        renderWithProviders(<BookingDetailsScreen />);
+        expect(await screen.findByText('Отменить запись')).toBeTruthy();
+        expect(screen.queryByText('Повторить запись')).toBeNull();
+    });
+
+    test('renders repeat booking action for a past visit', async () => {
+        mockedApiRequest.mockResolvedValue({
+            ok: true,
+            data: {
+                id: 'test-booking-id', start_at: '2020-01-01T10:00:00Z', end_at: '2020-01-01T11:00:00Z', status: 'paid',
+                viewer_role: 'client', promotion: null, package: null,
+                service: null, staff: null, business: { name: 'Тестовый бизнес', slug: 'test-business', phones: [] }, branch: null,
+            },
+        } as never);
+
         renderWithProviders(<BookingDetailsScreen />);
 
         expect(await screen.findByText('Повторить запись')).toBeTruthy();

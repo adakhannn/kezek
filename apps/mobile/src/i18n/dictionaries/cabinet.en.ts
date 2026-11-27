@@ -104,6 +104,7 @@ export const cabinetEn: Record<keyof typeof cabinetRu, string> = {
     'cabinet.empty.upcomingTitle': 'No upcoming bookings yet',
     'cabinet.empty.historyMessage': 'Visits will appear here once they are completed or cancelled.',
     'cabinet.empty.upcomingMessage': 'Book a service and your next visit will appear here right away.',
+    'cabinet.empty.upcomingAction': 'Find a service',
     'cabinet.footer.openProfile': 'Open profile and settings',
     'cabinet.footer.signOut': 'Sign out of account',
     'cabinet.card.noBusiness': 'Business not specified',
