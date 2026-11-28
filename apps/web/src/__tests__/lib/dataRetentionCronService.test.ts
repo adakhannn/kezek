@@ -1,5 +1,5 @@
 import { releaseBlockedAccountDeletions } from '@/lib/accountDeletionService';
-import { runDataRetention } from '@/lib/dataRetentionCronService';
+import { ANALYTICS_EVENTS_RETENTION_DAYS, runDataRetention } from '@/lib/dataRetentionCronService';
 
 jest.mock('@/lib/accountDeletionService', () => ({ releaseBlockedAccountDeletions: jest.fn() }));
 
@@ -22,7 +22,7 @@ function tables(resolve: (table: string, calls: Call[]) => Result = () => ({ dat
     return { from, log };
 }
 
-const NEW_COUNTERS = { blocked_deletions_released: 0, deleted_accounts_analytics_anonymized: 0 };
+const NEW_COUNTERS = { blocked_deletions_released: 0, deleted_accounts_analytics_anonymized: 0, analytics_events_deleted: 0 };
 
 beforeEach(() => {
     jest.mocked(releaseBlockedAccountDeletions).mockReset().mockResolvedValue(0);
@@ -158,6 +158,22 @@ describe('dataRetentionCronService', () => {
         ]);
         expect((writes[0].calls[1].args[1] as string[]).length).toBe(100);
         expect(writes[2].calls[1].args[1]).toEqual(ids.slice(100).map(row => row.user_id));
+    });
+
+    test('deletes analytics events older than one year', async () => {
+        const rpc = jest.fn().mockResolvedValue({ data: 0, error: null });
+        const { from, log } = tables((table, calls) => table === 'analytics_events' && calls.some(c => c.method === 'lt') ? { count: 7 } : { data: [], count: 0 });
+        const before = Date.now();
+        const result = await runDataRetention({ supabase: { rpc, from } as never });
+        expect(result).toMatchObject({ ok: true, data: { analytics_events_deleted: 7 } });
+        const cleanup = log.find(entry => entry.calls.some(c => c.method === 'lt'))!;
+        expect(cleanup.table).toBe('analytics_events');
+        expect(cleanup.calls[0]).toEqual({ method: 'delete', args: [{ count: 'exact' }] });
+        expect(cleanup.calls[1].args[0]).toBe('created_at');
+        const cutoff = Date.parse(cleanup.calls[1].args[1] as string);
+        expect(ANALYTICS_EVENTS_RETENTION_DAYS).toBe(365);
+        expect(before - cutoff).toBeGreaterThanOrEqual(365 * 86_400_000 - 1000);
+        expect(before - cutoff).toBeLessThan(366 * 86_400_000);
     });
 
     test('a failed analytics write is reported and the other steps keep their results', async () => {

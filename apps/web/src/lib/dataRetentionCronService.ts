@@ -7,6 +7,13 @@ type RetentionClient = Pick<DbClient, 'rpc' | 'from' | 'auth'>;
 type StepOutcome = { data: unknown; error: { message?: string } | null };
 
 /**
+ * Raw analytics_events (page views, booking funnel, sign-in metrics) are kept one year: the owner's
+ * decision of 28 Nov 2026. Daily totals already saved in business_daily_stats stay; recalculating a
+ * day older than this from raw events would find none.
+ */
+export const ANALYTICS_EVENTS_RETENTION_DAYS = 365;
+
+/**
  * Accounts deleted within this window get their analytics_events.client_id cleared on every run, so
  * a failed run is caught up by a later one. analytics_events has no foreign key to auth.users.
  */
@@ -41,6 +48,12 @@ async function anonymizeDeletedAccountsAnalytics(client: RetentionClient): Promi
     return { data: total, error: null };
 }
 
+async function cleanupOldAnalyticsEvents(client: RetentionClient): Promise<StepOutcome> {
+    const cutoff = new Date(Date.now() - ANALYTICS_EVENTS_RETENTION_DAYS * DAY_MS).toISOString();
+    const { count, error } = await client.from('analytics_events').delete({ count: 'exact' }).lt('created_at', cutoff);
+    return error ? { data: null, error } : { data: count, error: null };
+}
+
 async function releaseBlocked(client: RetentionClient): Promise<StepOutcome> {
     try {
         return { data: await releaseBlockedAccountDeletions(client), error: null };
@@ -65,6 +78,7 @@ const STEPS = [
     // run is handled in the same run. Plain table reads and writes: nothing here needs a migration.
     { task: releaseBlocked, name: 'release_blocked_account_deletions', count: 'blocked_deletions_released', error: 'blocked_deletions_error' },
     { task: anonymizeDeletedAccountsAnalytics, name: 'anonymize_deleted_accounts_analytics', count: 'deleted_accounts_analytics_anonymized', error: 'deleted_accounts_analytics_error' },
+    { task: cleanupOldAnalyticsEvents, name: 'cleanup_old_analytics_events', count: 'analytics_events_deleted', error: 'analytics_events_error' },
 ] as const;
 
 /** Independent cleanup commands keep their own committed results on partial failure. */
