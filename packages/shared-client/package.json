@@ -12,6 +12,8 @@
     "./i18n": "./src/i18n.ts",
     "./formatters": "./src/formatters.ts",
     "./timezone": "./src/timezone.ts",
+    "./visitFormat": "./src/visitFormat.ts",
+    "./supabaseProxy": "./src/supabaseProxy.ts",
     "./generated-sdk": "./src/generated-sdk/index.ts"
   },
   "scripts": {

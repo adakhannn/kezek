@@ -20,7 +20,7 @@ type MeasurePerformance = <T>(
 type RecalculateRatingsCronDeps = {
     supabase: RecalculateRatingsSupabaseLike;
     measurePerformance: MeasurePerformance;
-    sendAlertEmail: (alerts: AlertPayload[]) => Promise<{ success: boolean; error?: string }>;
+    sendAlertEmail: (alerts: AlertPayload[]) => Promise<{ success: boolean; error?: string; notConfigured?: true }>;
     tz: string;
     todayStr: string;
     nowMs?: () => number;
@@ -222,7 +222,8 @@ export async function runRecalculateRatingsCron({
             },
         ]);
 
-        if (!alertResult.success) {
+        // «Not configured» was already logged as a warning by sendAlertEmail; do not repeat it as an error.
+        if (!alertResult.success && !alertResult.notConfigured) {
             logError('RecalculateRatingsCron', 'Failed to send alert email', alertResult.error);
         }
 
@@ -267,7 +268,7 @@ export async function runRecalculateRatingsCron({
             },
         ]);
 
-        if (!alertResult.success) {
+        if (!alertResult.success && !alertResult.notConfigured) {
             logError('RecalculateRatingsCron', 'Failed to send critical rating alert email', alertResult.error);
         }
     }

@@ -1,4 +1,4 @@
-import { getRawErrorMessage, isNetworkError } from './errors';
+import { getRawErrorMessage, isAccountSuspendedError, isNetworkError } from './errors';
 import { isTimeoutError } from './fetchWithTimeout';
 
 const TRANSIENT_HTTP_STATUSES = new Set([408, 425, 429]);
@@ -14,6 +14,8 @@ function getErrorStatus(error: unknown): number | undefined {
 }
 
 export function isTransientQueryError(error: unknown): boolean {
+    // A blocked account answers 500 too, but it stays blocked: never retry it.
+    if (isAccountSuspendedError(error)) return false;
     if (isNetworkError(error)) return true;
 
     if (/timeout|timed out|temporarily unavailable/i.test(getRawErrorMessage(error))) {

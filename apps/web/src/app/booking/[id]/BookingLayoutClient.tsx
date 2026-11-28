@@ -1,24 +1,47 @@
 'use client';
 
+import { clientBookingActions } from '@core-domain/booking';
+import { formatVisitWhen } from '@shared-client/visitFormat';
 import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { formatBookingDateTime } from '@/lib/bookingCalendarDate';
 import { getBusinessTimezone } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
+/**
+ * Who opened the page:
+ * - `client`: the signed-in client of the booking (manages it in «Мои записи»);
+ * - `staff`: a master, manager or admin who reads it through RLS (no client hints);
+ * - `guest`: anyone with the link, through the public receipt (cannot see a cabinet).
+ */
+export type BookingViewer = 'client' | 'staff' | 'guest';
+
 type BookingLayoutProps = {
-    id: string;
     services: { name_ru: string; name_ky: string | null; name_en: string | null; duration_min: number | null }[] | null;
     masterName: string;
     startAt: Date;
+    endAt?: Date | null;
     status: string;
+    branch?: { name: string | null; address: string | null } | null;
     promotionApplied?: Record<string, unknown> | null;
+    subscriptionApplied?: Record<string, unknown> | null;
     /** businesses.tz of the booking; NULL or unknown means Asia/Bishkek (ARCH-11). */
     timeZone?: string | null;
+    viewer?: BookingViewer;
 };
 
-export default function BookingLayoutClient({ id, services, masterName, startAt, status, promotionApplied, timeZone }: BookingLayoutProps) {
+export default function BookingLayoutClient({
+    services,
+    masterName,
+    startAt,
+    endAt,
+    status,
+    branch,
+    promotionApplied,
+    subscriptionApplied,
+    timeZone,
+    viewer = 'guest',
+}: BookingLayoutProps) {
     const { t, locale } = useLanguage();
 
     function buildServicesSummary(): { primary: string; details?: string } {
@@ -73,65 +96,81 @@ export default function BookingLayoutClient({ id, services, masterName, startAt,
                 textKey: 'booking.status.noShow',
                 className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
             },
-            confirmed: { 
-                textKey: 'booking.status.confirmed', 
-                className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' 
+            confirmed: {
+                textKey: 'booking.status.confirmed',
+                className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
             },
-            paid: { 
-                textKey: 'booking.status.paid', 
-                className: 'bg-emerald-600 text-white dark:bg-emerald-500' 
+            paid: {
+                textKey: 'booking.status.paid',
+                className: 'bg-emerald-600 text-white dark:bg-emerald-500'
             },
-            hold: { 
-                textKey: 'booking.status.hold', 
-                className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' 
+            hold: {
+                textKey: 'booking.status.hold',
+                className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
             },
-            cancelled: { 
-                textKey: 'booking.status.cancelled', 
-                className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' 
+            cancelled: {
+                textKey: 'booking.status.cancelled',
+                className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
             },
         };
-        const s = statusMap[status] || { 
-            textKey: '', 
-            className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200' 
+        const s = statusMap[status] || {
+            textKey: '',
+            className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200'
         };
         const text = s.textKey ? t(s.textKey, status) : status;
         return { text, className: s.className };
     }
 
     const statusLabel = getStatusLabel(status);
-    const shortId = id.slice(0, 8);
-    
+
     // Format master name with transliteration for English locale
     const formattedMasterName = locale === 'en' ? transliterate(masterName) : masterName;
-    
-    const formattedDate = formatBookingDateTime(startAt, getBusinessTimezone(timeZone), locale);
+
+    // The owner's format: «27 нояб. • 10:00–11:00» in the business zone.
+    const formattedWhen = formatVisitWhen(startAt, endAt ?? null, locale, getBusinessTimezone(timeZone));
+
+    const branchName = branch?.name?.trim() || null;
+    const branchAddress = branch?.address?.trim() || null;
+
+    // The same rules as the cabinet and the app's booking details (R25-10): the client cancels or
+    // reschedules until the start; then, or for a booking with a benefit, only the business does.
+    const actions = clientBookingActions({ status, startAt, promotionApplied, subscriptionApplied });
+    let hint: string | null = null;
+    let benefitNotice = false;
+    if (viewer !== 'staff') {
+        if (actions.started) {
+            hint = t('booking.details.startedNotice');
+        } else if (actions.canCancel) {
+            if (viewer === 'client') {
+                hint = actions.canReschedule ? t('booking.details.manageHint') : t('booking.details.cancelHint');
+                benefitNotice = actions.rescheduleNeedsBusiness;
+            } else {
+                // A guest has no cabinet to manage the booking in: the salon changes it.
+                hint = t('booking.contactHint');
+            }
+        }
+    }
+
+    const backLink = viewer === 'client'
+        ? { href: '/cabinet/bookings', label: t('booking.details.backToBookings') }
+        : { href: '/', label: t('booking.goHome', 'Go to home') };
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center px-4">
-            <div className="w-full max-w-xl space-y-6 py-10">
-                <div className="text-center space-y-2">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-50">
-                        {t('booking.title', 'Booking #{id}').replace('{id}', shortId)}
-                    </h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {t('booking.subtitle', 'Booking confirmation and visit details')}
-                    </p>
-                </div>
+        <main className="bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex justify-center px-4">
+            <div className="w-full max-w-xl space-y-6 py-6 sm:py-10">
+                <h1 className="text-center text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-50">
+                    {t('booking.title')}
+                </h1>
 
                 <section className="rounded-2xl border border-gray-200 bg-white/80 p-5 shadow-md backdrop-blur dark:border-gray-800 dark:bg-gray-900/80 space-y-4">
-                    <div className="flex items-center justify-between gap-3">
-                        <div>
-                            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                {t('booking.status', 'Status')}
-                            </div>
-                            <div className="mt-1 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold shadow-sm border border-transparent">
-                                <span className={statusLabel.className + ' rounded-full px-2 py-0.5'}>
-                                    {statusLabel.text}
-                                </span>
-                            </div>
+                    <div>
+                        <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            {t('booking.status', 'Status')}
                         </div>
-                        <div className="text-right text-xs text-gray-500 dark:text-gray-400">
-                            ID: <span className="font-mono">{id}</span>
+                        <div className="mt-1 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold shadow-sm border border-transparent">
+                            <span className={statusLabel.className + ' rounded-full px-2 py-0.5'}>
+                                {statusLabel.text}
+                            </span>
                         </div>
                     </div>
 
@@ -153,27 +192,42 @@ export default function BookingLayoutClient({ id, services, masterName, startAt,
                         </div>
                         <div className="flex items-start justify-between gap-3">
                             <dt className="text-gray-500 dark:text-gray-400">
+                                {t('booking.dateTime', 'Date and time')}
+                            </dt>
+                            <dd className="font-medium text-gray-900 dark:text-gray-100 text-right">
+                                {formattedWhen}
+                            </dd>
+                        </div>
+                        <div className="flex items-start justify-between gap-3">
+                            <dt className="text-gray-500 dark:text-gray-400">
                                 {t('booking.master', 'Master')}
                             </dt>
                             <dd className="font-medium text-gray-900 dark:text-gray-100 text-right">
                                 {formattedMasterName}
                             </dd>
                         </div>
-                        <div className="flex items-start justify-between gap-3">
-                            <dt className="text-gray-500 dark:text-gray-400">
-                                {t('booking.dateTime', 'Date and time')}
-                            </dt>
-                            <dd className="font-medium text-gray-900 dark:text-gray-100 text-right">
-                                {formattedDate}
-                            </dd>
-                        </div>
+                        {branchName || branchAddress ? (
+                            <div className="flex items-start justify-between gap-3">
+                                <dt className="text-gray-500 dark:text-gray-400">
+                                    {t('booking.details.branch')}
+                                </dt>
+                                <dd className="font-medium text-gray-900 dark:text-gray-100 text-right">
+                                    {branchName ? <div>{branchName}</div> : null}
+                                    {branchAddress ? (
+                                        <div className="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                                            {branchAddress}
+                                        </div>
+                                    ) : null}
+                                </dd>
+                            </div>
+                        ) : null}
                     </dl>
-                    
+
                     {/* Применённая акция */}
                     {promotionApplied && typeof promotionApplied === 'object' && 'promotion_type' in promotionApplied && (
                         <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/40">
                             <div className="flex items-start gap-2">
-                                <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                     <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                                 </svg>
                                 <div className="flex-1">
@@ -194,21 +248,27 @@ export default function BookingLayoutClient({ id, services, masterName, startAt,
                         </div>
                     )}
 
-                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        {t('booking.contactHint', 'If you need to change or cancel your booking, contact the salon by phone or through the contact channel specified on the business page.')}
-                    </p>
+                    {hint ? (
+                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400" data-testid="booking-details-hint">
+                            {hint}
+                        </p>
+                    ) : null}
+                    {benefitNotice ? (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {t('booking.details.benefitRescheduleNotice')}
+                        </p>
+                    ) : null}
                 </section>
 
                 <div className="flex justify-center">
                     <Link
-                        href="/"
+                        href={backLink.href}
                         className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
                     >
-                        {t('booking.goHome', 'Go to home')}
+                        {backLink.label}
                     </Link>
                 </div>
             </div>
         </main>
     );
 }
-

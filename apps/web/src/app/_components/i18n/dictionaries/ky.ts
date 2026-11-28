@@ -35,7 +35,6 @@ import { selectBusinessKy } from './selectBusiness.ky';
 import { servicesKy } from './services.ky';
 import { staffKy } from './staff.ky';
 import { timeRangeKy } from './timeRange.ky';
-import { visitDateKy } from './visitDate.ky';
 
 export const ky: Translations = Object.assign(
     {},
@@ -63,7 +62,6 @@ export const ky: Translations = Object.assign(
     datePickerKy,
     monthPickerKy,
     timeRangeKy,
-    visitDateKy,
     notificationsKy,
     bookingsKy,
     footerKy,

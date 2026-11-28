@@ -118,8 +118,8 @@ function WhatsAppAuthContent() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             {step === 'phone'
-              ? t('auth.whatsapp.phoneHint', 'Введите номер телефона, на него придет код в WhatsApp.')
-              : t('auth.whatsapp.codeHint', 'Введите код, который пришел вам в WhatsApp.')}
+              ? t('auth.whatsapp.phoneHint', 'Введите номер телефона, на него придёт код в WhatsApp.')
+              : t('auth.whatsapp.codeHint', 'Введите код, который пришёл вам в WhatsApp.')}
           </p>
         </div>
 

@@ -3,6 +3,8 @@ import { AppState, type AppStateStatus, Linking } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 
 import { clearLocalStateOnSessionEnd } from '../lib/accountLocalState';
+import { endSuspendedSession } from '../lib/accountSuspended';
+import { isAccountSuspendedError } from '../lib/errors';
 import { syncPushRegistration } from '../lib/pushNotifications';
 import { getMobileApiUrl } from '../lib/apiUrl';
 import { fetchWithTimeout } from '../lib/fetchWithTimeout';
@@ -13,6 +15,26 @@ const AUTH_CALLBACK_DEDUP_TTL_MS = 2 * 60 * 1000;
 export { getMobileApiUrl };
 
 const processedAuthCallbacks = new Map<string, number>();
+/**
+ * A cold start delivers the same callback URL through Linking.getInitialURL() and the 'url' event,
+ * and a sign-in screen may pass it too. The PKCE code can be exchanged only once: a second
+ * concurrent exchange got flow_state_not_found (KEZEK-MOBILE-4). Concurrent callers share one exchange.
+ */
+const inFlightAuthCallbacks = new Map<string, Promise<boolean>>();
+
+function getAuthErrorCode(error: unknown): string | undefined {
+    const code = (error as { code?: unknown } | null)?.code;
+    return typeof code === 'string' ? code : undefined;
+}
+
+async function hasStoredSession(): Promise<boolean> {
+    try {
+        const { data } = await supabase.auth.getSession();
+        return !!data?.session;
+    } catch {
+        return false;
+    }
+}
 
 function markAuthCallbackProcessed(url: string) {
     const now = Date.now();
@@ -85,7 +107,7 @@ export async function exchangeViaMobileApi(exchangeCode: string, apiUrl: string,
     await setSessionFromTokens(accessToken, refreshToken);
 }
 
-export async function handleDeepLinkAuth(url: string, _apiUrl?: string) {
+export async function handleDeepLinkAuth(url: string, _apiUrl?: string): Promise<boolean> {
     if (!url || !isAuthCallbackUrl(url)) {
         return false;
     }
@@ -97,6 +119,22 @@ export async function handleDeepLinkAuth(url: string, _apiUrl?: string) {
         return true;
     }
 
+    const inFlight = inFlightAuthCallbacks.get(url);
+    if (inFlight) {
+        logDebug('RootNavigatorSession', 'Joining the auth callback exchange already in progress', {
+            url: maskUrl(url),
+        });
+        return inFlight;
+    }
+
+    const exchange = processAuthCallbackUrl(url).finally(() => {
+        inFlightAuthCallbacks.delete(url);
+    });
+    inFlightAuthCallbacks.set(url, exchange);
+    return exchange;
+}
+
+async function processAuthCallbackUrl(url: string): Promise<boolean> {
     logDebug('RootNavigatorSession', 'Handling auth callback URL', { url: maskUrl(url) });
 
     try {
@@ -123,6 +161,25 @@ export async function handleDeepLinkAuth(url: string, _apiUrl?: string) {
         });
         return false;
     } catch (error) {
+        if (isAccountSuspendedError(error)) {
+            await endSuspendedSession('RootNavigatorSession', error);
+            return false;
+        }
+        if (getAuthErrorCode(error) === 'flow_state_not_found') {
+            // The code was already used. With a session on the device that was this sign-in (an
+            // exchange outside this process, e.g. a reload); without one the link expired or was replayed.
+            if (await hasStoredSession()) {
+                logDebug('RootNavigatorSession', 'Auth callback code already exchanged; session present', {
+                    url: maskUrl(url),
+                });
+                markAuthCallbackProcessed(url);
+                return true;
+            }
+            logWarn('RootNavigatorSession', 'Auth callback link expired or already used', {
+                url: maskUrl(url),
+            });
+            return false;
+        }
         logError('RootNavigatorSession', 'Failed to process auth callback URL', error);
         return false;
     }
@@ -164,6 +221,14 @@ export function useRootNavigationSession() {
             } = await supabase.auth.getSession();
 
             if (error) {
+                if (isAccountSuspendedError(error)) {
+                    // Blocked account (KEZEK-MOBILE-2): no retry, sign out here, tell the user.
+                    await endSuspendedSession('RootNavigatorSession', error);
+                    if (isMounted) {
+                        updateSession(null);
+                    }
+                    return null;
+                }
                 throw error;
             }
 

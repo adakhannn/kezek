@@ -68,7 +68,10 @@ export function apiRouteRecords() {
         // API-12: catch-all handlers that only answer a JSON 404 for unknown API paths. They are
         // documented like any route but are not operations of the HTTP API.
         const fallback = /\/\[\.\.\.path\]$/.test(route) && /\bunknownApiRoute\b/.test(fs.readFileSync(path.join(repoRoot, file), 'utf8'));
-        return { file, route, fallback, ...exports };
+        // R25-31: the optional Supabase pass-through (/sb/*) forwards Supabase's own API; it is documented
+        // but is not an operation of the Kezek HTTP API either.
+        const proxy = /\/\[\.\.\.path\]$/.test(route) && /\bhandleSupabaseProxyRequest\b/.test(fs.readFileSync(path.join(repoRoot, file), 'utf8'));
+        return { file, route, fallback, proxy, ...exports };
     });
     return records;
 }

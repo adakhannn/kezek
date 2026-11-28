@@ -2,6 +2,7 @@
 'use client';
 
 import { canCancel as canCancelBooking, clientBookingActions, type BookingStatus } from '@core-domain/booking';
+import { formatVisitWhen } from '@shared-client/visitFormat';
 import {useState, useEffect, useMemo, useRef} from 'react';
 
 import MapDialog from './MapDialog';
@@ -20,7 +21,6 @@ import {logError} from '@/lib/log';
 import { repeatBookingHref } from '@/lib/repeatBookingHref';
 import { getBusinessTimezone } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
-import { formatVisitDateRange } from '@/lib/visitDateFormat';
 
 export default function BookingCard({
                                         bookingId,
@@ -146,7 +146,7 @@ export default function BookingCard({
 
     const tz = getBusinessTimezone(business?.tz);
     // Owner format «27 нояб. • 09:00–10:00» in the business zone; the zone name is not shown.
-    const when = formatVisitDateRange(start_at, end_at, tz, locale);
+    const when = formatVisitWhen(start_at, end_at, locale, tz);
 
     const totalDurationMin =
         servicesList && servicesList.length > 0

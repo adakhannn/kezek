@@ -116,6 +116,16 @@ export {
 } from './formatters';
 export type { DateLocale, PriceRange } from './formatters';
 
+// Формат визита владельца: «27 нояб. • 10:00–11:00»
+export {
+    formatVisitDate,
+    formatVisitRange,
+    formatVisitTime,
+    formatVisitWhen,
+    VISIT_DATE_TIME_SEPARATOR,
+} from './visitFormat';
+export type { VisitLocale } from './visitFormat';
+
 // Часовой пояс бизнеса (ARCH-11)
 export {
     DEFAULT_BUSINESS_TIME_ZONE,

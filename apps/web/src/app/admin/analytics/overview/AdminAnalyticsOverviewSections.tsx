@@ -249,7 +249,7 @@ export function AdminAnalyticsTrendsSection({
                         <div>
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('admin.analyticsOverview.revenueTrendTitle', 'Тренд по выручке')}</h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {t('admin.analyticsOverview.revenueTrendHint', 'Оценочная выручка по дням с учетом промо.')}
+                                {t('admin.analyticsOverview.revenueTrendHint', 'Оценочная выручка по дням с учётом промо.')}
                             </p>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr';
 
 import { logWarnSafe } from './logSafe';
+import { browserSupabaseClientOptions } from './supabaseProxyClient';
 
 /**
  * Клиент Supabase для использования в клиентских компонентах
@@ -29,7 +30,13 @@ if (!hasValidBrowserConfig && typeof window !== 'undefined') {
     );
 }
 
-export const supabase = createBrowserClient(
-    resolvedSupabaseUrl,
-    resolvedSupabaseAnonKey,
-);
+// R25-31: with NEXT_PUBLIC_SUPABASE_PROXY_URL set, requests go through our /sb proxy while the client URL
+// (and so the session cookie name) stays the project's own. Unset: no options, as before.
+const proxyOptions = hasValidBrowserConfig ? browserSupabaseClientOptions() : undefined;
+
+export const supabase = proxyOptions
+    ? createBrowserClient(resolvedSupabaseUrl, resolvedSupabaseAnonKey, proxyOptions)
+    : createBrowserClient(
+        resolvedSupabaseUrl,
+        resolvedSupabaseAnonKey,
+    );

@@ -3,6 +3,7 @@ import { resolveBizContextForManagers } from '@/lib/bizContextResolver';
 import { BizAccessError } from '@/lib/authDiagnostics';
 import { MANAGER_ROLE_KEYS } from '@/lib/authContext';
 import { AuthSessionMissingError } from '@supabase/supabase-js';
+import { logError, logWarn } from '@/lib/log';
 
 jest.mock('@/lib/supabaseHelpers', () => ({
     createSupabaseServerClient: jest.fn(),
@@ -315,6 +316,37 @@ describe('resolveBizContextForManagers – выбор бизнеса', () => {
         });
         await expect(resolveBizContextForManagers()).rejects.toMatchObject({code: 'SERVICE_UNAVAILABLE'});
         expect(createSupabaseAdminClient).not.toHaveBeenCalled();
+    });
+
+    test.each([
+        ['bad_jwt', 'invalid JWT: unable to parse or verify signature'],
+        ['refresh_token_not_found', 'Invalid Refresh Token: Refresh Token Not Found'],
+        ['session_expired', 'Session expired'],
+    ])('a 400 %s is an unauthenticated session (sign-in / 401), logged as a warning (KEZEK-WEB-7)', async (code, message) => {
+        (mockSupabase.auth.getUser as jest.Mock).mockResolvedValueOnce({
+            data: { user: null }, error: { message, status: 400, code },
+        });
+        await expect(resolveBizContextForManagers()).rejects.toMatchObject({ code: 'NOT_AUTHENTICATED' });
+        expect(logError).not.toHaveBeenCalled();
+        expect(logWarn).toHaveBeenCalledWith('AuthBiz', 'User authentication failed',
+            expect.objectContaining({ errorCode: code, errorStatus: 400 }));
+    });
+
+    test('an auth outage (5xx) stays an error and SERVICE_UNAVAILABLE', async () => {
+        (mockSupabase.auth.getUser as jest.Mock).mockResolvedValueOnce({
+            data: { user: null }, error: { message: 'upstream', status: 502, code: 'unexpected_failure' },
+        });
+        await expect(resolveBizContextForManagers()).rejects.toMatchObject({ code: 'SERVICE_UNAVAILABLE' });
+        expect(logError).toHaveBeenCalledWith('AuthBiz', 'User authentication failed', expect.objectContaining({ errorStatus: 502 }));
+        expect(logWarn).not.toHaveBeenCalledWith('AuthBiz', 'User authentication failed', expect.anything());
+    });
+
+    test('a rate-limited auth check (429) is not a sign-out', async () => {
+        (mockSupabase.auth.getUser as jest.Mock).mockResolvedValueOnce({
+            data: { user: null }, error: { message: 'rate limited', status: 429, code: 'over_request_rate_limit' },
+        });
+        await expect(resolveBizContextForManagers()).rejects.toMatchObject({ code: 'SERVICE_UNAVAILABLE' });
+        expect(logError).not.toHaveBeenCalled();
     });
 
     test('считает отклонённую сервером сессию неавторизованной', async () => {

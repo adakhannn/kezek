@@ -25,6 +25,19 @@ const mockOpenAuthSessionAsync = jest.fn();
 const mockMaybeCompleteAuthSession = jest.fn();
 const mockAppStateListeners = new Set<(state: string) => void>();
 const mockTrackMobileEvent = jest.fn();
+const mockLogDebug = jest.fn();
+
+jest.mock('../../../lib/log', () => ({
+    ...jest.requireActual('../../../lib/log'),
+    logDebug: (...args: unknown[]) => mockLogDebug(...args),
+}));
+
+/** The Google funnel goes to the debug log: the analytics endpoint rejects these event types. */
+function googleFunnelEvents(): string[] {
+    return mockLogDebug.mock.calls
+        .filter(([, message]) => message === 'Google auth funnel event')
+        .map(([, , details]) => (details as { event: string }).event);
+}
 
 jest.mock('../../../contexts/ToastContext', () => ({
     useToast: () => ({
@@ -81,6 +94,7 @@ describe('SignInScreen', () => {
         });
         mockMaybeCompleteAuthSession.mockReset();
         mockTrackMobileEvent.mockReset();
+        mockLogDebug.mockReset();
 
         jest
             .spyOn(AppState, 'addEventListener')
@@ -354,15 +368,14 @@ describe('SignInScreen', () => {
             expect(mockShowToast).toHaveBeenCalledWith('Вход выполнен успешно', 'success');
         });
 
-        expect(mockTrackMobileEvent).toHaveBeenCalledWith(
-            expect.objectContaining({ eventType: 'mobile_google_login_started' }),
+        expect(googleFunnelEvents()).toEqual(
+            expect.arrayContaining([
+                'mobile_google_login_started',
+                'mobile_google_login_callback_received',
+                'mobile_google_login_success',
+            ]),
         );
-        expect(mockTrackMobileEvent).toHaveBeenCalledWith(
-            expect.objectContaining({ eventType: 'mobile_google_login_callback_received' }),
-        );
-        expect(mockTrackMobileEvent).toHaveBeenCalledWith(
-            expect.objectContaining({ eventType: 'mobile_google_login_success' }),
-        );
+        expect(mockTrackMobileEvent).not.toHaveBeenCalled();
     });
 
     test('google integration: cancel scenario shows info toast and cancelled metric', async () => {
@@ -377,9 +390,8 @@ describe('SignInScreen', () => {
             expect(mockShowToast).toHaveBeenCalledWith('Вход отменён', 'info');
         });
 
-        expect(mockTrackMobileEvent).toHaveBeenCalledWith(
-            expect.objectContaining({ eventType: 'mobile_google_login_cancelled' }),
-        );
+        expect(googleFunnelEvents()).toContain('mobile_google_login_cancelled');
+        expect(mockTrackMobileEvent).not.toHaveBeenCalled();
     });
 
     test('ui-level: Google auth status is announced while the external flow opens', async () => {
@@ -429,11 +441,7 @@ describe('SignInScreen', () => {
             expect(mockShowToast).toHaveBeenCalledWith('Вход выполнен успешно', 'success');
         });
 
-        expect(
-            mockTrackMobileEvent.mock.calls.filter(
-                ([payload]) => payload?.eventType === 'mobile_google_login_success',
-            ).length,
-        ).toBe(1);
+        expect(googleFunnelEvents().filter((event) => event === 'mobile_google_login_success')).toHaveLength(1);
     });
 
     test('ui-level: telegram pending status is announced for accessibility', async () => {

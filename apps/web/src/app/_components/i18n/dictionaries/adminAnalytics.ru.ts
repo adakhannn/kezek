@@ -48,7 +48,7 @@ export const adminAnalyticsRu = {
     'admin.analyticsOverview.bookingsEmptyTitle': 'Нет данных по броням',
     'admin.analyticsOverview.bookingsEmptyDescription': 'За выбранный период нет точек для тренда успешных броней.',
     'admin.analyticsOverview.revenueTrendTitle': 'Тренд по выручке',
-    'admin.analyticsOverview.revenueTrendHint': 'Оценочная выручка по дням с учетом промо.',
+    'admin.analyticsOverview.revenueTrendHint': 'Оценочная выручка по дням с учётом промо.',
     'admin.analyticsOverview.revenueEmptyTitle': 'Нет данных по выручке',
     'admin.analyticsOverview.revenueEmptyDescription': 'За выбранный период нет точек для тренда по выручке.',
     'admin.analyticsOverview.promoTrendTitle': 'Доля промо-бронирований по дням',

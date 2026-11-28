@@ -221,7 +221,7 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                 {/* Период расчета */}
                 <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                        {t('admin.ratingConfig.windowTitle', 'Период расчета рейтинга')}
+                        {t('admin.ratingConfig.windowTitle', 'Период расчёта рейтинга')}
                     </h2>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -236,7 +236,7 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            {t('admin.ratingConfig.windowHint', 'Скользящее окно для расчета рейтинга (рекомендуется 30 дней)')}
+                            {t('admin.ratingConfig.windowHint', 'Скользящее окно для расчёта рейтинга (рекомендуется 30 дней)')}
                         </p>
                     </div>
                 </div>

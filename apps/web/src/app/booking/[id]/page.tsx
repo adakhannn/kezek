@@ -1,10 +1,18 @@
 
+import type { Metadata } from 'next';
+
 import BookingLayoutClient from './BookingLayoutClient';
 import NotFoundMessage from './NotFoundMessage';
 
+import { getT } from '@/app/_components/i18n/server';
 import { LoadFailedNotice } from '@/components/LoadFailedNotice';
 import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getT();
+    return { title: t('booking.meta.title') };
+}
 
 export default async function BookingPage({
                                               params,
@@ -19,10 +27,11 @@ export default async function BookingPage({
     const {data, error} = await supabase
         .from('bookings')
         .select(`
-      id,status,start_at,end_at,promotion_applied,
+      id,status,start_at,end_at,promotion_applied,subscription_applied,client_id,
       services:services!bookings_service_id_fkey(name_ru, name_ky, name_en),
       staff:staff!bookings_staff_id_fkey(full_name),
       biz:businesses!bookings_biz_id_fkey(tz),
+      branch:branches!bookings_branch_id_fkey(name, address),
       booking_services (
         duration_min,
         service:services (name_ru, name_ky, name_en)
@@ -77,16 +86,23 @@ export default async function BookingPage({
             : null;
     const master = Array.isArray(data.staff) ? data.staff[0] : data.staff;
     const biz = Array.isArray(data.biz) ? data.biz[0] : data.biz;
+    const branch = Array.isArray(data.branch) ? data.branch[0] : data.branch;
+    // RLS also lets the business's staff read the booking; only its client gets the client's hints.
+    const { data: auth } = await supabase.auth.getUser();
+    const viewer = auth?.user?.id && auth.user.id === data.client_id ? 'client' : 'staff';
 
     return (
             <BookingLayoutClient
-                id={String(data.id)}
                 services={services}
                 masterName={master?.full_name ?? '—'}
                 startAt={new Date(data.start_at)}
+                endAt={data.end_at ? new Date(data.end_at) : null}
                 status={data.status}
+                branch={branch ? { name: branch.name ?? null, address: branch.address ?? null } : null}
                 promotionApplied={data.promotion_applied as Record<string, unknown> | null}
+                subscriptionApplied={data.subscription_applied as Record<string, unknown> | null}
                 timeZone={biz?.tz ?? null}
+                viewer={viewer}
             />
     );
 }
@@ -117,13 +133,14 @@ async function FallbackBooking({ id }: { id: string }) {
 
     return (
             <BookingLayoutClient
-                id={String(row.id)}
                 services={Array.isArray(row.services) ? (row.services as Array<{ name_ru: string; name_ky: string | null; name_en: string | null; duration_min: number | null }>) : null}
                 masterName={row.staff_name}
                 startAt={new Date(row.start_at)}
+                endAt={row.end_at ? new Date(row.end_at) : null}
                 status={row.status}
                 promotionApplied={(bookingData?.promotion_applied as Record<string, unknown> | null | undefined) || null}
                 timeZone={row.tz ?? null}
+                viewer="guest"
             />
     );
 }

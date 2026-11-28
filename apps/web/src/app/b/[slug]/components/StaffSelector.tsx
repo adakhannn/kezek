@@ -9,6 +9,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { RatingDisplay } from '@/components/RatingDisplay';
 import { Badge } from '@/components/ui/Badge';
 import { formatStaffName } from '@/lib/i18nHelpers';
+import { displayAvatarUrl } from '@/lib/supabaseProxyClient';
 
 type StaffSelectorProps = {
     staff: Staff[];
@@ -110,7 +111,7 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr, loadin
                                     unoptimized
                                     width={48}
                                     height={48}
-                                    src={person.avatar_url}
+                                    src={displayAvatarUrl(person.avatar_url)}
                                     alt={formatName(person.full_name)}
                                     className="h-12 w-12 shrink-0 rounded-full object-cover"
                                     onError={(event) => {

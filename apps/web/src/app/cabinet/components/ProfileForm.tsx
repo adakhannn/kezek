@@ -498,7 +498,7 @@ export default function ProfileForm() {
                     </div>
                     <div className="w-fit shrink-0 whitespace-nowrap rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
                         {isDirty
-                            ? t('cabinet.profile.unsaved', 'Есть несохраненные изменения')
+                            ? t('cabinet.profile.unsaved', 'Есть несохранённые изменения')
                             : t('cabinet.profile.synced', 'Все изменения сохранены')}
                     </div>
                 </div>
@@ -846,7 +846,7 @@ export default function ProfileForm() {
                                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
-                                            <span>{t('cabinet.profile.whatsapp.verified', 'Номер подтвержден')}</span>
+                                            <span>{t('cabinet.profile.whatsapp.verified', 'Номер подтверждён')}</span>
                                         </div>
                                     ) : (
                                         <div className="space-y-2">
@@ -854,7 +854,7 @@ export default function ProfileForm() {
                                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                                 </svg>
-                                                <span>{t('cabinet.profile.whatsapp.notVerified', 'Номер не подтвержден. Подтвердите для получения уведомлений.')}</span>
+                                                <span>{t('cabinet.profile.whatsapp.notVerified', 'Номер не подтверждён. Подтвердите для получения уведомлений.')}</span>
                                             </div>
                                             {!showOtpInput ? (
                                                 <Button
@@ -999,7 +999,7 @@ export default function ProfileForm() {
             {isDirty && !error ? (
                 <AlertBanner
                     variant="info"
-                    title={t('cabinet.profile.unsavedTitle', 'Изменения еще не сохранены')}
+                    title={t('cabinet.profile.unsavedTitle', 'Изменения ещё не сохранены')}
                     message={t('cabinet.profile.unsavedMessage', 'Проверьте данные и сохраните профиль, чтобы обновления применились к следующим записям и уведомлениям')}
                 />
             ) : null}

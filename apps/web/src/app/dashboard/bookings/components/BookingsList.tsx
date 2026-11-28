@@ -1,5 +1,6 @@
 'use client';
 
+import { formatVisitDate, formatVisitRange, formatVisitWhen } from '@shared-client/visitFormat';
 import Link from 'next/link';
 
 import { QuickActions } from './QuickActions';
@@ -9,7 +10,6 @@ import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusChip } from '@/components/ui/StatusChip';
-import { formatVisitDateRange, formatVisitDay, formatVisitTimeRange } from '@/lib/visitDateFormat';
 
 type BranchRow = { id: string; name: string };
 
@@ -166,10 +166,10 @@ export function BookingsList({
                                     <td className="px-4 py-4">
                                         <div className="min-w-[11rem]">
                                             <p className="type-label text-[var(--text-primary)]">
-                                                {formatVisitDay(booking.start_at, tz, locale)}
+                                                {formatVisitDate(booking.start_at, locale, tz)}
                                             </p>
                                             <p className="type-caption mt-1 text-[var(--text-muted)]">
-                                                {formatVisitTimeRange(booking.start_at, booking.end_at, tz)}
+                                                {formatVisitRange(booking.start_at, booking.end_at, tz)}
                                             </p>
                                         </div>
                                     </td>
@@ -233,7 +233,7 @@ export function BookingsList({
                                     <p className="type-caption text-[var(--text-secondary)]">{t('bookings.list.master', 'Мастер')}</p>
                                     <p className="type-label mt-1 text-[var(--text-primary)]">{master?.full_name || '—'}</p>
                                     <p className="type-caption mt-1 text-[var(--text-muted)]">
-                                        {formatVisitDateRange(booking.start_at, booking.end_at, tz, locale)}
+                                        {formatVisitWhen(booking.start_at, booking.end_at, locale, tz)}
                                     </p>
                                 </div>
                             </div>

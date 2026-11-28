@@ -127,7 +127,7 @@ export default function PostSignup() {
             localStorage.removeItem('signup_full_name');
             localStorage.removeItem('signup_phone');
 
-            setMessage(t('auth.postSignup.saved', 'Профиль сохранен'));
+            setMessage(t('auth.postSignup.saved', 'Профиль сохранён'));
             
             // Обновляем страницу, чтобы middleware увидел новое имя, затем редиректим
             router.refresh();

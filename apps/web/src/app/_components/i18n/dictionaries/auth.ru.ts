@@ -95,7 +95,7 @@ export const authRu = {
     'auth.verifyOtp.verifying': 'Проверяю...',
     'auth.verifyOtp.submit': 'Подтвердить',
     'auth.whatsapp.title': 'Вход через WhatsApp',
-    'auth.whatsapp.phoneHint': 'Введите номер телефона, на него придет код в WhatsApp.',
+    'auth.whatsapp.phoneHint': 'Введите номер телефона, на него придёт код в WhatsApp.',
     'auth.whatsapp.codeHint': 'Введите код, который пришёл вам в WhatsApp.',
     'auth.whatsapp.sending': 'Отправка...',
     'auth.whatsapp.sendCode': 'Отправить код',

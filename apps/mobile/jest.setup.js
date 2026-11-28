@@ -38,11 +38,35 @@ jest.mock('expo-constants', () => ({
     },
 }));
 
-jest.mock('expo-secure-store', () => ({
-    getItemAsync: jest.fn(),
-    setItemAsync: jest.fn(),
-    deleteItemAsync: jest.fn(),
-}));
+// The native module rejects keys outside [A-Za-z0-9._-] (KEZEK-MOBILE-3: 'offline:bookings:' broke the
+// bookings cache and sign-out). The mock enforces the same rule whatever implementation a test installs:
+// mockImplementation/Once (and mockResolvedValue & co., built on them) are wrapped, and the default
+// implementation after a reset validates too.
+jest.mock('expo-secure-store', () => {
+    const INVALID_KEY_MESSAGE =
+        'Invalid key provided to SecureStore. Keys must not be empty and contain only alphanumeric characters, ".", "-", and "_".';
+    const isValidKey = (key) => typeof key === 'string' && /^[\w.-]+$/.test(key);
+    const guarded = (impl) =>
+        function guardedSecureStoreCall(key, ...rest) {
+            if (!isValidKey(key)) return Promise.reject(new Error(INVALID_KEY_MESSAGE));
+            return impl ? impl.call(this, key, ...rest) : undefined;
+        };
+    const secureStoreFn = () => {
+        const fn = jest.fn();
+        const mockImplementation = fn.mockImplementation;
+        const mockImplementationOnce = fn.mockImplementationOnce;
+        fn.mockImplementation = (impl) => mockImplementation(guarded(impl));
+        fn.mockImplementationOnce = (impl) => mockImplementationOnce(guarded(impl));
+        // Used when no implementation is set (fresh or after mockReset).
+        fn._protoImpl = guarded(undefined);
+        return fn;
+    };
+    return {
+        getItemAsync: secureStoreFn(),
+        setItemAsync: secureStoreFn(),
+        deleteItemAsync: secureStoreFn(),
+    };
+});
 
 // Push notifications: no permission dialog, token or Expo call in unit tests (lib/pushNotifications.ts).
 jest.mock('expo-notifications', () => ({

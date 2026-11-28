@@ -40,7 +40,7 @@ export function AdminPagination({ page, totalPages, totalItems, onPageChange, is
                     onClick={() => onPageChange(page + 1)}
                     disabled={isBusy || page >= totalPages}
                 >
-                    {t('admin.pagination.next', 'Вперед')}
+                    {t('admin.pagination.next', 'Вперёд')}
                 </Button>
             </div>
         </div>

@@ -111,7 +111,16 @@ async function collectHealthCheckAlerts({
 > {
     const alerts: Alert[] = [];
     const unhealthyQueues = queueStatuses.filter(queue => queue.status === 'failed' || queue.status === 'backlog');
-    for (const queue of unhealthyQueues) alerts.push({ type: 'error', message: `Queue ${queue.job}: ${queue.status}`, details: { ...queue } });
+    for (const queue of unhealthyQueues) {
+        // Counts at the top level and in the message: Sentry showed the nested `counts` as [Object]
+        // (KEZEK-WEB-A), so the event did not say how many notifications failed.
+        const { counts } = queue;
+        const summary = counts
+            ? ` (failed=${counts.failed}, ambiguous=${counts.ambiguous}, due=${counts.due}, oldestDueAgeSeconds=${counts.oldest_due_age_seconds})`
+            : '';
+        alerts.push({ type: 'error', message: `Queue ${queue.job}: ${queue.status}${summary}`,
+            details: { job: queue.job, status: queue.status, ...counts } });
+    }
     const unhealthyCron = cronStatuses.filter(job => ['failed', 'stuck', 'overdue', 'unobserved'].includes(job.status));
     for (const job of unhealthyCron) {
         alerts.push({ type: job.status === 'unobserved' ? 'warning' : 'error',

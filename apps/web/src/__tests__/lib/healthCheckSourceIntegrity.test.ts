@@ -1,4 +1,6 @@
+jest.mock('@/lib/log', () => ({ logError: jest.fn(), logWarn: jest.fn(), logDebug: jest.fn() }));
 import { runHealthCheckAlerts } from '@/lib/healthCheckAlertsCronService';
+import { logError } from '@/lib/log';
 const now = new Date('2026-11-10T12:00:00Z');
 
 function dependencies(options: { failure?: string; open?: number; promos?: number; staleBiz?: boolean; missingCount?: boolean } = {}) {
@@ -61,7 +63,23 @@ test('a successful cron cannot conceal ambiguous delivery or a delayed queue', a
         expect(result.data.healthCheck.checks.backgroundQueues).toMatchObject({ ok: false });
     }
     expect(deps.sendAlertEmail).toHaveBeenCalledWith(expect.arrayContaining([
-        expect.objectContaining({ message: 'Queue booking-notifications: failed' }),
-        expect.objectContaining({ message: 'Queue whatsapp-inbox: backlog' }),
+        expect.objectContaining({ message: 'Queue booking-notifications: failed (failed=0, ambiguous=1, due=1, oldestDueAgeSeconds=601)' }),
+        expect.objectContaining({ message: 'Queue whatsapp-inbox: backlog (failed=0, ambiguous=0, due=1, oldestDueAgeSeconds=601)' }),
     ]));
+});
+
+test('without the alert inbox a failed queue reaches Sentry with numeric counts at depth 1 (KEZEK-WEB-A)', async () => {
+    const deps = dependencies();
+    deps.sendAlertEmail.mockResolvedValue({ success: false, error: 'ALERT_EMAIL_TO or EMAIL_FROM not configured' });
+    const counts = { pending: 3, due: 1, processing: 0, failed: 2, ambiguous: 0, oldest_due_age_seconds: 42 };
+    const result = await runHealthCheckAlerts({ ...deps, queueStatuses: [{ job: 'booking-notifications', status: 'failed', counts }] });
+    expect(result).toMatchObject({ ok: true, data: { alertSent: false } });
+    const call = (logError as jest.Mock).mock.calls.find(([, message]) => String(message).includes('Queue booking-notifications'));
+    expect(call).toBeDefined();
+    const [scope, message, details] = call!;
+    expect(scope).toBe('HealthCheckAlert');
+    expect(message).toBe('[error] Queue booking-notifications: failed (failed=2, ambiguous=0, due=1, oldestDueAgeSeconds=42)');
+    expect(details).toEqual({ job: 'booking-notifications', status: 'failed', pending: 3, due: 1, processing: 0,
+        failed: 2, ambiguous: 0, oldest_due_age_seconds: 42 });
+    expect(Object.values(details).every(value => typeof value !== 'object')).toBe(true);
 });

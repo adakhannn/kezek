@@ -5,7 +5,31 @@ import { TRANSIENT_AUTH_STORAGE_KEYS } from './authStorageKeys';
 import { clearOfflineBookings } from './offlineBookingsStorage';
 import { clearPushRegistrationRecord } from './pushNotifications';
 import { queryClient } from './queryClient';
+import { logWarn } from './log';
 import { clearStaffSelection } from './staffSelectionStorage';
+
+/**
+ * Every local clean-up is best-effort and independent: one store that fails (KEZEK-MOBILE-3: an
+ * invalid SecureStore key) must not keep the others from running, nor fail the sign-out after the
+ * session is already gone. Failures are logged as warnings; the promise always resolves.
+ */
+async function settleAll(step: string, tasks: Promise<unknown>[]): Promise<void> {
+    const results = await Promise.allSettled(tasks);
+    results.forEach((result) => {
+        if (result.status === 'rejected') {
+            logWarn('accountLocalState', `Failed to clear local state (${step})`, result.reason);
+        }
+    });
+}
+
+/** Starts a clean-up step; a synchronous throw becomes a rejection that settleAll reports. */
+function attempt(work: () => Promise<unknown>): Promise<unknown> {
+    try {
+        return work();
+    } catch (error) {
+        return Promise.reject(error);
+    }
+}
 
 /**
  * What the sign-out button removes (signOut.ts): the whole shift queue, after the
@@ -13,10 +37,10 @@ import { clearStaffSelection } from './staffSelectionStorage';
  * was already removed on the server while the session existed; here its local record goes.
  */
 export async function clearLocalStateOnSignOut(userId?: string): Promise<void> {
-    await Promise.all([
-        ...TRANSIENT_AUTH_STORAGE_KEYS.map((key) => SecureStore.deleteItemAsync(key)),
-        clearPushRegistrationRecord(),
-        clearShiftOfflineData(),
+    await settleAll('sign-out', [
+        ...TRANSIENT_AUTH_STORAGE_KEYS.map((key) => attempt(() => SecureStore.deleteItemAsync(key))),
+        attempt(clearPushRegistrationRecord),
+        attempt(clearShiftOfflineData),
         clearAccountCaches(userId),
     ]);
     queryClient.clear();
@@ -33,10 +57,17 @@ export async function clearLocalStateOnSignOut(userId?: string): Promise<void> {
  */
 export async function clearLocalStateOnSessionEnd(previousUserId?: string): Promise<void> {
     queryClient.clear();
-    await Promise.all([clearShiftCache(), clearAccountCaches(previousUserId), clearPushRegistrationRecord()]);
+    await settleAll('session end', [
+        attempt(clearShiftCache),
+        clearAccountCaches(previousUserId),
+        attempt(clearPushRegistrationRecord),
+    ]);
 }
 
 async function clearAccountCaches(userId?: string): Promise<void> {
     if (!userId) return;
-    await Promise.all([clearOfflineBookings(userId), clearStaffSelection(userId)]);
+    await settleAll('account caches', [
+        attempt(() => clearOfflineBookings(userId)),
+        attempt(() => clearStaffSelection(userId)),
+    ]);
 }

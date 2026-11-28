@@ -3,7 +3,6 @@ import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
 
 import { useLanguage } from '../../../i18n';
-import { trackMobileEvent } from '../../../lib/analytics';
 import { getErrorMessage } from '../../../lib/errors';
 import { GOOGLE_ACTIVE_FLOW_STORAGE_KEY } from '../../../lib/authStorageKeys';
 import { logDebug, logError, logWarn } from '../../../lib/log';
@@ -190,12 +189,12 @@ export function useGoogleSignInFlow({
             | 'mobile_google_login_cancelled',
         metadata?: Record<string, unknown>,
     ) => {
-        void trackMobileEvent({
-            eventType,
-            metadata: {
-                flow: GOOGLE_AUTH_FLOW_NAME,
-                ...metadata,
-            },
+        // The analytics endpoint accepts page and booking-flow beacons only (sign-in metrics are
+        // written by the auth routes), so the Google funnel stays in the debug log.
+        logDebug('SignInScreen', 'Google auth funnel event', {
+            event: eventType,
+            flow: GOOGLE_AUTH_FLOW_NAME,
+            ...metadata,
         });
     };
 

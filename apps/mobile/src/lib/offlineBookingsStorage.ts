@@ -2,7 +2,9 @@ import * as SecureStore from 'expo-secure-store';
 
 import { logDebug, logWarn } from './log';
 
-const BOOKINGS_KEY_PREFIX = 'offline:bookings:';
+// SecureStore keys may contain only [A-Za-z0-9._-] (KEZEK-MOBILE-3). The previous prefix
+// 'offline:bookings:' was rejected natively, so nothing was ever stored under it: no migration.
+const BOOKINGS_KEY_PREFIX = 'kezek.offline.bookings.';
 const SECURE_STORE_CHUNK_SIZE = 1800;
 const SECURE_STORE_META_SUFFIX = '__chunks_meta';
 const SECURE_STORE_CHUNK_SUFFIX = '__chunk_';
@@ -149,10 +151,13 @@ export async function loadOfflineBookings(userId: string): Promise<OfflineBookin
     } catch (error) {
         // Corrupted secure-store cache should not surface as a fatal dev RedBox.
         logWarn('offlineBookingsStorage', 'Failed to load offline bookings, clearing cache', error);
-        const staleMetaRaw = await SecureStore.getItemAsync(getMetaKey(key));
-        const staleChunkCount = Number(staleMetaRaw || 0);
-        await clearChunkEntries(key, staleChunkCount);
-        await SecureStore.deleteItemAsync(key);
+        try {
+            await clearOfflineBookings(userId);
+        } catch (clearError) {
+            // The cache is best-effort: callers (the cabinet after a failed request) get "no cache",
+            // never an unhandled rejection.
+            logWarn('offlineBookingsStorage', 'Failed to clear unreadable offline bookings', clearError);
+        }
         return null;
     }
 }

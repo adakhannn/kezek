@@ -407,6 +407,6 @@ export const adminRu = {
     'admin.shell.denied.home': 'На главную',
     'admin.pagination.summary': 'Страница {page} из {totalPages} • Всего: {totalItems}',
     'admin.pagination.prev': 'Назад',
-    'admin.pagination.next': 'Вперед',
+    'admin.pagination.next': 'Вперёд',
     'admin.table.empty': 'Нет данных',
 } as const;

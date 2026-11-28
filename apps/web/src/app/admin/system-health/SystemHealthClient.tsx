@@ -207,11 +207,11 @@ export default function SystemHealthClient() {
                             ]}
                         />
                         <HealthPanel
-                            title={t('admin.systemHealth.cron.ratings', 'Пересчет рейтингов')}
+                            title={t('admin.systemHealth.cron.ratings', 'Пересчёт рейтингов')}
                             ok={data.cronJobs.ratings.ok}
                             lines={[
                                 data.cronJobs.ratings.daysSinceLastMetric !== null
-                                    ? t('admin.systemHealth.cron.lastRecalc', 'Последний пересчет: {days} дн. назад').replace('{days}', String(data.cronJobs.ratings.daysSinceLastMetric))
+                                    ? t('admin.systemHealth.cron.lastRecalc', 'Последний пересчёт: {days} дн. назад').replace('{days}', String(data.cronJobs.ratings.daysSinceLastMetric))
                                     : t('admin.systemHealth.cron.neverRecalculated', 'Рейтинги никогда не пересчитывались'),
                                 `Staff: ${formatDate(data.cronJobs.ratings.staffLastMetricDate)}`,
                                 `Branch: ${formatDate(data.cronJobs.ratings.branchLastMetricDate)}`,

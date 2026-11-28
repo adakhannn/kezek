@@ -13,6 +13,10 @@ export function isTimeoutError(error: unknown): boolean {
     return error instanceof TimeoutError;
 }
 
+function isAbortError(error: unknown): boolean {
+    return typeof error === 'object' && error !== null && (error as { name?: unknown }).name === 'AbortError';
+}
+
 type FetchWithTimeoutOptions = RequestInit & {
     timeoutMs?: number;
 };
@@ -42,7 +46,9 @@ export async function fetchWithTimeout(
             signal: controller.signal,
         });
     } catch (error: unknown) {
-        if (controller.signal.aborted || (error instanceof DOMException && error.name === 'AbortError')) {
+        // Hermes has no global DOMException (KEZEK-MOBILE-1): referencing it threw a ReferenceError
+        // that replaced the real network error. Detect the abort by name only.
+        if (controller.signal.aborted || isAbortError(error)) {
             throw new TimeoutError();
         }
         throw error;

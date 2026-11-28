@@ -1,5 +1,6 @@
 'use client';
 
+import { formatVisitWhen } from '@shared-client/visitFormat';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -10,7 +11,6 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { useBusinessTimeZone } from '@/components/BusinessTimeZoneContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { formatDateTime } from '@/lib/dateFormat';
 import { transliterate } from '@/lib/transliterate';
 
 type Booking = {
@@ -78,7 +78,8 @@ export default function StaffBookingsView({
     }
 
     // Используем унифицированные функции форматирования дат
-    const formatDateTimeLocal = (iso: string): string => formatDateTime(iso, locale as 'ru' | 'ky' | 'en', true, tz);
+    // The owner's format: «27 нояб. • 10:00–11:00» in the business zone.
+    const formatVisit = (start: string, end: string): string => formatVisitWhen(start, end, locale as 'ru' | 'ky' | 'en', tz);
 
     function getServiceName(service: { name_ru: string; name_ky?: string | null; name_en?: string | null } | null): string {
         if (!service) return t('staff.cabinet.bookings.card.serviceDefault', 'Услуга');
@@ -216,7 +217,7 @@ export default function StaffBookingsView({
                                                         {t('staff.cabinet.bookings.card.time', 'Время')}
                                                     </div>
                                                     <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                        {formatDateTimeLocal(booking.start_at)} - {formatDateTimeLocal(booking.end_at)}
+                                                        {formatVisit(booking.start_at, booking.end_at)}
                                                     </div>
                                                 </div>
                                                 <div>

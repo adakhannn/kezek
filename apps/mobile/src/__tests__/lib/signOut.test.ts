@@ -41,7 +41,7 @@ describe('signOutSafely', () => {
             'whatsapp_mobile_active_attempt_v1',
             'shift_offline_queue',
             'shift_offline_cache',
-            'offline:bookings:user-1',
+            'kezek.offline.bookings.user-1',
             'kezek_staff_selection_user-1',
         ].forEach((key) => secureStore.set(key, 'sensitive'));
         auth.signOut.mockResolvedValue({ error: null });
@@ -81,6 +81,23 @@ describe('signOutSafely', () => {
 
         await expect(signOutSafely()).resolves.toEqual({ usedLocalFallback: true });
         expect(auth._removeSession).toHaveBeenCalledTimes(1);
+    });
+
+    test('resolves even when one local cache cannot be cleared (KEZEK-MOBILE-3)', async () => {
+        ['kezek.offline.bookings.user-1', 'kezek_staff_selection_user-1', 'shift_offline_queue'].forEach((key) =>
+            secureStore.set(key, 'sensitive'),
+        );
+        auth.signOut.mockResolvedValue({ error: null });
+        (SecureStore.deleteItemAsync as jest.Mock).mockImplementation(async (key: string) => {
+            if (key === 'kezek_staff_selection_user-1') throw new Error('keystore unavailable');
+            secureStore.delete(key);
+        });
+
+        await expect(signOutSafely()).resolves.toEqual({ usedLocalFallback: false });
+        // The other stores were still cleared, and the query cache too.
+        expect(secureStore.has('kezek.offline.bookings.user-1')).toBe(false);
+        expect(secureStore.has('shift_offline_queue')).toBe(false);
+        expect(queryClient.clear).toHaveBeenCalledTimes(1);
     });
 
     test('falls back when remote sign-out hangs', async () => {

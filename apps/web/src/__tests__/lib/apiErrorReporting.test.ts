@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, featureDisabledResponse, handleApiError, withErrorHandler } from '@/lib/apiErrorHandler';
+import { alreadyReportedUnavailableResponse, createErrorResponse, featureDisabledResponse, handleApiError, withErrorHandler } from '@/lib/apiErrorHandler';
 
 jest.mock('@/lib/log', () => ({ logError: jest.fn(), logWarn: jest.fn(), logDebug: jest.fn() }));
 
@@ -29,6 +29,14 @@ describe('API error reporting', () => {
 
         expect(response.status).toBe(503);
         expect((await response.json()).error).toBe('service_unavailable');
+        expect(logError).not.toHaveBeenCalled();
+    });
+
+    test('a 503 whose cause the caller already logged is not reported again (KEZEK-WEB-8)', async () => {
+        const response = await withErrorHandler('Cron', async () => alreadyReportedUnavailableResponse('Cron execution tracking is unavailable'));
+
+        expect(response.status).toBe(503);
+        expect(await response.json()).toMatchObject({ ok: false, error: 'service_unavailable' });
         expect(logError).not.toHaveBeenCalled();
     });
 
