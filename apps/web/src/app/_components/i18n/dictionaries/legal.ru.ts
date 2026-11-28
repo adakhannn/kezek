@@ -1,14 +1,14 @@
 // Legal pages (/privacy, /terms, /data-deletion), FE-10. Not part of the client bundle: only
 // ../legal.ts imports these, for the server-rendered pages. The ru text is the legal original.
 // The texts describe what the code does (docs/legal/PRIVACY_DRAFT.md, TERMS_DRAFT.md); the
-// operator and the support address are added when the owner gives them.
+// support contact is the owner's (28 Nov 2026); operator details (name, INN, address) still to come.
 export const legalRu = {
     'legal.common.backHome': 'Вернуться на главную',
     'legal.common.lastUpdated': 'Последнее обновление: {date}',
     'legal.common.serviceLabel': 'Сервис:',
     'legal.common.websiteLabel': 'Веб-сайт:',
     'legal.common.supportLabel': 'Поддержка:',
-    'legal.common.supportText': 'изменить данные и удалить аккаунт можно в профиле на сайте или в приложении, раздел «Удаление аккаунта». Контакт поддержки будет добавлен на эту страницу.',
+    'legal.common.supportText': 'изменить данные и удалить аккаунт можно в профиле на сайте или в приложении, раздел «Удаление аккаунта». По другим вопросам пишите на osorovadahan04@gmail.com или в WhatsApp +996 500 574 029.',
     'legal.privacy.metaTitle': 'Политика конфиденциальности — Kezek',
     'legal.privacy.metaDescription': 'Политика конфиденциальности сервиса Kezek',
     'legal.privacy.title': 'Политика конфиденциальности',
@@ -130,7 +130,7 @@ export const legalRu = {
     'legal.dataDeletion.s3.step4.title': 'Подтвердите удаление',
     'legal.dataDeletion.s3.step4.text': 'Введите слово УДАЛИТЬ и нажмите «Запросить удаление аккаунта». Удаление будет запланировано через 7 дней.',
     'legal.dataDeletion.s3.alt.label': 'Если вы не можете войти:',
-    'legal.dataDeletion.s3.alt.text': 'если вы записывались без аккаунта или потеряли доступ ко входу, контакт поддержки для запроса на удаление будет добавлен на эту страницу.',
+    'legal.dataDeletion.s3.alt.text': 'если вы записывались без аккаунта или потеряли доступ ко входу, напишите на osorovadahan04@gmail.com или в WhatsApp +996 500 574 029. Укажите телефон или e-mail из записи.',
     'legal.dataDeletion.s4.title': '4. Сроки удаления',
     'legal.dataDeletion.s4.intro': 'После запроса на удаление:',
     'legal.dataDeletion.s4.i1': '7 дней запрос можно отменить там же, в разделе «Удаление аккаунта»',
