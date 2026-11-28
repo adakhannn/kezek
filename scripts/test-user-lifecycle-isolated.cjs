@@ -108,6 +108,9 @@ const created = [];
       insert into bookings(client_id,amount) values('${user}',123.45);`);
     const login = () => http(authUrl, '/token?grant_type=password', 'POST', { email: 'target@lifecycle.invalid', password: 'Synthetic-only-password-319!' });
     let session = await login(); assert.equal(session.status, 200); const old = session.data;
+    // Parallel sign-ins of one user (two tabs, app and site) must not deadlock inside Auth (2026-11-26 prod).
+    const parallelLogins = await Promise.all(Array.from({ length: 12 }, () => login()));
+    assert.deepEqual(parallelLogins.map(x => x.status), Array(12).fill(200), 'parallel sign-ins of one user succeed');
     assert.equal((await http(restUrl, '/profiles', 'GET', undefined, old.access_token)).status, 200);
     // No-op unblock must still complete (banned_until is already NULL).
     let c = prepare(admin,user,'unblock'); assert.equal((await apply(user,c,'unblock')).status,200); assert(completed(admin,user,c));
