@@ -156,6 +156,14 @@ export function featureDisabledResponse(message: string): NextResponse<ApiErrorR
     return response;
 }
 
+/**
+ * 503 whose cause the caller has already logged at the level it deserves (e.g. a transient cron
+ * tracking blip as a warning). Not reported again as an `ApiErrorResponse` server error.
+ */
+export function alreadyReportedUnavailableResponse(message: string): NextResponse<ApiErrorResponse> {
+    return featureDisabledResponse(message);
+}
+
 function buildErrorResponse(
     error: ApiErrorType,
     message: string | undefined,

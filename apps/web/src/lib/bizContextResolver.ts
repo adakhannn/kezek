@@ -15,6 +15,7 @@ import {
     getBizResolutionMethod,
 } from './bizContextRuntimeHelpers';
 import { logDebug, logError, logWarn } from './log';
+import { isInvalidRefreshTokenError } from './supabaseAuthRecovery';
 import { createSupabaseServerClient } from './supabaseHelpers';
 
 export type ManagerBusinessContext = {
@@ -37,6 +38,12 @@ export type ManagerBusinessContext = {
     website_url: string | null;
 };
 
+/** Supabase Auth error codes that mean the token or session itself was rejected. */
+const REJECTED_SESSION_CODES = new Set([
+    'bad_jwt', 'no_authorization', 'session_not_found', 'session_expired',
+    'refresh_token_not_found', 'refresh_token_already_used', 'user_not_found', 'user_banned',
+]);
+
 /**
  * Выбор текущего бизнеса для кабинета менеджмента.
  * Логика перенесена из getBizContextForManagers (authBiz.ts).
@@ -50,16 +57,22 @@ export async function resolveBizContextForManagers() {
     logDebug('AuthBiz', 'Starting business context resolution');
     const { data: userData, error: eUser } = await supabase.auth.getUser();
     if (eUser) {
-        logError('AuthBiz', 'User authentication failed', {
+        const authStatus = typeof eUser.status === 'number' ? eUser.status : 0;
+        const authCode = typeof eUser.code === 'string' ? eUser.code : '';
+        // A 4xx answer concerns the caller's token (KEZEK-WEB-7): a warning, not a Sentry error.
+        // 5xx and network failures (status 0) stay errors.
+        const clientError = authStatus >= 400 && authStatus < 500;
+        (clientError ? logWarn : logError)('AuthBiz', 'User authentication failed', {
             error: eUser?.message,
             hasUser: !!userData?.user,
             errorCode: eUser?.code,
             errorStatus: eUser?.status,
         });
-        const authStatus = typeof eUser.status === 'number' ? eUser.status : 0;
-        const authCode = typeof eUser.code === 'string' ? eUser.code : '';
-        const isRejectedSession = isAuthSessionMissingError(eUser)
-            || authStatus === 401 || authStatus === 403 || authCode === 'session_not_found';
+        // GoTrue answers 400 for some rejected tokens (bad_jwt, an expired or reused refresh token);
+        // those must reach the sign-in redirect / 401 like a 401/403, not a 503. An unknown 400
+        // (e.g. provider configuration) and 429 stay SERVICE_UNAVAILABLE: the session may be fine.
+        const isRejectedSession = isAuthSessionMissingError(eUser) || isInvalidRefreshTokenError(eUser)
+            || authStatus === 401 || authStatus === 403 || REJECTED_SESSION_CODES.has(authCode);
         if (!isRejectedSession) {
             throw new BizAccessError('SERVICE_UNAVAILABLE', 'AUTH_SERVICE_UNAVAILABLE');
         }

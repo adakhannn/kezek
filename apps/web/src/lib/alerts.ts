@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 
 import { getEmailFrom, getSiteOrigin } from './env';
-import { logDebug, logError } from './log';
+import { logDebug, logError, logWarn } from './log';
 import { DEFAULT_SITE_ORIGIN } from './siteOrigin';
 
 let resendClient: Resend | null = null;
@@ -31,13 +31,22 @@ type Alert = {
     details?: Record<string, unknown>;
 };
 
+export type AlertEmailResult = {
+    success: boolean;
+    error?: string;
+    /** The alert inbox is not set up (owner action); already logged here once as a warning. */
+    notConfigured?: true;
+};
+
 /**
- * Отправляет алерт по email через Resend
+ * Отправляет алерт по email через Resend.
+ * A missing configuration is a warning, logged once per call: the alerts themselves reach Sentry
+ * from the caller, and an error-level event on every cron run was noise (KEZEK-WEB-2/3/6).
  */
-export async function sendAlertEmail(alerts: Alert[]): Promise<{ success: boolean; error?: string }> {
+export async function sendAlertEmail(alerts: Alert[]): Promise<AlertEmailResult> {
     if (!process.env.RESEND_API_KEY) {
-        logError('Alerts', 'RESEND_API_KEY not configured, skipping email alert');
-        return { success: false, error: 'RESEND_API_KEY not configured' };
+        logWarn('Alerts', 'RESEND_API_KEY not configured, skipping email alert');
+        return { success: false, error: 'RESEND_API_KEY not configured', notConfigured: true };
     }
 
     if (alerts.length === 0) {
@@ -49,8 +58,8 @@ export async function sendAlertEmail(alerts: Alert[]): Promise<{ success: boolea
     const to = process.env.ALERT_EMAIL_TO?.trim();
     const from = getEmailFrom();
     if (!to || !from) {
-        logError('Alerts', 'ALERT_EMAIL_TO or EMAIL_FROM not configured, skipping email alert');
-        return { success: false, error: 'ALERT_EMAIL_TO or EMAIL_FROM not configured' };
+        logWarn('Alerts', 'ALERT_EMAIL_TO or EMAIL_FROM not configured, skipping email alert');
+        return { success: false, error: 'ALERT_EMAIL_TO or EMAIL_FROM not configured', notConfigured: true };
     }
 
     const errorCount = alerts.filter((a) => a.type === 'error').length;
