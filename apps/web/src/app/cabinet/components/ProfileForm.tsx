@@ -32,6 +32,8 @@ type Profile = {
 type LoginConnections = {
     google: boolean;
     yandex: boolean;
+    /** Sign in with Apple: shown read-only, it is managed in the Apple ID settings. */
+    apple: boolean;
 };
 
 type NotificationEmail = {
@@ -85,6 +87,7 @@ export default function ProfileForm() {
     const [loginConnections, setLoginConnections] = useState<LoginConnections>({
         google: false,
         yandex: false,
+        apple: false,
     });
     const [linkingProvider, setLinkingProvider] = useState<'google' | 'yandex' | null>(null);
     const [unlinkingProvider, setUnlinkingProvider] = useState<SocialProvider | null>(null);
@@ -212,6 +215,7 @@ export default function ProfileForm() {
             setLoginConnections({
                 google: providers.has('google'),
                 yandex: !!data?.yandex_id || !!meta.yandex_id || meta.auth_provider === 'yandex',
+                apple: providers.has('apple'),
             });
             const nextNotificationEmails = await notificationEmailRequest;
             setNotificationEmails(nextNotificationEmails);
@@ -568,6 +572,17 @@ export default function ProfileForm() {
                 </div>
 
                 <div className="space-y-3">
+                    {loginConnections.apple ? (
+                        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3" data-testid="profile-apple-connection">
+                            <div>
+                                <span className="type-body font-medium text-gray-700 dark:text-gray-300">{t('cabinet.profile.connections.apple', 'Apple')}</span>
+                                <p className="type-caption mt-1 text-gray-500 dark:text-gray-400">
+                                    {t('cabinet.profile.connections.appleReadOnly', 'Вход через Apple отключается в настройках Apple ID на устройстве.')}
+                                </p>
+                            </div>
+                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">{t('cabinet.profile.connections.connected', 'Подключено')}</span>
+                        </div>
+                    ) : null}
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
                         <span className="type-body font-medium text-gray-700 dark:text-gray-300">Google</span>
                         {loginConnections.google ? (

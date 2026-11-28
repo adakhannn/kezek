@@ -529,4 +529,26 @@ describe('ProfileScreen', () => {
         }));
         await waitFor(() => expect(mockShowToast).toHaveBeenCalledWith('Способ входа успешно отвязан', 'success'));
     });
+
+    test('Sign in with Apple is a read-only connected row; Google beside it stays unlinkable', async () => {
+        mockedSupabase.auth.getUser.mockResolvedValue({
+            data: { user: { id: 'test-user-id', email: 'relay@privaterelay.appleid.com', phone: null, user_metadata: {}, identities: [{ provider: 'apple' }, { provider: 'google' }] } },
+            error: null,
+        });
+        renderWithProviders(<ProfileScreen />);
+
+        const apple = await screen.findByTestId('profile-apple-connection');
+        expect(apple).toBeTruthy();
+        expect(screen.getByText('Apple')).toBeTruthy();
+        expect(screen.getByText('Вход через Apple отключается в настройках Apple ID на устройстве.')).toBeTruthy();
+        expect(screen.queryByLabelText('Отвязать Apple')).toBeNull();
+        expect(screen.getByLabelText('Отвязать Google')).toBeTruthy();
+    });
+
+    test('no Apple row for an account without Sign in with Apple', async () => {
+        renderWithProviders(<ProfileScreen />);
+
+        expect(await screen.findByTestId('profile-google-connection')).toBeTruthy();
+        expect(screen.queryByTestId('profile-apple-connection')).toBeNull();
+    });
 });

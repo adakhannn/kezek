@@ -245,6 +245,23 @@ function ProviderRow({ label, icon, iconColor, linked, detail, hint, onConnect, 
     );
 }
 
+/** Sign in with Apple, read-only: it counts as a login method but is turned off in Apple ID. */
+function AppleConnection() {
+    const { t } = useLanguage();
+    return (
+        <View style={styles.row} testID="profile-apple-connection">
+            <View style={styles.rowHeader}>
+                <ProviderIcon icon="logo-apple" color={colors.text.primary} />
+                <View style={styles.rowBody}>
+                    <Text style={styles.rowTitle}>{t('parity.connections.apple')}</Text>
+                    <Text style={styles.rowDetail}>{t('parity.connections.appleReadOnly')}</Text>
+                </View>
+                <ConnectedBadge />
+            </View>
+        </View>
+    );
+}
+
 type Props = {
     connections: LoginConnections;
     telegramUsername: string | null;
@@ -266,6 +283,7 @@ export function LoginConnectionsCard({ connections, telegramUsername, whatsApp, 
             testID="profile-login-connections"
         >
             <Card variant="plain" padding="md" style={styles.card}>
+                {connections.apple ? <AppleConnection /> : null}
                 <ProviderRow
                     label="Google"
                     icon="logo-google"

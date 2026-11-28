@@ -36,6 +36,13 @@ describe('deriveLoginConnections (web ProfileForm rules)', () => {
         expect(deriveLoginConnections({ user_metadata: { telegram_id: 9 } }, null).telegram).toBe(true);
         expect(deriveLoginConnections(null, { whatsapp_verified: true }).whatsapp).toBe(true);
     });
+
+    test('Sign in with Apple from Auth providers or identities; absent for other accounts', () => {
+        expect(deriveLoginConnections({ identities: [{ provider: 'apple' }] }, null).apple).toBe(true);
+        expect(deriveLoginConnections({ app_metadata: { providers: ['apple', 'google'] } }, null)).toMatchObject({ apple: true, google: true });
+        expect(deriveLoginConnections({ app_metadata: { provider: 'email' }, identities: [{ provider: 'google' }] }, null).apple).toBe(false);
+        expect(deriveLoginConnections(null, null).apple).toBe(false);
+    });
 });
 
 describe('notification e-mail addresses', () => {

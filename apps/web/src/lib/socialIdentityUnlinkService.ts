@@ -77,7 +77,10 @@ export async function unlinkSocialIdentity(params: {
         telegram: (!!profile?.telegram_id && !!profile.telegram_verified) || !!metadata.telegram_id,
         whatsapp: !!profile?.whatsapp_phone && !!profile.whatsapp_verified,
     };
-    const connectedCount = Object.values(connected).filter(Boolean).length;
+    // Sign in with Apple counts as a login method, so an Apple user who also linked Google can
+    // unlink Google; Apple itself is not unlinked here (it is managed in the Apple ID settings).
+    const appleConnected = !!authData.user.identities?.some((identity) => identity.provider === 'apple');
+    const connectedCount = Object.values(connected).filter(Boolean).length + (appleConnected ? 1 : 0);
 
     if (!connected[params.provider]) {
         return { ok: false, error: 'not_found', message: notConnectedMessages[params.provider], status: 404, details: { code: 'identity_not_connected' } };

@@ -6,7 +6,8 @@
 
 export type SocialProvider = 'google' | 'yandex' | 'telegram' | 'whatsapp';
 
-export type LoginConnections = Record<SocialProvider, boolean>;
+/** The unlinkable providers plus Sign in with Apple, which is shown read-only (managed in Apple ID). */
+export type LoginConnections = Record<SocialProvider, boolean> & { apple: boolean };
 
 type UserLike = {
     app_metadata?: { provider?: string | null; providers?: string[] | null } | null;
@@ -35,6 +36,7 @@ export function deriveLoginConnections(user: UserLike, profile: ProfileLike): Lo
         yandex: !!profile?.yandex_id || !!meta.yandex_id || meta.auth_provider === 'yandex',
         telegram: (!!profile?.telegram_id && !!profile?.telegram_verified) || !!meta.telegram_id,
         whatsapp: !!profile?.whatsapp_verified,
+        apple: providers.has('apple'),
     };
 }
 
