@@ -14,7 +14,10 @@ import {
     PRIVATE_CACHE_CONTROL,
     PUBLIC_FILE_CACHE_CONTROL,
     resolveUpstreamUrl,
+    normalizedProxyPath,
+    PROXY_CONTENT_SECURITY_POLICY,
     SUPABASE_PROXY_AUTH_LIMIT,
+    SUPABASE_PROXY_TOKEN_LIMIT,
     SUPABASE_PROXY_MAX_BODY_BYTES,
 } from '@/lib/supabaseProxy';
 
@@ -50,6 +53,7 @@ describe('switch (off by default)', () => {
         expect(res.status).toBe(404);
         expect(res.headers.get(SUPABASE_PROXY_STATUS_HEADER)).toBe('disabled');
         expect(res.headers.get('cache-control')).toBe(PRIVATE_CACHE_CONTROL);
+        expect(res.headers.get('content-security-policy')).toBe(PROXY_CONTENT_SECURITY_POLICY);
         expect(fetchMock).not.toHaveBeenCalled();
         expect(checkRateLimit).not.toHaveBeenCalled();
     });
@@ -99,6 +103,14 @@ describe('fixed upstream host and path allow-list', () => {
         '/rest/v1/x',
         '/sb/auth/v1/admin/users',
         '/sb/auth/v1/admin',
+        '/sb/auth/v1/ADMIN/users',
+        '/sb/auth/v1/%61dmin/users',
+        '/sb/auth/v1/%41DMIN',
+        '/sb/auth/v1/admin;x/users',
+        '/sb/auth/v1/admin%3Bx/users',
+        '/sb/auth/v1/adminx/users',
+        '/sb/auth/v1/admin/',
+        '/sb/rest/v1/bookings;x',
         '/sb/rest/v1/../../pg/query',
         '/sb/rest/v1/%2e%2e/%2e%2e/pg',
         '/sb/rest/v1/a%2F..%2F..%2Fpg',
@@ -168,6 +180,7 @@ describe('headers', () => {
         expect(res.headers.get('vercel-cdn-cache-control')).toBe('no-store');
         expect(res.headers.get('content-range')).toBe('0-0/1');
         expect(res.headers.get('x-supabase-api-version')).toBe('2024-01-01');
+        expect(res.headers.get('content-security-policy')).toBe(PROXY_CONTENT_SECURITY_POLICY);
         for (const dropped of ['set-cookie', 'access-control-allow-origin', 'content-encoding', 'server']) {
             expect(res.headers.get(dropped)).toBeNull();
         }
@@ -188,6 +201,8 @@ describe('headers', () => {
         expect(ok.headers.get('cache-control')).toBe(PUBLIC_FILE_CACHE_CONTROL);
         expect(ok.headers.get('vercel-cdn-cache-control')).toBe('no-store');
         expect(ok.headers.get('content-type')).toBe('image/jpeg');
+        // An uploaded HTML/SVG "photo" cannot run script on our origin.
+        expect(ok.headers.get('content-security-policy')).toBe(PROXY_CONTENT_SECURITY_POLICY);
         const missing = await call('/sb/storage/v1/object/public/avatars/2.jpg', {}, ON,
             upstreamFetch(new Response('{}', { status: 400 }))).response;
         expect(missing.headers.get('cache-control')).toBe(PRIVATE_CACHE_CONTROL);
@@ -272,9 +287,31 @@ describe('per-client limit on code sending and checking', () => {
         expect(fetchMock).toHaveBeenCalled();
     });
 
-    test('token refresh and data reads are not limited by the proxy', async () => {
-        await call('/sb/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: '{}' }).response;
+    test.each(['refresh_token', 'password', 'id_token'])('token grant %s gets the generous per-client budget', async (grant) => {
+        await call(`/sb/auth/v1/token?grant_type=${grant}`, { method: 'POST', body: '{}' }).response;
+        expect(checkRateLimit).toHaveBeenCalledWith(expect.any(Request), SUPABASE_PROXY_TOKEN_LIMIT, '/sb/auth/v1/token');
+        expect(SUPABASE_PROXY_TOKEN_LIMIT.maxRequests).toBeGreaterThanOrEqual(300);
+    });
+
+    test.each([
+        ['/sb/auth/v1/OTP', '/sb/auth/v1/otp'],
+        ['/sb/auth/v1/otp/', '/sb/auth/v1/otp'],
+        ['/sb/auth/v1/%76erify', '/sb/auth/v1/verify'],
+        ['/sb/auth/v1/Token/?grant_type=password', '/sb/auth/v1/token'],
+    ])('case and trailing-slash variants are counted: %s', async (path, routeId) => {
+        await call(path, { method: 'POST', body: '{}' }).response;
+        expect(checkRateLimit).toHaveBeenCalledWith(expect.any(Request), expect.anything(), routeId);
+    });
+
+    test('data reads and non-POST auth calls are not limited by the proxy', async () => {
         await call('/sb/rest/v1/services').response;
+        await call('/sb/auth/v1/user').response;
         expect(checkRateLimit).not.toHaveBeenCalled();
+    });
+
+    test('normalized path: decoded, lower case, no trailing slash', () => {
+        expect(normalizedProxyPath('/sb/auth/v1/%54oken/')).toBe('/auth/v1/token');
+        expect(normalizedProxyPath('/sb/auth/v1/a;b')).toBeNull();
+        expect(normalizedProxyPath('/other')).toBeNull();
     });
 });
