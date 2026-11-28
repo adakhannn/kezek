@@ -146,7 +146,7 @@ export function useDashboardBookingsListController({
                 setTotalCount(0);
             }
             setSettled({ key, ok: false });
-            messages.current.showError(messages.current.t('bookings.list.loadError', 'Не удалось загрузить брони'));
+            messages.current.showError(messages.current.t('bookings.list.loadError', 'Не удалось загрузить записи'));
         } finally {
             if (id === sequence.current) setRefreshing(false);
         }
@@ -229,7 +229,7 @@ export function useDashboardBookingsListController({
 
         await notify('confirm', id);
         await refresh();
-        showSuccess(t('bookings.actions.confirmed', 'Бронь подтверждена'));
+        showSuccess(t('bookings.actions.confirmed', 'Запись подтверждена'));
     }
 
     async function cancel(id: string) {
@@ -244,7 +244,7 @@ export function useDashboardBookingsListController({
 
         await notify('cancel', id);
         await refresh();
-        showSuccess(t('bookings.actions.cancelled', 'Бронь отменена'));
+        showSuccess(t('bookings.actions.cancelled', 'Запись отменена'));
     }
 
     async function markAttendance(id: string, attended: boolean) {

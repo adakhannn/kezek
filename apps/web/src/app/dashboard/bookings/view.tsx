@@ -72,7 +72,7 @@ export default function AdminBookingsView({
                             {tabMeta.chip}
                         </span>
                     }
-                    title={t('bookings.title', 'Брони')}
+                    title={t('bookings.title', 'Записи')}
                     description={t(
                         'bookings.subtitle',
                         'Единое операционное рабочее место для сегодняшнего потока, истории бронирований и быстрой записи клиентов.',

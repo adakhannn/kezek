@@ -139,7 +139,7 @@ describe('dashboard bookings list (FE-03)', () => {
         await act(async () => { await result.current.refresh(); });
         expect(result.current.list).toHaveLength(30);
         expect(result.current.loadFailed).toBe(true);
-        expect(showError).toHaveBeenCalledWith('Не удалось загрузить брони');
+        expect(showError).toHaveBeenCalledWith('Не удалось загрузить записи');
 
         act(() => result.current.setBranchFilter('branch-2'));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -204,7 +204,7 @@ describe('BookingsList states', () => {
     test('a failed load is an error with a retry, not "no bookings"', () => {
         const onRetry = jest.fn();
         render(<BookingsList {...props} bookings={[]} isLoading={false} loadFailed onRetry={onRetry} />);
-        expect(screen.getByText('Не удалось загрузить брони')).toBeTruthy();
+        expect(screen.getByText('Не удалось загрузить записи')).toBeTruthy();
         expect(screen.queryByText('Нет бронирований')).toBeNull();
         fireEvent.click(screen.getByText('Повторить'));
         expect(onRetry).toHaveBeenCalled();

@@ -136,7 +136,7 @@ test.describe('QuickDesk - управление бронированиями', (
         await expect(row).toContainText('В ожидании');
         await row.getByRole('button', { name: 'Подтвердить', exact: true }).click();
         await confirmDialog(page);
-        await expect(page.getByText('Бронь подтверждена')).toBeVisible();
+        await expect(page.getByText('Запись подтверждена')).toBeVisible();
         await expect(row).toContainText('Подтверждено');
     });
 
@@ -144,7 +144,7 @@ test.describe('QuickDesk - управление бронированиями', (
         const row = await bookingRow(page, 'E2E Отмена');
         await row.getByRole('button', { name: 'Отменить', exact: true }).click();
         await confirmDialog(page);
-        await expect(page.getByText('Бронь отменена')).toBeVisible();
+        await expect(page.getByText('Запись отменена')).toBeVisible();
         // Cancelled bookings leave the default "active" list.
         await page.locator('select', { has: page.locator('option[value="no_show"]') }).selectOption('cancelled');
         await expect(page.locator('tr', { hasText: 'E2E Отмена' })).toContainText('Отменено');

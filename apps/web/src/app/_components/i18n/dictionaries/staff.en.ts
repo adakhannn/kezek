@@ -406,7 +406,7 @@ export const staffEn = {
     'staff.transfer.cancel': 'Cancel',
     'staff.transfer.current': 'Current branch:',
     'staff.transfer.errors.selectBranch': 'Select branch',
-    'staff.transfer.note': 'Transfer is performed immediately. We do not touch future bookings (transfer is a separate task).',
+    'staff.transfer.note': 'The transfer takes effect immediately. Future bookings stay as they are: reschedule them separately if needed.',
     'staff.transfer.processing': 'Transferring…',
     'staff.transfer.submit': 'Confirm transfer',
     'staff.transfer.subtitle': 'Transfer staff member to another branch on a permanent basis',

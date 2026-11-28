@@ -87,7 +87,7 @@ export const adminAnalyticsRu = {
     'admin.analyticsFunnel.stepsHint': 'Для каждого шага показано количество сессий и конверсия относительно предыдущего шага.',
     'admin.analyticsFunnel.chartTitle': 'Воронка шагов бронирования',
     'admin.analyticsFunnel.emptyTitle': 'Нет данных по воронке',
-    'admin.analyticsFunnel.emptyDescription': 'За выбранный период и срез нет событий, которые можно показать в отчете.',
+    'admin.analyticsFunnel.emptyDescription': 'За выбранный период и срез нет событий, которые можно показать в отчёте.',
     'admin.analyticsFunnel.tooltipSessions': 'Сессий на шаге: {count}',
     'admin.analyticsFunnel.tooltipFromStart': 'Конверсия от начала воронки: {value}',
     'admin.analyticsFunnel.tooltipFromPrev': 'Конверсия от предыдущего шага: {value}',
