@@ -24,8 +24,6 @@ import { useTemporaryTransfers } from './hooks/useTemporaryTransfers';
 import type { Data, ServiceStaffRow } from './types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { AlertBanner } from '@/components/ui/AlertBanner';
-import { Card } from '@/components/ui/Card';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { trackBookingFlowStep } from '@/lib/analyticsTrackEvent';
@@ -399,46 +397,7 @@ export default function BookingForm({ data }: { data: Data }) {
             <div className="mx-auto max-w-[var(--container-xl)] space-y-5 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
                 <BookingHeader biz={biz} contacts={publicContacts} branchName={selectedBranch?.name} t={t} />
 
-                <Card variant="elevated" padding="lg">
-                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
-                        <div>
-                            <p className="type-label text-[var(--accent-primary)]">
-                                {t('booking.flow.badge', 'Пошаговая запись')}
-                            </p>
-                            <h2 className="type-section-title mt-2 text-[var(--text-primary)]">
-                                {t('booking.flow.title', 'Понятный путь от выбора до подтверждения')}
-                            </h2>
-                            <p className="type-body mt-2 text-[var(--text-secondary)]">
-                                {t(
-                                    'booking.flow.description',
-                                    'Поток разбит на короткие шаги: сначала контекст, потом специалист и услуги, а точное время выбирается только в самом конце.',
-                                )}
-                            </p>
-                        </div>
-                        <div className="rounded-[22px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
-                            <div className="type-label text-[var(--text-primary)]">
-                                {t('booking.flow.sideTitle', 'Что делает поток удобнее')}
-                            </div>
-                            <ul className="mt-3 space-y-2 text-sm text-[var(--text-secondary)]">
-                                <li>• {t('booking.flow.side1', 'Шаги открываются последовательно и не дают потеряться.')}</li>
-                                <li>• {t('booking.flow.side2', 'Сводка справа всегда показывает текущий выбор.')}</li>
-                                <li>• {t('booking.flow.side3', 'После выбора времени поток перейдёт к подтверждению записи.')}</li>
-                            </ul>
-                        </div>
-                    </div>
-                </Card>
-
-                {!isAuthed ? (
-                    <AlertBanner
-                        variant="warning"
-                        title={t('booking.needAuthTitle', 'Для финального подтверждения понадобится вход или гостевая запись')}
-                        message={t(
-                            'booking.needAuth',
-                            'Для бронирования необходимо войти или продолжить как гость после выбора слота.',
-                        )}
-                    />
-                ) : null}
-
+                {/* Guest sign-in guidance lives in the time step and the summary, where it applies. */}
                 {branchId && branchPromotions.length > 0 ? (
                     <PromotionsList promotions={branchPromotions} t={t} />
                 ) : null}

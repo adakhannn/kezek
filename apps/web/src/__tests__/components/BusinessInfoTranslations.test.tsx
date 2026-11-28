@@ -83,8 +83,8 @@ describe('BusinessInfo visible landing localization', () => {
     it.each(['ru', 'ky', 'en'] as const)('provides dictionary entries for every visible product label in %s', locale => {
         const t = setLanguage(locale);
         render(<BusinessInfo data={fixture} />);
-        const productKeys = t.mock.calls.map(([key]) => key).filter(key => /^business\.(hero|info|metrics|trust|cta)\./.test(key));
-        expect(productKeys.length).toBeGreaterThan(20);
+        const productKeys = t.mock.calls.map(([key]) => key).filter(key => /^business\.(hero|info|metrics|cta)\./.test(key));
+        expect(productKeys.length).toBeGreaterThan(10);
         for (const key of productKeys) expect(dictionaries[locale][key]).toEqual(expect.any(String));
     });
 
@@ -107,6 +107,30 @@ describe('BusinessInfo visible landing localization', () => {
         for (const oldCopy of ['Почему можно идти дальше к записи', 'Онлайн-запись доступна', 'Вернуться в каталог', 'Будет доступен в выборе специалиста']) {
             expect(container.textContent).not.toContain(oldCopy);
         }
+    });
+
+    it.each(['ru', 'ky', 'en'] as const)('shows client copy only: no design notes, empty ratings or zero promotions in %s', locale => {
+        setLanguage(locale);
+        const { container } = render(<BusinessInfo data={fixture} />);
+        const text = container.textContent ?? '';
+        for (const note of ['booking flow', 'Почему можно идти дальше', 'Страница заранее показывает', 'с рейтингом', 'rated', 'рейтинги бар',
+            'Будет доступен', 'Филиал будет доступен', 'Недостаточно данных', 'Нет рейтинга']) {
+            expect(text).not.toContain(note);
+        }
+        // Branches, services and team tiles; the promotions tile appears only when there are promotions.
+        const metrics = screen.getByTestId('business-metrics');
+        expect(metrics.children).toHaveLength(3);
+    });
+
+    it('shows the promotions tile and a rating badge when the business has them', () => {
+        setLanguage('ru');
+        render(<BusinessInfo data={{
+            ...fixture,
+            branches: [{ ...fixture.branches[0], rating_score: 90 }],
+            promotions: [{ id: 'promo-1', branch_id: 'branch-1', promotion_type: 'birthday_discount', title_ru: null, params: { discount_percent: 10 } }],
+        }} />);
+        expect(screen.getByTestId('business-metrics').children).toHaveLength(4);
+        expect(screen.getAllByText('4.5').length).toBeGreaterThan(0);
     });
 
     it('updates public product copy when the active language changes', () => {

@@ -9,6 +9,8 @@ type RatingDisplayProps = {
     showLowHint?: boolean;
     /** Вариант оформления. */
     variant?: 'badge' | 'inline';
+    /** Render nothing when there is no score yet (cards, lists). */
+    hideWhenEmpty?: boolean;
     className?: string;
 };
 
@@ -27,12 +29,14 @@ export function RatingDisplay({
     t,
     showLowHint = false,
     variant = 'badge',
+    hideWhenEmpty = false,
     className = '',
 }: RatingDisplayProps) {
     const isNull = score === null || score === undefined;
     const isLow = typeof score === 'number' && score <= 10;
 
     if (isNull) {
+        if (hideWhenEmpty) return null;
         const label = t('common.rating.noRating', 'Нет рейтинга');
         if (variant === 'badge') {
             return (

@@ -396,7 +396,7 @@ export const staffKy = {
     'staff.transfer.cancel': 'Жокко чыгаруу',
     'staff.transfer.current': 'Учурдагы филиал:',
     'staff.transfer.errors.selectBranch': 'Филиалды тандаңыз',
-    'staff.transfer.note': 'Которуу дароо ишке ашат. Келечектеги брондоолорго тийгизбейбиз (которуу — бөлүнчө милдет).',
+    'staff.transfer.note': 'Которуу дароо ишке ашат. Келечектеги жазылуулар өзгөрбөйт: керек болсо, аларды өзүнчө жылдырыңыз.',
     'staff.transfer.processing': 'Которуп жатабыз…',
     'staff.transfer.submit': 'Которууну ырасталоо',
     'staff.transfer.subtitle': 'Кызматкерди башка филиалга туруктуу негизде которуу',

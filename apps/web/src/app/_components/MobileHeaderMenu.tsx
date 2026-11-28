@@ -114,7 +114,7 @@ function MobileAuthStatus({ account, onAction }: { account: ShellAccount | null;
             <div className="inline-flex w-full items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-emphasis)_82%,transparent)] px-3.5 py-2 text-sm shadow-[var(--shadow-xs)]">
                 <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
                 <span className="truncate text-[var(--text-secondary)]">
-                    <span className="font-medium text-[var(--text-primary)]">{account.label || t('header.account', 'аккаунт')}</span>
+                    <span className="font-medium text-[var(--text-primary)]">{account.label || t('header.account', 'Аккаунт')}</span>
                 </span>
             </div>
 

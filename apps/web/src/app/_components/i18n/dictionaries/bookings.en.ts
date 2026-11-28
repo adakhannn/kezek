@@ -92,7 +92,7 @@ export const bookingsEn = {
     'bookings.desk.quickSelectBranch': 'Quick select branch',
     'bookings.desk.selectService': 'Select service',
     'bookings.desk.service': 'Service',
-    'bookings.desk.slotsHint': 'Slots are calculated by `get_free_slots_service_day` taking into account schedule and occupied bookings.',
+    'bookings.desk.slotsHint': 'Free times follow the master\'s schedule and the bookings already taken.',
     'bookings.desk.statusPanel.bookings': 'bookings',
     'bookings.desk.statusPanel.freeSlots': 'free slots',
     'bookings.desk.statusPanel.goToCalendar': 'Calendar',

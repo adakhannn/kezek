@@ -59,7 +59,7 @@ export function BookingFilters({
     return (
         <div className="space-y-4">
             <SectionHeader
-                title={t('bookings.list.title', 'Брони')}
+                title={t('bookings.list.title', 'Записи')}
                 description={t(
                     'bookings.workspace.description',
                     'Быстро переключайтесь между сегодняшней операционной работой, поиском по истории и ручной обработкой статусов.',

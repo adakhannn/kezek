@@ -2,6 +2,7 @@
 'use client';
 
 import { canCancel as canCancelBooking, clientBookingActions, type BookingStatus } from '@core-domain/booking';
+import { formatVisitWhen } from '@shared-client/visitFormat';
 import {useState, useEffect, useMemo, useRef} from 'react';
 
 import MapDialog from './MapDialog';
@@ -16,8 +17,6 @@ import { StatusChip } from '@/components/ui/StatusChip';
 import { ToastContainer } from '@/components/ui/Toast';
 import { buttonStyles } from '@/components/ui/buttonStyles';
 import { useToast } from '@/hooks/useToast';
-import { formatBookingDateTime } from '@/lib/bookingCalendarDate';
-import { formatLocalizedDate } from '@/lib/kyDateFormat';
 import {logError} from '@/lib/log';
 import { repeatBookingHref } from '@/lib/repeatBookingHref';
 import { getBusinessTimezone } from '@/lib/time';
@@ -146,11 +145,8 @@ export default function BookingCard({
     }
 
     const tz = getBusinessTimezone(business?.tz);
-    const startDate = new Date(start_at);
-    const endDate = new Date(end_at);
-    const formattedStart = formatBookingDateTime(startDate, tz, locale);
-    const formatClock = (value: Date) => formatLocalizedDate(value, locale, { hour: '2-digit', minute: '2-digit', timeZone: tz });
-    const when = `${formattedStart} - ${formatClock(endDate)}`;
+    // Owner format «27 нояб. • 09:00–10:00» in the business zone; the zone name is not shown.
+    const when = formatVisitWhen(start_at, end_at, locale, tz);
 
     const totalDurationMin =
         servicesList && servicesList.length > 0
@@ -196,6 +192,13 @@ export default function BookingCard({
         no_show: 3,
     };
 
+    const packageName = (() => {
+        if (!subscriptionApplied || typeof subscriptionApplied !== 'object') return '';
+        const snapshot = subscriptionApplied as Record<string, unknown>;
+        const localized = locale === 'ru' ? null : snapshot[`plan_name_${locale}`];
+        return String(localized || snapshot.plan_name_ru || snapshot.promotion_title || '');
+    })();
+
     const timelineSteps: Array<{
         key: 'created' | 'confirmed' | 'completed' | 'promo';
         label: string;
@@ -218,14 +221,15 @@ export default function BookingCard({
                     ? t('cabinet.bookings.timeline.cancelled', 'Cancelled')
                     : status === 'no_show'
                         ? statusLabels.no_show
-                        : t('cabinet.bookings.timeline.completed', 'Completed'),
+                        : statusLabels.paid,
             done: statusOrder[status] >= 3,
         },
-        {
-            key: 'promo',
-            label: t('cabinet.bookings.timeline.promo', 'Promo applied'),
-            done: !!(promotionApplied && status === 'paid'),
-        },
+        // The promotion step exists only on bookings that carry a promotion.
+        ...(promotionApplied ? [{
+            key: 'promo' as const,
+            label: t('cabinet.bookings.timeline.promo', 'Promotion applied'),
+            done: status === 'paid',
+        }] : []),
     ];
 
     return (
@@ -234,9 +238,6 @@ export default function BookingCard({
                 <div className="min-w-0 flex-1 space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
                         <StatusChip status={status} label={statusLabels[status]} className="shrink-0" />
-                        <span className="type-label rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1.5 text-[var(--text-secondary)]">
-                            #{bookingId.slice(0, 8)}
-                        </span>
                         {promotionApplied ? (
                             <Badge variant="success" size="md">
                                 {t('cabinet.bookings.timeline.promo', 'Promo applied')}
@@ -244,7 +245,7 @@ export default function BookingCard({
                         ) : null}
                         {subscriptionApplied ? (
                             <Badge variant="info" size="md">
-                                {t('cabinet.bookings.card.paidWithPackage', 'Paid with package')}
+                                {t('cabinet.bookings.card.paidWithPackage', 'Visit package')}
                             </Badge>
                         ) : null}
                     </div>
@@ -257,8 +258,16 @@ export default function BookingCard({
                                 <svg className="h-4 w-4 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                <span>{when}</span>
+                                <span data-testid="booking-card-when">{when}</span>
                             </span>
+                            {totalDurationMin > 0 ? (
+                                <span className="inline-flex items-center gap-2" aria-label={`${t('cabinet.bookings.card.summary.duration', 'Duration')}: ${totalDurationMin} ${t('booking.duration.min', 'min')}`}>
+                                    <svg className="h-4 w-4 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>{totalDurationMin} {t('booking.duration.min', 'мин')}</span>
+                                </span>
+                            ) : null}
                             <span className="inline-flex items-center gap-2">
                                 <svg className="h-4 w-4 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -282,51 +291,6 @@ export default function BookingCard({
                     </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[18rem] lg:grid-cols-1">
-                    <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
-                        <p className="type-label text-[var(--text-muted)]">
-                            {t('cabinet.bookings.card.summary.when', 'Date and time')}
-                        </p>
-                        <p className="type-body mt-2 font-medium text-[var(--text-primary)]">{formattedStart}</p>
-                        <p className="type-caption mt-1 text-[var(--text-secondary)]">
-                            {formatClock(startDate)} - {formatClock(endDate)} • {tz}
-                        </p>
-                    </div>
-                    <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
-                        <p className="type-label text-[var(--text-muted)]">
-                            {t('cabinet.bookings.card.summary.duration', 'Duration')}
-                        </p>
-                        <p className="type-body mt-2 font-medium text-[var(--text-primary)]">
-                            {totalDurationMin} {t('booking.duration.min', 'мин')}
-                        </p>
-                        <p className="type-caption mt-1 text-[var(--text-secondary)]">
-                            {hasMultipleServices
-                                ? t('cabinet.bookings.card.servicesList.title', 'Services in visit')
-                                : t('cabinet.bookings.card.service', 'Service')}
-                        </p>
-                    </div>
-                    <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
-                        <p className="type-label text-[var(--text-muted)]">
-                            {t('cabinet.bookings.card.summary.nextAction', 'Next action')}
-                        </p>
-                        <p className="type-body mt-2 font-medium text-[var(--text-primary)]">
-                            {canCancel
-                                ? t('cabinet.bookings.card.actions.cancel', 'Cancel')
-                                : canLeaveReview
-                                    ? t('cabinet.bookings.card.actions.review', 'Leave review')
-                                    : canEditReview
-                                        ? t('cabinet.bookings.card.actions.editReviewShort', 'Edit review')
-                                        : t('cabinet.bookings.card.actions.repeat', 'Repeat')}
-                        </p>
-                        <p className="type-caption mt-1 text-[var(--text-secondary)]">
-                            {status === 'cancelled'
-                                ? t('cabinet.bookings.timeline.cancelled', 'Cancelled')
-                                : status === 'paid'
-                                    ? t('cabinet.bookings.timeline.completed', 'Completed')
-                                    : statusLabels[status]}
-                        </p>
-                    </div>
-                </div>
             </div>
 
             <div className="mb-4 rounded-[20px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_88%,var(--surface-page))] p-4">
@@ -336,7 +300,7 @@ export default function BookingCard({
                     </p>
                     <span className="type-caption text-[var(--text-muted)]">{statusLabels[status]}</span>
                 </div>
-                <div className="mt-4 grid gap-3 md:grid-cols-4">
+                <div className={`mt-4 grid gap-3 ${timelineSteps.length > 3 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
                     {timelineSteps.map((step) => (
                         <div
                             key={step.key}
@@ -394,7 +358,6 @@ export default function BookingCard({
             )}
 
             {subscriptionApplied && typeof subscriptionApplied === 'object' && ('plan_id' in subscriptionApplied || 'plan_name_ru' in subscriptionApplied || 'promotion_title' in subscriptionApplied) && (() => {
-                const name = String((subscriptionApplied as Record<string, unknown>).plan_name_ru ?? (subscriptionApplied as Record<string, unknown>).promotion_title ?? '');
                 const finalAmount = (subscriptionApplied as Record<string, unknown>).final_amount;
                 return (
                     <div className="mb-3 rounded-lg border border-[color:color-mix(in_srgb,var(--status-info)_30%,transparent)] bg-[var(--status-info-soft)] px-3 py-2">
@@ -404,13 +367,15 @@ export default function BookingCard({
                             </svg>
                             <div className="flex-1">
                                 <p className="type-label text-[var(--status-info)]">
-                                    {t('cabinet.bookings.card.paidWithPackage', 'Paid with package')}: &quot;{name}&quot;
-                                    {finalAmount != null && (
-                                        <span className="ml-2 font-semibold text-[color:color-mix(in_srgb,var(--status-info)_86%,var(--text-primary))]">
-                                            {t('cabinet.bookings.card.finalAmount', 'Final amount:')} {String(finalAmount)} {t('booking.currency', 'som')}
-                                        </span>
-                                    )}
+                                    {packageName
+                                        ? t('cabinet.bookings.card.packageNamed', 'Visit package “{name}”').replace('{name}', packageName)
+                                        : t('cabinet.bookings.card.paidWithPackage', 'Visit package')}
                                 </p>
+                                {finalAmount != null && (
+                                    <p className="type-caption mt-1 font-semibold text-[color:color-mix(in_srgb,var(--status-info)_86%,var(--text-primary))]">
+                                        {t('cabinet.bookings.card.finalAmount', 'Final amount:')} {String(finalAmount)} {t('booking.currency', 'som')}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -496,9 +461,6 @@ export default function BookingCard({
                         className={buttonStyles({ variant: 'secondary', size: 'md' })}
                         href={`/booking/${bookingId}`}
                     >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
                         <span>{t('cabinet.bookings.card.actions.open', 'Открыть')}</span>
                     </a>
 

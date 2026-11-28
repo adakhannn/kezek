@@ -28,24 +28,27 @@ describe.each([['ru', ru], ['en', en], ['ky', ky]] as const)('step5 identity gui
         };
     }
 
-    it('shows confirmation guidance instead of asking an authenticated client to sign in', () => {
+    it('does not ask an authenticated client to sign in', () => {
         const input = props(true);
         render(<BookingFormSections {...input} />);
-        expect(screen.getByText(dictionary['booking.summary.selectSlotFirst'], { exact: true })).toBeTruthy();
+        expect(screen.getByRole('heading', { name: dictionary['booking.step5.title'] })).toBeTruthy();
         expect(screen.queryByText(dictionary['booking.flow.step5Description'], { exact: true })).toBeNull();
         expect(input.onSlotSelect).not.toHaveBeenCalled();
         expect(input.createBooking).not.toHaveBeenCalled();
     });
 
-    it('retains guest guidance and updates only the copy when identity becomes authenticated', () => {
+    it('retains guest guidance and drops it once identity becomes authenticated', () => {
         const guest = props(false);
         const view = render(<BookingFormSections {...guest} />);
         expect(screen.getByText(dictionary['booking.flow.step5Description'], { exact: true })).toBeTruthy();
-        expect(screen.queryByText(dictionary['booking.summary.selectSlotFirst'], { exact: true })).toBeNull();
         view.rerender(<BookingFormSections {...guest} isAuthed />);
-        expect(screen.getByText(dictionary['booking.summary.selectSlotFirst'], { exact: true })).toBeTruthy();
         expect(screen.queryByText(dictionary['booking.flow.step5Description'], { exact: true })).toBeNull();
         expect(guest.onSlotSelect).not.toHaveBeenCalled();
         expect(guest.createBooking).not.toHaveBeenCalled();
+    });
+
+    it('names the step once: no «Шаг N» kicker or step intro card above the step', () => {
+        const { container } = render(<BookingFormSections {...props(false)} />);
+        expect(container.textContent).not.toMatch(/Шаг \d|Step \d|Кадам \d/);
     });
 });

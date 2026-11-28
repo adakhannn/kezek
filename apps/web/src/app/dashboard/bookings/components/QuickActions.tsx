@@ -127,18 +127,18 @@ export function QuickActions({
                     isOpen={confirmDialog !== null}
                     title={
                         confirmDialog === 'confirm'
-                            ? t('bookings.actions.confirmTitle', 'Подтвердить бронь')
+                            ? t('bookings.actions.confirmTitle', 'Подтвердить запись')
                             : confirmDialog === 'cancel'
-                            ? t('bookings.actions.cancelTitle', 'Отменить бронь')
+                            ? t('bookings.actions.cancelTitle', 'Отменить запись')
                             : confirmDialog === 'attended'
                             ? t('bookings.actions.attendedTitle', 'Отметить приход')
                             : t('bookings.actions.noShowTitle', 'Отметить неявку')
                     }
                     message={
                         confirmDialog === 'confirm'
-                            ? t('bookings.actions.confirmMessage', 'Вы уверены, что хотите подтвердить эту бронь?')
+                            ? t('bookings.actions.confirmMessage', 'Подтвердить эту запись?')
                             : confirmDialog === 'cancel'
-                            ? t('bookings.actions.cancelMessage', 'Вы уверены, что хотите отменить эту бронь?')
+                            ? t('bookings.actions.cancelMessage', 'Отменить эту запись?')
                             : confirmDialog === 'attended'
                             ? t('bookings.actions.attendedMessage', 'Отметить клиента как пришедшего?')
                             : t('bookings.actions.noShowMessage', 'Отметить клиента как не пришедшего?')
@@ -193,18 +193,18 @@ export function QuickActions({
                 isOpen={confirmDialog !== null}
                 title={
                     confirmDialog === 'confirm'
-                        ? t('bookings.actions.confirmTitle', 'Подтвердить бронь')
+                        ? t('bookings.actions.confirmTitle', 'Подтвердить запись')
                         : confirmDialog === 'cancel'
-                        ? t('bookings.actions.cancelTitle', 'Отменить бронь')
+                        ? t('bookings.actions.cancelTitle', 'Отменить запись')
                         : confirmDialog === 'attended'
                         ? t('bookings.actions.attendedTitle', 'Отметить приход')
                         : t('bookings.actions.noShowTitle', 'Отметить неявку')
                 }
                 message={
                     confirmDialog === 'confirm'
-                        ? t('bookings.actions.confirmMessage', 'Вы уверены, что хотите подтвердить эту бронь?')
+                        ? t('bookings.actions.confirmMessage', 'Подтвердить эту запись?')
                         : confirmDialog === 'cancel'
-                        ? t('bookings.actions.cancelMessage', 'Вы уверены, что хотите отменить эту бронь?')
+                        ? t('bookings.actions.cancelMessage', 'Отменить эту запись?')
                         : confirmDialog === 'attended'
                         ? t('bookings.actions.attendedMessage', 'Отметить клиента как пришедшего?')
                         : t('bookings.actions.noShowMessage', 'Отметить клиента как не пришедшего?')

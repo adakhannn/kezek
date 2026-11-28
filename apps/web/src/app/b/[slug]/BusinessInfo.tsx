@@ -104,14 +104,12 @@ export default function BusinessInfo({ data }: { data: Data }) {
     // `label` is the key's own translation, shown when a plural form is missing.
     const countLabel = (count: number, key: string, label: string): string =>
         t(`${key}.${bookingCountForm(count, locale)}`, label);
-    const ratedBranches = branches.filter((branch) => typeof branch.rating_score === 'number').length;
-    const ratedStaff = staff.filter((person) => typeof person.rating_score === 'number').length;
 
     return (
         <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_26%),radial-gradient(circle_at_top_right,rgba(244,114,182,0.07),transparent_24%),linear-gradient(180deg,var(--surface-canvas),color-mix(in_srgb,var(--surface-muted)_72%,var(--surface-canvas)))]">
             <div className="mx-auto flex w-full max-w-[var(--container-xl)] flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
                 <section className="overflow-hidden rounded-[32px] border border-[var(--border-subtle)] bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.14),transparent_26%),linear-gradient(180deg,color-mix(in_srgb,var(--surface-card)_96%,transparent),color-mix(in_srgb,var(--surface-elevated)_98%,transparent))] p-6 shadow-[var(--shadow-lg)] sm:p-8">
-                    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+                    <div className="grid gap-6">
                         <div className="space-y-5">
                             <PageHeader
                                 eyebrow={
@@ -132,13 +130,9 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     </div>
                                 }
                                 title={biz.name}
-                                description={t(
-                                    'business.hero.description',
-                                    'Страница заранее показывает филиалы, команду и предложения, чтобы пользователь понимал, что именно он бронирует и почему стоит идти дальше.',
-                                )}
                                 meta={
                                     <div className="flex flex-wrap items-center gap-3">
-                                        <RatingDisplay score={biz.rating_score} t={t} variant="badge" className="px-3 py-1" />
+                                        <RatingDisplay score={biz.rating_score} t={t} variant="badge" hideWhenEmpty className="px-3 py-1" />
                                         {biz.address ? (
                                             <span className="type-caption rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1.5 text-[var(--text-secondary)]">
                                                 {biz.address}
@@ -181,58 +175,30 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                 )}
                             />
 
-                            <div className="grid gap-3 sm:grid-cols-3">
+                            <div
+                                className={`grid gap-3 ${promotions.length > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}
+                                data-testid="business-metrics"
+                            >
                                 <BusinessMetric
                                     value={branches.length}
-                                    label={t('business.metrics.branches', 'активных филиалов')}
+                                    label={t('business.metrics.branches', 'Филиалы')}
                                 />
                                 <BusinessMetric
                                     value={services.length}
-                                    label={t('business.metrics.services', 'активных услуг')}
+                                    label={t('business.metrics.services', 'Услуги')}
                                 />
                                 <BusinessMetric
                                     value={staff.length}
-                                    label={t('business.metrics.staff', 'сотрудников в записи')}
+                                    label={t('business.metrics.staff', 'Команда')}
                                 />
-                                <BusinessMetric
-                                    value={promotions.length}
-                                    label={t('business.metrics.promotions', 'акций и офферов')}
-                                />
+                                {promotions.length > 0 ? (
+                                    <BusinessMetric
+                                        value={promotions.length}
+                                        label={t('business.metrics.promotions', 'Акции')}
+                                    />
+                                ) : null}
                             </div>
                         </div>
-
-                        {hasActiveBranches ? <Card variant="elevated" padding="lg" className="self-start">
-                            <SectionHeader
-                                title={t('business.trust.title', 'Почему можно идти дальше к записи')}
-                                description={t(
-                                    'business.trust.description',
-                                    'Пользователь уже до booking flow видит структуру бизнеса, команду и основные сигналы доверия.',
-                                )}
-                            />
-                            <div className="mt-4 grid gap-3">
-                                <TrustPoint
-                                    title={t('business.trust.point1Title', 'Филиалы видны заранее')}
-                                    body={t(
-                                        'business.trust.point1Body',
-                                        'Можно понять географию бизнеса и не идти в booking flow вслепую.',
-                                    )}
-                                />
-                                <TrustPoint
-                                    title={t('business.trust.point2Title', 'Команда не скрыта')}
-                                    body={t(
-                                        'business.trust.point2Body',
-                                        'Даже до выбора слота понятно, что в бизнесе есть реальные специалисты.',
-                                    )}
-                                />
-                                <TrustPoint
-                                    title={t('business.trust.point3Title', 'Акции и выгода прозрачны')}
-                                    body={t(
-                                        'business.trust.point3Body',
-                                        'Если есть специальные предложения, они видны ещё до записи.',
-                                    )}
-                                />
-                            </div>
-                        </Card> : null}
                     </div>
                 </section>
 
@@ -242,10 +208,6 @@ export default function BusinessInfo({ data }: { data: Data }) {
                             <Card variant="elevated" padding="lg">
                                 <SectionHeader
                                     title={t('business.info.branches', 'Филиалы')}
-                                    description={t(
-                                        'business.info.branchesDescription',
-                                        'Здесь видно, где именно доступен бизнес и какие филиалы уже имеют рейтинг.',
-                                    )}
                                     action={
                                         <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
                                             {branches.length} {countLabel(branches.length, 'business.info.branchesCount', t('business.info.branchesCount', 'локаций'))}
@@ -274,15 +236,10 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                                     score={branch.rating_score}
                                                     t={t}
                                                     variant="badge"
-                                                    className="px-2 py-0.5"
+                                                    hideWhenEmpty
+                                                    className="shrink-0 px-2 py-0.5"
                                                 />
                                             </div>
-                                            <p className="type-caption mt-4 text-[var(--text-muted)]">
-                                                {t(
-                                                    'business.info.branchHint',
-                                                    'Филиал будет доступен в потоке записи при выборе удобной локации.',
-                                                )}
-                                            </p>
                                             <PublicContactActions contacts={resolvePublicContacts(biz, branch)} compact className="mt-4" />
                                             {branch.directory_links && Object.values(branch.directory_links).some(Boolean) ? (
                                                 <div className="mt-4 flex flex-wrap gap-2">
@@ -308,10 +265,6 @@ export default function BusinessInfo({ data }: { data: Data }) {
                             <Card variant="elevated" padding="lg" data-testid="services-section">
                                 <SectionHeader
                                     title={t('business.info.services', 'Услуги')}
-                                    description={t(
-                                        'business.info.servicesDescription',
-                                        'Активные услуги и их базовые условия видны до перехода к записи.',
-                                    )}
                                     action={
                                         <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
                                             {services.length} {countLabel(services.length, 'business.info.servicesCount', t('business.info.servicesCount', 'услуг'))}
@@ -373,10 +326,6 @@ export default function BusinessInfo({ data }: { data: Data }) {
                             <Card variant="elevated" padding="lg">
                                 <SectionHeader
                                     title={t('business.info.staff', 'Команда')}
-                                    description={t(
-                                        'business.info.staffDescription',
-                                        'Показываем сотрудников заранее, чтобы пользователь понимал, кого он сможет выбрать дальше.',
-                                    )}
                                     action={
                                         <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
                                             {staff.length} {countLabel(staff.length, 'business.info.staffCount', t('business.info.staffCount', 'специалистов'))}
@@ -423,12 +372,11 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                                     </div>
                                                 </div>
 
-                                                <div className="mt-4 flex items-center justify-between gap-2">
-                                                    <span className="type-caption text-[var(--text-muted)]">
-                                                        {t('business.info.staffAvailable', 'Будет доступен в выборе специалиста')}
-                                                    </span>
-                                                    <RatingDisplay score={person.rating_score} t={t} variant="badge" className="px-1.5 py-0.5" />
-                                                </div>
+                                                {typeof person.rating_score === 'number' ? (
+                                                    <div className="mt-3">
+                                                        <RatingDisplay score={person.rating_score} t={t} variant="badge" className="px-1.5 py-0.5" />
+                                                    </div>
+                                                ) : null}
                                             </div>
                                         );
                                     })}
@@ -507,23 +455,10 @@ export default function BusinessInfo({ data }: { data: Data }) {
                         <Card variant="elevated" padding="lg">
                             <SectionHeader
                                 title={hasActiveBranches
-                                    ? t('business.cta.title', 'Готовы перейти к записи')
+                                    ? t('business.cta.title', 'Записаться онлайн')
                                     : t('booking.step1.noBranches', 'Нет активных филиалов.')}
-                                description={hasActiveBranches ? t(
-                                    'business.cta.description',
-                                    'Следующий шаг уже в booking flow: там выбираются филиал, услуга, сотрудник, дата и время.',
-                                ) : noBranchesMessage}
+                                description={hasActiveBranches ? undefined : noBranchesMessage}
                             />
-                            <div className="mt-4 grid gap-3">
-                                <BusinessMetric
-                                    value={ratedBranches}
-                                    label={t('business.metrics.ratedBranches', 'филиалов с рейтингом')}
-                                />
-                                <BusinessMetric
-                                    value={ratedStaff}
-                                    label={t('business.metrics.ratedStaff', 'сотрудников с рейтингом')}
-                                />
-                            </div>
                             <div className="mt-5 flex flex-col gap-2">
                                 {hasActiveBranches ? <Link
                                     href={`/b/${biz.slug}/booking`}
@@ -561,15 +496,6 @@ function BusinessMetric({ value, label }: { value: number; label: string }) {
         <div className="rounded-[22px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_88%,transparent)] p-4 shadow-[var(--shadow-xs)]">
             <div className="type-metric text-[var(--text-primary)]">{value}</div>
             <p className="type-caption mt-2 text-[var(--text-muted)]">{label}</p>
-        </div>
-    );
-}
-
-function TrustPoint({ title, body }: { title: string; body: string }) {
-    return (
-        <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
-            <h3 className="type-label text-[var(--text-primary)]">{title}</h3>
-            <p className="type-caption mt-2 text-[var(--text-secondary)]">{body}</p>
         </div>
     );
 }

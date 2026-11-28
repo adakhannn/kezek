@@ -71,7 +71,7 @@ function BookingPill({
     title?: string;
 }) {
     const { t } = useLanguage();
-    const openBooking = t('bookings.calendar.openBooking', 'Открыть бронь');
+    const openBooking = t('bookings.calendar.openBooking', 'Открыть запись');
 
     return (
         <BookingCard

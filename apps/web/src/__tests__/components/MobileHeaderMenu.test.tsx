@@ -74,7 +74,8 @@ describe('MobileHeaderMenu', () => {
         expect(document.body.textContent).toContain('Кабинет сотрудника');
 
         rerender(<MobileHeaderMenu account={{ ...staffAccount, label: null, roles: { ...staffAccount.roles, hasStaff: false } }} />);
-        expect(screen.getByText('аккаунт').className).toContain('font-medium');
+        // The section heading and the nameless account label both read «Аккаунт»; the label is the bold one.
+        expect(screen.getAllByText('Аккаунт').some(element => element.className.includes('font-medium'))).toBe(true);
         expect(document.body.textContent).not.toContain('Кабинет сотрудника');
     });
 });

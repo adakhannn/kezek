@@ -1,6 +1,6 @@
 'use client';
 
-import { formatInTimeZone } from 'date-fns-tz';
+import { formatVisitDate, formatVisitRange, formatVisitWhen } from '@shared-client/visitFormat';
 import Link from 'next/link';
 
 import { QuickActions } from './QuickActions';
@@ -86,7 +86,7 @@ export function BookingsList({
     if (bookings.length === 0 && loadFailed) {
         return (
             <EmptyState
-                title={t('bookings.list.loadError', 'Не удалось загрузить брони')}
+                title={t('bookings.list.loadError', 'Не удалось загрузить записи')}
                 description={t('bookings.list.loadErrorHint', 'Проверьте соединение и попробуйте ещё раз.')}
                 action={onRetry ? <Button onClick={onRetry}>{t('bookings.list.retry', 'Повторить')}</Button> : undefined}
                 className="border border-dashed border-[var(--border-subtle)] bg-[var(--surface-elevated)]"
@@ -97,7 +97,7 @@ export function BookingsList({
     if (bookings.length === 0) {
         return (
             <EmptyState
-                title={t('bookings.list.empty', 'Нет бронирований')}
+                title={t('bookings.list.empty', 'Нет записей')}
                 description={t(
                     'bookings.workspace.emptyHint',
                     'Попробуйте другой пресет, поиск или фильтр по филиалу. История и сегодняшние записи переключаются через один и тот же workspace.',
@@ -166,10 +166,10 @@ export function BookingsList({
                                     <td className="px-4 py-4">
                                         <div className="min-w-[11rem]">
                                             <p className="type-label text-[var(--text-primary)]">
-                                                {formatInTimeZone(new Date(booking.start_at), tz, 'dd.MM.yyyy')}
+                                                {formatVisitDate(booking.start_at, locale, tz)}
                                             </p>
                                             <p className="type-caption mt-1 text-[var(--text-muted)]">
-                                                {formatInTimeZone(new Date(booking.start_at), tz, 'HH:mm')} - {formatInTimeZone(new Date(booking.end_at), tz, 'HH:mm')}
+                                                {formatVisitRange(booking.start_at, booking.end_at, tz)}
                                             </p>
                                         </div>
                                     </td>
@@ -233,7 +233,7 @@ export function BookingsList({
                                     <p className="type-caption text-[var(--text-secondary)]">{t('bookings.list.master', 'Мастер')}</p>
                                     <p className="type-label mt-1 text-[var(--text-primary)]">{master?.full_name || '—'}</p>
                                     <p className="type-caption mt-1 text-[var(--text-muted)]">
-                                        {formatInTimeZone(new Date(booking.start_at), tz, 'dd.MM.yyyy')} • {formatInTimeZone(new Date(booking.start_at), tz, 'HH:mm')}
+                                        {formatVisitWhen(booking.start_at, booking.end_at, locale, tz)}
                                     </p>
                                 </div>
                             </div>

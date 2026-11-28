@@ -18,7 +18,7 @@ export function BookingHeader({ biz, contacts, branchName, t }: BookingHeaderPro
         <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-3">
                 <h1 className="type-page-title text-gray-900 dark:text-gray-100">{biz.name}</h1>
-                <RatingDisplay score={biz.rating_score} t={t} variant="badge" className="px-3 py-1" />
+                <RatingDisplay score={biz.rating_score} t={t} variant="badge" hideWhenEmpty className="px-3 py-1" />
             </div>
             {biz.address ? <p className="type-body text-gray-600 dark:text-gray-400">{biz.address}</p> : null}
             {branchName ? (

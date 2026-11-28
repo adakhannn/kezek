@@ -30,10 +30,7 @@ test.each([['ru', ru], ['en', en], ['ky', ky]] as const)('localizes first two st
     const t = (key: string, fallback?: string) => dictionary[key] ?? fallback ?? key;
     jest.mocked(useLanguage).mockReturnValue({ locale, t } as ReturnType<typeof useLanguage>);
     for (const key of [
-        'booking.flow.step1Title', 'booking.flow.step1Description', 'booking.flow.step1Next',
-        'booking.flow.step2Title', 'booking.flow.step2Description', 'booking.flow.step2Next',
-        'booking.step1.kicker', 'booking.step1.description', 'booking.step1.availableBranch',
-        'booking.step1.selectedBranch', 'booking.step2.kicker', 'booking.step2.description',
+        'booking.step1.title', 'booking.step2.title', 'booking.step1.availableBranch', 'booking.step1.selectedBranch',
         'datePicker.calendarLabel', 'datePicker.chooseDate', 'datePicker.legend.selected', 'datePicker.legend.disabled',
     ]) expect(dictionary[key]).toEqual(expect.any(String));
     render(<>
@@ -71,9 +68,7 @@ test.each([['ru', ru], ['en', en], ['ky', ky]] as const)('localizes selected and
     const t = (key: string, fallback?: string) => dictionary[key] ?? fallback ?? key;
     jest.mocked(useLanguage).mockReturnValue({ locale, t } as ReturnType<typeof useLanguage>);
     for (const key of [
-        'booking.flow.step3Title', 'booking.flow.step3Description', 'booking.flow.step3Next',
-        'booking.flow.step4Title', 'booking.flow.step4Description', 'booking.flow.step4Next',
-        'booking.step3.kicker', 'booking.step4.kicker', 'booking.step4.selectedSummary',
+        'booking.step3.title', 'booking.step4.title', 'booking.step4.selectedSummary',
         'booking.nav.ready', 'booking.summary.pending',
     ]) expect(dictionary[key]).toBeTruthy();
     render(<>
@@ -107,7 +102,8 @@ test.each([['ru', ru], ['en', en], ['ky', ky]] as const)('localizes common booki
             branchId="branch" branchPromotions={[]} isAuthed={false} step={5} />
     </>);
     expect(screen.getByRole('button', {name: t('booking.steps.backLabel').replace('{step}', '1').replace('{label}', 'Branch')})).toBeTruthy();
-    expect(screen.getByText(t('booking.steps.current'))).toBeTruthy();
+    // One compact line names the step once: «Шаг 5 из 5 · Время».
+    expect(screen.getByTestId('booking-step-indicator').textContent).toBe('Localized 5/5 · Time');
     expect(screen.getByText(t('booking.summary.selectedCount').replace('{count}', '1'))).toBeTruthy();
     expect(screen.getByText(t('booking.summary.step').replace('{step}', '5'))).toBeTruthy();
     expect(screen.getByText(t('booking.summary.authTitle'))).toBeTruthy();
