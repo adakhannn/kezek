@@ -81,7 +81,7 @@ export default async function RatingConfigPage() {
                                 {t('admin.ratingConfig.title', 'Настройки рейтингов')}
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                {t('admin.ratingConfig.subtitle', 'Управление глобальными настройками расчета рейтингов для всех бизнесов')}
+                                {t('admin.ratingConfig.subtitle', 'Управление глобальными настройками расчёта рейтингов для всех бизнесов')}
                             </p>
                         </div>
                         <Link href="/admin">

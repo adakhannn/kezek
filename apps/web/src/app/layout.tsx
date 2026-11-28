@@ -10,6 +10,7 @@ import { ReminderBanners } from './_components/ReminderBanners';
 import { LanguageProvider } from './_components/i18n/LanguageProvider';
 import { en as enDictionary, ky as kyDictionary } from './_components/i18n/dictionaries';
 import { getServerLocale } from './_components/i18n/server';
+import { rootMetadata } from './rootMetadata';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PerformanceTracking } from '@/components/PerformanceTracking';
@@ -40,18 +41,9 @@ const geistMono = localFont({
     fallback: ['Geist Mono Fallback'],
 });
 
-export const metadata: Metadata = {
-    title: 'Kezek - booking platform and business workspace',
-    description: 'Fast booking flow and service marketplace for clients and teams.',
-    manifest: '/manifest.webmanifest',
-    icons: [
-        { rel: 'icon', url: '/icon-192.png' },
-        { rel: 'apple-touch-icon', url: '/icon-192.png' },
-    ],
-    other: {
-        'facebook-domain-verification': 'g5lm3sbfqpeijkt93lqgoxg65tqlz3',
-    },
-};
+export async function generateMetadata(): Promise<Metadata> {
+    return rootMetadata(await getServerLocale());
+}
 
 export default async function RootLayout({
     children,

@@ -10,15 +10,14 @@ jest.mock('@/app/cabinet/components/MapDialog', () => ({ __esModule: true, defau
 jest.mock('@/app/cabinet/components/ReviewDialog', () => ({ __esModule: true, default: () => null }));
 
 test.each([
-    ['ru', 'ru-RU'], ['ky', 'ky-KG'], ['en', 'en-US'],
-] as const)('receipt formats %s dates in the actual locale and Bishkek timezone', (locale, intlLocale) => {
+    ['ru', '19 окт. • 02:15–03:15'], ['ky', '19-октябрь • 02:15–03:15'], ['en', 'Oct 19 • 02:15–03:15'],
+] as const)('receipt writes the %s visit in the owner format and the Bishkek timezone', (locale, expected) => {
     jest.mocked(useLanguage).mockReturnValue({ locale, t: (_key: string, fallback?: string) => fallback ?? '' } as ReturnType<typeof useLanguage>);
+    jest.useFakeTimers({ now: new Date('2026-11-28T06:00:00Z') });
     // UTC previous day: guards against accidentally switching the visit date/timezone.
-    const startAt = new Date('2026-10-18T20:15:00Z');
-    render(<BookingLayoutClient id="receipt-date" services={null} masterName="Test" startAt={startAt} status="confirmed" />);
-    const expected = new Intl.DateTimeFormat(intlLocale, {
-        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bishkek',
-    }).format(startAt);
+    render(<BookingLayoutClient services={null} masterName="Test" startAt={new Date('2026-10-18T20:15:00Z')}
+        endAt={new Date('2026-10-18T21:15:00Z')} status="confirmed" />);
+    jest.useRealTimers();
     expect(screen.getByText(expected)).toBeTruthy();
 });
 

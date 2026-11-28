@@ -63,7 +63,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 feedback.showError(
                     t(
                         'booking.selectMaster',
-                        'Не удалось определить мастера для выбранного времени. Пожалуйста, выберите время еще раз.',
+                        'Не удалось определить мастера для выбранного времени. Пожалуйста, выберите время ещё раз.',
                     ),
                 );
                 return;
@@ -176,7 +176,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 fmtErr(e, t) ||
                 t(
                     'booking.error.technical',
-                    'Произошла техническая ошибка при создании бронирования. Пожалуйста, проверьте подключение к интернету и попробуйте еще раз.',
+                    'Произошла техническая ошибка при создании бронирования. Пожалуйста, проверьте подключение к интернету и попробуйте ещё раз.',
                 );
             feedback.showError(message);
         } finally {

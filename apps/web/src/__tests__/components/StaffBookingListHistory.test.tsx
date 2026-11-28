@@ -133,3 +133,9 @@ test('restores a different history entry rather than overriding it with the moun
     });
     expect(displayedHref()).toBe('/booking/upcoming-row');
 });
+
+// H3: the owner's visit format, «19 окт. • 09:00–10:00» in the business zone, not two full date-times.
+test('shows the visit as one day and a time range', () => {
+    render(<StaffBookingsView {...input} />);
+    expect(screen.getByText(/^19 окт\.( 2026)? • 09:00–10:00$/)).toBeTruthy();
+});

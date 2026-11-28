@@ -27,7 +27,7 @@ function setLanguage(locale: 'ru' | 'ky' | 'en', dictionary: Record<string, stri
 
 test.each(locales)('receipt localizes no-show in %s', (locale, dictionary, label) => {
     setLanguage(locale, dictionary);
-    render(<BookingLayoutClient id="no-show" services={null} masterName="Test" startAt={new Date('2026-10-12T10:15:00Z')} status="no_show" />);
+    render(<BookingLayoutClient services={null} masterName="Test" startAt={new Date('2026-10-12T10:15:00Z')} status="no_show" />);
     expect(screen.getByText(label)).toBeTruthy();
     expect(screen.queryByText('no_show')).toBeNull();
 });

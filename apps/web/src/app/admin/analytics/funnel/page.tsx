@@ -307,7 +307,7 @@ export default function AdminAnalyticsFunnelPage() {
           <EmptyState
             compact
             title={t('admin.analyticsFunnel.emptyTitle', 'Нет данных по воронке')}
-            description={t('admin.analyticsFunnel.emptyDescription', 'За выбранный период и срез нет событий, которые можно показать в отчете.')}
+            description={t('admin.analyticsFunnel.emptyDescription', 'За выбранный период и срез нет событий, которые можно показать в отчёте.')}
           />
         ) : (
           <div className="space-y-4">

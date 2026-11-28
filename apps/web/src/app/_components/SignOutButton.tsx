@@ -42,8 +42,10 @@ export function SignOutButton({ className, onAction }: { className?: string; onA
             type="button"
             className={className ?? 'flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 text-sm'}
             onClick={handleSignOut}
+            // Below sm the label is hidden and only the icon shows: the button still needs a name (H6).
+            aria-label={t('header.signOut')}
         >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
             <span className="hidden sm:inline">{t('header.signOut', 'Выйти')}</span>
