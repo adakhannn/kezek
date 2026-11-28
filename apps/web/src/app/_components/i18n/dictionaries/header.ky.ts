@@ -1,5 +1,5 @@
 export const headerKy = {
-    'header.account': 'аккаунт',
+    'header.account': 'Аккаунт',
     'header.adminPanel': 'Админ-панель',
     'header.businessCabinet': 'Бизнес кабинети',
     'header.cabinetShort': 'Кабинет',

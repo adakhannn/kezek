@@ -19,7 +19,7 @@ export async function AppShellHeader() {
                 <div className="relative overflow-visible rounded-[28px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_88%,transparent)] shadow-[var(--shadow-lg)] backdrop-blur-xl">
                     <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.16),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(244,114,182,0.14),transparent_28%)]" />
                     <div className="relative flex min-h-[68px] items-center gap-3 px-4 py-3 sm:min-h-[74px] sm:px-5 lg:px-6">
-                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className="mr-auto flex shrink-0 items-center gap-3">
                             <Logo />
                         </div>
 

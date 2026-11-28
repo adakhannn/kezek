@@ -1,5 +1,5 @@
 export const headerEn = {
-    'header.account': 'account',
+    'header.account': 'Account',
     'header.adminPanel': 'Admin panel',
     'header.businessCabinet': 'Business dashboard',
     'header.cabinetShort': 'Account',
