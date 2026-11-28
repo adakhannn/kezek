@@ -1,5 +1,5 @@
 import { createTranslate, translate } from '../../i18n/translate';
-import { getErrorMessage, isAuthError, isNetworkError } from '../../lib/errors';
+import { getErrorMessage, isAccountSuspendedError, isAuthError, isNetworkError } from '../../lib/errors';
 
 describe('user-facing error mapping', () => {
     test.each([
@@ -84,5 +84,20 @@ describe('a readable message is in the script of the screen language', () => {
         expect(getErrorMessage(new Error(kyMessage), 'Запасной текст', ky)).toBe(kyMessage);
         expect(getErrorMessage(new Error('This phone number is already in use.'), 'Запасной текст', ky)).toBe('Запасной текст');
         expect(getErrorMessage(new Error('This phone number is already in use.'), 'Запасной текст')).toBe('Запасной текст');
+    });
+
+    test('a blocked account is named as such in every language (KEZEK-MOBILE-2)', () => {
+        const granting = Object.assign(new Error('Database error granting user'), { name: 'AuthRetryableFetchError', status: 500 });
+        const banned = Object.assign(new Error('User is banned'), { code: 'user_banned', status: 400 });
+        expect(isAccountSuspendedError(granting)).toBe(true);
+        expect(isAccountSuspendedError(banned)).toBe(true);
+        expect(isAccountSuspendedError(Object.assign(new Error('Database error granting user'), { status: 502 }))).toBe(false);
+        expect(isAccountSuspendedError(Object.assign(new Error('Internal error'), { status: 500 }))).toBe(false);
+
+        expect(getErrorMessage(granting)).toBe('Ваш аккаунт заблокирован. Если это ошибка, обратитесь в поддержку.');
+        expect(getErrorMessage(granting, undefined, createTranslate('ky'))).toBe(translate('ky', 'auth.error.accountSuspended'));
+        expect(getErrorMessage(banned, undefined, createTranslate('en'))).toBe(
+            'Your account has been blocked. Contact support if you think this is a mistake.',
+        );
     });
 });

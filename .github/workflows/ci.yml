@@ -487,13 +487,20 @@ jobs:
       - name: Pull disposable PostgreSQL image (the version production runs)
         run: |
           # Docker Hub pulls fail now and then on shared runners; retry before failing the job.
-          image="$(node scripts/lib/isolated-postgres.cjs)"
-          for attempt in 1 2 3 4; do
-            docker pull "$image" && exit 0
-            echo "docker pull $image failed (attempt $attempt), retrying"
-            sleep $((attempt * 15))
+          # The user-lifecycle suite also starts Node, GoTrue and PostgREST containers: pull them
+          # here with retries too, so a registry hiccup does not fail the suite in its first seconds.
+          images="$(node scripts/lib/isolated-postgres.cjs)"
+          if [ "${{ matrix.runner }}" = "test-user-lifecycle-isolated.cjs" ]; then
+            images="$images node:22-alpine public.ecr.aws/supabase/gotrue:v2.180.0 public.ecr.aws/supabase/postgrest:v13.0.7"
+          fi
+          for image in $images; do
+            for attempt in 1 2 3 4; do
+              docker pull "$image" && continue 2
+              echo "docker pull $image failed (attempt $attempt), retrying"
+              sleep $((attempt * 15))
+            done
+            exit 1
           done
-          exit 1
 
       - name: Run isolated SQL contracts
         run: node scripts/${{ matrix.runner }}

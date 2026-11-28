@@ -30,4 +30,10 @@ describe('query retry policy', () => {
     ])('does not retry permanent or domain failures', (error) => {
         expect(shouldRetryQuery(0, error)).toBe(false);
     });
+
+    test('a blocked account answering 500 is never retried (KEZEK-MOBILE-2)', () => {
+        const error = Object.assign(new Error('Database error granting user'), { status: 500 });
+        expect(shouldRetryQuery(0, error)).toBe(false);
+        expect(shouldRetryQuery(0, Object.assign(new Error('Internal error'), { status: 500 }))).toBe(true);
+    });
 });

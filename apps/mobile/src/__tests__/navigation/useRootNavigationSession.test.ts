@@ -7,8 +7,16 @@ import {
 import { supabase } from '../../lib/supabase';
 import { clearLocalStateOnSessionEnd } from '../../lib/accountLocalState';
 import { syncPushRegistration } from '../../lib/pushNotifications';
+import { resetAccountSuspendedNoticeForTests } from '../../lib/accountSuspended';
+import { logError, logWarn } from '../../lib/log';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { AppState, Linking } from 'react-native';
+import { Alert, AppState, Linking } from 'react-native';
+
+jest.mock('../../lib/log', () => ({
+    ...jest.requireActual('../../lib/log'),
+    logError: jest.fn(),
+    logWarn: jest.fn(),
+}));
 
 jest.mock('../../lib/supabase', () => ({
     supabase: {
@@ -17,6 +25,7 @@ jest.mock('../../lib/supabase', () => ({
             exchangeCodeForSession: jest.fn(),
             getSession: jest.fn(),
             onAuthStateChange: jest.fn(),
+            signOut: jest.fn(),
         },
     },
 }));
@@ -38,6 +47,7 @@ describe('useRootNavigationSession helpers', () => {
             exchangeCodeForSession: jest.Mock;
             getSession: jest.Mock;
             onAuthStateChange: jest.Mock;
+            signOut: jest.Mock;
         };
     };
 
@@ -49,6 +59,8 @@ describe('useRootNavigationSession helpers', () => {
             data: { session: null },
             error: null,
         });
+        mockedSupabase.auth.signOut.mockResolvedValue({ error: null });
+        resetAccountSuspendedNoticeForTests();
         mockedSupabase.auth.onAuthStateChange.mockReturnValue({
             data: {
                 subscription: {
@@ -105,6 +117,97 @@ describe('useRootNavigationSession helpers', () => {
         expect(mockedSupabase.auth.exchangeCodeForSession).toHaveBeenCalledTimes(1);
         expect(mockedSupabase.auth.exchangeCodeForSession).toHaveBeenCalledWith('once-oauth-code');
         expect(mockedSupabase.auth.setSession).not.toHaveBeenCalled();
+    });
+
+    test('concurrent deliveries of one callback exchange the code once (KEZEK-MOBILE-4)', async () => {
+        const url = 'kezek://auth/callback?code=concurrent-code';
+        let finishExchange: (value: { error: null }) => void = () => undefined;
+        mockedSupabase.auth.exchangeCodeForSession.mockReturnValueOnce(
+            new Promise((resolve) => {
+                finishExchange = resolve;
+            }),
+        );
+
+        // getInitialURL and the 'url' event deliver the same link on a cold start.
+        const first = handleDeepLinkAuth(url);
+        const second = handleDeepLinkAuth(url);
+        finishExchange({ error: null });
+
+        await expect(Promise.all([first, second])).resolves.toEqual([true, true]);
+        expect(mockedSupabase.auth.exchangeCodeForSession).toHaveBeenCalledTimes(1);
+    });
+
+    test('an already used code with a session on the device is not an error', async () => {
+        mockedSupabase.auth.exchangeCodeForSession.mockResolvedValueOnce({
+            error: Object.assign(new Error('invalid flow state, no valid flow state found'), {
+                code: 'flow_state_not_found',
+                status: 404,
+            }),
+        });
+        mockedSupabase.auth.getSession.mockResolvedValueOnce({
+            data: { session: { access_token: 'existing', user: { id: 'user-1' } } },
+            error: null,
+        });
+
+        await expect(handleDeepLinkAuth('kezek://auth/callback?code=used-code')).resolves.toBe(true);
+        expect(logError).not.toHaveBeenCalled();
+    });
+
+    test('an already used code without a session is a warning, not an error', async () => {
+        mockedSupabase.auth.exchangeCodeForSession.mockResolvedValueOnce({
+            error: Object.assign(new Error('invalid flow state'), { code: 'flow_state_not_found', status: 404 }),
+        });
+
+        await expect(handleDeepLinkAuth('kezek://auth/callback?code=expired-code')).resolves.toBe(false);
+        expect(logError).not.toHaveBeenCalled();
+        expect(logWarn).toHaveBeenCalledWith(
+            'RootNavigatorSession',
+            'Auth callback link expired or already used',
+            expect.anything(),
+        );
+    });
+
+    test('a blocked account on start: signed out locally, told why, no retry and no error report (KEZEK-MOBILE-2)', async () => {
+        const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+        mockedSupabase.auth.getSession.mockResolvedValue({
+            data: { session: null },
+            error: Object.assign(new Error('Database error granting user'), {
+                name: 'AuthRetryableFetchError',
+                status: 500,
+            }),
+        });
+
+        const { result } = renderHook(() => useRootNavigationSession());
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+        expect(result.current.hasSession).toBe(false);
+        expect(mockedSupabase.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+        expect(mockedSupabase.auth.getSession).toHaveBeenCalledTimes(1);
+        expect(alertSpy).toHaveBeenCalledWith(
+            'Аккаунт заблокирован',
+            'Ваш аккаунт заблокирован. Если это ошибка, обратитесь в поддержку.',
+        );
+        expect(logError).not.toHaveBeenCalled();
+        expect(logWarn).toHaveBeenCalledWith(
+            'RootNavigatorSession',
+            'Account is blocked; signing out on this device',
+            expect.anything(),
+        );
+    });
+
+    test('a generic 500 is not mistaken for a blocked account', async () => {
+        const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+        mockedSupabase.auth.getSession.mockResolvedValue({
+            data: { session: null },
+            error: Object.assign(new Error('Internal server error'), { status: 500 }),
+        });
+
+        const { result } = renderHook(() => useRootNavigationSession());
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+        expect(alertSpy).not.toHaveBeenCalled();
+        expect(mockedSupabase.auth.signOut).not.toHaveBeenCalled();
+        expect(logError).toHaveBeenCalledWith('RootNavigatorSession', 'Bootstrap failed', expect.anything());
     });
 
     test('redeems a provider grant with its initiating verifier over POST', async () => {

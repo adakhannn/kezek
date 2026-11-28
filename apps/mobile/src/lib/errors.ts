@@ -70,6 +70,19 @@ function isTechnicalMessage(value: string): boolean {
     ].some((pattern) => pattern.test(value));
 }
 
+/**
+ * The account is blocked (KEZEK-MOBILE-2). A suspended user's new session is refused by the
+ * `kezek_lifecycle_session` trigger on auth.sessions (USER_SUSPENDED); GoTrue hides the cause and
+ * answers 500 "Database error granting user" (the SDK even calls it retryable). An Auth ban answers
+ * 400 with the code `user_banned`. Either way, retrying cannot help.
+ */
+export function isAccountSuspendedError(error: unknown): boolean {
+    const errorLike = asErrorLike(error) as (ErrorLike & { code?: unknown }) | null;
+    if (!errorLike) return false;
+    if (errorLike.code === 'user_banned') return true;
+    return errorLike.status === 500 && /database error granting user/i.test(getRawErrorMessage(error));
+}
+
 export function isNetworkError(error: unknown): boolean {
     return /network|failed to fetch|internet|соединени|сети/i.test(getRawErrorMessage(error));
 }
@@ -101,6 +114,9 @@ export function getErrorMessage(
     const status = getStatus(error);
     const readable = rawMessage !== '' && isInScriptOf(rawMessage, t.locale) && !isTechnicalMessage(rawMessage);
 
+    if (isAccountSuspendedError(error)) {
+        return t('auth.error.accountSuspended');
+    }
     if (
         errorLike?.name === 'TimeoutError' ||
         /timed out|timeout|время ожидания/i.test(rawMessage)

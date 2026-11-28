@@ -20,6 +20,8 @@ export const authRu = {
     'auth.signIn.whatsappHint': 'Переход к экрану входа по коду из WhatsApp.',
     'auth.signedIn': 'Вход выполнен успешно',
     'auth.error.timeout': 'Превышено время ожидания. Проверьте интернет и попробуйте снова.',
+    'auth.error.accountSuspended.title': 'Аккаунт заблокирован',
+    'auth.error.accountSuspended': 'Ваш аккаунт заблокирован. Если это ошибка, обратитесь в поддержку.',
 
     // Google sign-in (hooks/useGoogleSignInFlow)
     'auth.google.status.loading': 'Открываем вход через Google',

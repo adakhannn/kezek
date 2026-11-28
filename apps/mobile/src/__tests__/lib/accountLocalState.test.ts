@@ -11,9 +11,9 @@ describe('account local state (R25-05)', () => {
         'whatsapp_mobile_active_attempt_v1',
         'shift_offline_queue',
         'shift_offline_cache',
-        'offline:bookings:user-1',
+        'kezek.offline.bookings.user-1',
         'kezek_staff_selection_user-1',
-        'offline:bookings:user-2',
+        'kezek.offline.bookings.user-2',
         'kezek_staff_selection_user-2',
     ];
 
@@ -39,8 +39,8 @@ describe('account local state (R25-05)', () => {
 
         expect([...secureStore.keys()].sort()).toEqual([
             'google_mobile_active_login_v1',
+            'kezek.offline.bookings.user-2',
             'kezek_staff_selection_user-2',
-            'offline:bookings:user-2',
             'shift_offline_queue',
             'telegram_mobile_active_login_v1',
             'whatsapp_mobile_active_attempt_v1',
@@ -51,6 +51,6 @@ describe('account local state (R25-05)', () => {
         await clearLocalStateOnSignOut('user-1');
 
         expect(queryClient.getQueryData(['user'])).toBeUndefined();
-        expect([...secureStore.keys()].sort()).toEqual(['kezek_staff_selection_user-2', 'offline:bookings:user-2']);
+        expect([...secureStore.keys()].sort()).toEqual(['kezek.offline.bookings.user-2', 'kezek_staff_selection_user-2']);
     });
 });

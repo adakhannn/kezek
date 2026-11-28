@@ -21,6 +21,8 @@ export const authKy: Record<keyof typeof authRu, string> = {
     'auth.signIn.whatsappHint': 'WhatsApp\'ка келген код менен кирүү экранына өтөт.',
     'auth.signedIn': 'Сиз ийгиликтүү кирдиңиз',
     'auth.error.timeout': 'Күтүү убактысы бүттү. Интернетти текшерип, кайра аракет кылыңыз.',
+    'auth.error.accountSuspended.title': 'Аккаунт бөгөттөлгөн',
+    'auth.error.accountSuspended': 'Сиздин аккаунтуңуз бөгөттөлгөн. Эгер бул ката болсо, колдоо кызматына кайрылыңыз.',
 
     // Google sign-in (hooks/useGoogleSignInFlow)
     'auth.google.status.loading': 'Google аркылуу кирүүнү ачып жатабыз',

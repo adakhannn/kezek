@@ -21,6 +21,8 @@ export const authEn: Record<keyof typeof authRu, string> = {
     'auth.signIn.whatsappHint': 'Opens sign-in with a code from WhatsApp.',
     'auth.signedIn': 'You are signed in',
     'auth.error.timeout': 'The request timed out. Check your internet connection and try again.',
+    'auth.error.accountSuspended.title': 'Account blocked',
+    'auth.error.accountSuspended': 'Your account has been blocked. Contact support if you think this is a mistake.',
 
     // Google sign-in (hooks/useGoogleSignInFlow)
     'auth.google.status.loading': 'Opening Google sign-in',

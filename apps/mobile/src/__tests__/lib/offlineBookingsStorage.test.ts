@@ -50,7 +50,7 @@ describe('offlineBookingsStorage', () => {
 
     test('stores and loads large payload via chunked secure storage', async () => {
         const payload = createLargePayload('chunk-user');
-        const key = 'offline:bookings:chunk-user';
+        const key = 'kezek.offline.bookings.chunk-user';
 
         await saveOfflineBookings(payload);
 
@@ -64,7 +64,7 @@ describe('offlineBookingsStorage', () => {
 
     test('falls back to single-key value when chunk payload is partial', async () => {
         const payload = createLargePayload('fallback-user');
-        const key = 'offline:bookings:fallback-user';
+        const key = 'kezek.offline.bookings.fallback-user';
 
         await saveOfflineBookings(payload);
 
@@ -78,6 +78,31 @@ describe('offlineBookingsStorage', () => {
 
         const loaded = await loadOfflineBookings('fallback-user');
         expect(loaded).toEqual(fallbackPayload);
+    });
+
+    test('a small payload round-trips under a key SecureStore accepts (KEZEK-MOBILE-3)', async () => {
+        const payload: OfflineBookingsPayload = {
+            userId: '6f1c2a3b-0000-4000-8000-000000000001',
+            updatedAt: '2026-11-28T10:00:00.000Z',
+            items: createLargePayload().items.slice(0, 2),
+        };
+
+        await saveOfflineBookings(payload);
+
+        expect([...storage.keys()]).toEqual([`kezek.offline.bookings.${payload.userId}`]);
+        expect([...storage.keys()].every((key) => /^[\w.-]+$/.test(key))).toBe(true);
+        await expect(loadOfflineBookings(payload.userId)).resolves.toEqual(payload);
+    });
+
+    test('an unreadable store loads as "no cache" instead of rejecting', async () => {
+        (SecureStore.getItemAsync as jest.Mock).mockRejectedValue(new Error('keystore unavailable'));
+
+        await expect(loadOfflineBookings('locked-user')).resolves.toBeNull();
+    });
+
+    test('the SecureStore mock rejects keys the native module rejects', async () => {
+        await expect(SecureStore.getItemAsync('offline:bookings:u1')).rejects.toThrow('Invalid key provided to SecureStore');
+        await expect(SecureStore.setItemAsync('', 'x')).rejects.toThrow('Invalid key provided to SecureStore');
     });
 
     test('does not surface save failures as console errors', async () => {
