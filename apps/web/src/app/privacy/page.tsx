@@ -2,8 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { getLegalT, type LegalKey } from '@/app/_components/i18n/legal';
-import { formatLocalizedDate } from '@/lib/kyDateFormat';
+import { formatLegalUpdatedAt, getLegalT, type LegalKey } from '@/app/_components/i18n/legal';
 import { getPublicSiteHost, getPublicSiteOrigin } from '@/lib/siteOrigin';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,6 +25,8 @@ const COLLECTED: ReadonlyArray<[LegalKey, LegalKey]> = [
     ['legal.privacy.s2.contacts.label', 'legal.privacy.s2.contacts.text'],
     ['legal.privacy.s2.bookings.label', 'legal.privacy.s2.bookings.text'],
     ['legal.privacy.s2.auth.label', 'legal.privacy.s2.auth.text'],
+    ['legal.privacy.s2.notifications.label', 'legal.privacy.s2.notifications.text'],
+    ['legal.privacy.s2.location.label', 'legal.privacy.s2.location.text'],
     ['legal.privacy.s2.tech.label', 'legal.privacy.s2.tech.text'],
 ];
 const PURPOSES: readonly LegalKey[] = [
@@ -37,11 +38,11 @@ const PURPOSES: readonly LegalKey[] = [
 ];
 const RECIPIENTS: readonly LegalKey[] = ['legal.privacy.s5.i1', 'legal.privacy.s5.i2', 'legal.privacy.s5.i3'];
 const RIGHTS: readonly LegalKey[] = ['legal.privacy.s6.i1', 'legal.privacy.s6.i2', 'legal.privacy.s6.i3', 'legal.privacy.s6.i4'];
-const COOKIE_TYPES: readonly LegalKey[] = ['legal.privacy.s7.i1', 'legal.privacy.s7.i2', 'legal.privacy.s7.i3'];
+const COOKIE_TYPES: readonly LegalKey[] = ['legal.privacy.s7.i1', 'legal.privacy.s7.i2', 'legal.privacy.s7.i3', 'legal.privacy.s7.i4'];
 
 export default async function PrivacyPage() {
     const { locale, t } = await getLegalT();
-    const updated = formatLocalizedDate(new Date(), locale, { year: 'numeric', month: 'long', day: 'numeric' });
+    const updated = formatLegalUpdatedAt(locale);
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
@@ -200,7 +201,7 @@ export default async function PrivacyPage() {
                                 <p className="text-sm text-gray-700 dark:text-gray-300">
                                     <strong>{t('legal.common.serviceLabel')}</strong> Kezek<br/>
                                     <strong>{t('legal.common.websiteLabel')}</strong> <a href={getPublicSiteOrigin()} className="text-indigo-600 dark:text-indigo-400 hover:underline">{getPublicSiteHost()}</a><br/>
-                                    <strong>Email:</strong> {t('legal.common.emailText')}
+                                    <strong>{t('legal.common.supportLabel')}</strong> {t('legal.common.supportText')}
                                 </p>
                             </div>
                         </section>
