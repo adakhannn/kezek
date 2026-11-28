@@ -2565,7 +2565,7 @@
     },
     "public.guard_user_lifecycle_session()": {
       "arguments": "",
-      "body": "0ab1302d51655b7a34609106a2a4d0e6",
+      "body": "b815dfc2fc2d8fe408afadc3520a3d6e",
       "config": [
         "search_path=pg_catalog, public"
       ],

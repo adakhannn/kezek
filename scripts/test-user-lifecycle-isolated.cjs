@@ -88,7 +88,7 @@ const created = [];
     const legacySession=await http(authUrl,'/token?grant_type=password','POST',{email:'legacy@lifecycle.invalid',password:'Synthetic-only-password-319!'});
     assert.equal(legacySession.status,200);
     sql(`insert into user_suspensions(user_id) values('${legacy.data.id}');`);
-    sql(source('20261111090000_user_lifecycle.sql'));
+    sql(source('20261111090000_user_lifecycle.sql')); sql(source('20261128120000_session_guard_no_deadlock.sql'));
     assert.equal((await http(authUrl,'/user','GET',undefined,legacySession.data.access_token)).status,403,'migration revokes preexisting legacy suspension sessions');
     assert.equal(sql(`select count(*) from auth.refresh_tokens where user_id='${legacy.data.id}'`),'0');
     fails(`insert into auth.sessions(id,user_id) values(gen_random_uuid(),'${legacy.data.id}');`,/USER_SUSPENDED/);

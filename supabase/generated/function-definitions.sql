@@ -5643,6 +5643,7 @@ CREATE OR REPLACE FUNCTION public.guard_user_lifecycle_session()
 AS $function$
 declare until_time timestamptz;
 begin
+  perform pg_advisory_xact_lock(184208, hashtext(new.user_id::text));
   select banned_until into until_time from auth.users where id=new.user_id for share;
   if not found or until_time>now() or exists(select 1 from public.user_suspensions where user_id=new.user_id) then
     raise exception 'USER_SUSPENDED' using errcode='42501';
