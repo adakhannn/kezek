@@ -105,6 +105,35 @@ export async function requestAccountDeletion(admin: AdminLike, userId: string, c
     return { ok: true as const, scheduledFor: scheduledFor.toISOString() };
 }
 
+const NOTIFICATION_PREFERENCE_KEYS = ['notify_email', 'notify_sms', 'notify_telegram', 'notify_whatsapp'] as const;
+
+/** Puts back the channel switches saved when the deletion was requested (preference_snapshot). */
+async function restoreNotificationPreferences(admin: AdminLike, userId: string, snapshot: unknown) {
+    if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return;
+    const saved = snapshot as Record<string, unknown>;
+    const restored: DbUpdate<'profiles'> = {};
+    for (const key of NOTIFICATION_PREFERENCE_KEYS) {
+        const value = saved[key];
+        if (typeof value === 'boolean') restored[key] = value;
+    }
+    if (!Object.keys(restored).length) return;
+    const { error } = await admin.from('profiles').update(restored).eq('id', userId);
+    if (error) throw databaseFailure(error, 'Не удалось сохранить настройки уведомлений');
+}
+
+/** The account is no longer scheduled for deletion: drop the marks requestAccountDeletion set. */
+async function clearDeletionMetadata(admin: AdminLike, userId: string) {
+    const { data: authData } = await admin.auth.admin.getUserById(userId);
+    const { error: metadataError } = await admin.auth.admin.updateUserById(userId, {
+        user_metadata: {
+            ...(authData.user?.user_metadata ?? {}),
+            account_deletion_pending: null,
+            account_deletion_scheduled_for: null,
+        },
+    });
+    if (metadataError) throw databaseFailure(metadataError, 'Не удалось восстановить аккаунт');
+}
+
 export async function cancelAccountDeletion(admin: AdminLike, userId: string) {
     const now = new Date().toISOString();
     const { data: request, error: requestError } = await admin
@@ -116,24 +145,52 @@ export async function cancelAccountDeletion(admin: AdminLike, userId: string) {
     if (requestError) throw databaseFailure(requestError, 'Не удалось загрузить запрос на удаление');
     const { error } = await admin.from('account_deletion_requests').update({ status: 'cancelled', cancelled_at: now, updated_at: now }).eq('user_id', userId).eq('status', 'pending');
     if (error) throw databaseFailure(error, 'Не удалось отменить удаление');
-    const preferences = request?.preference_snapshot;
-    if (preferences && typeof preferences === 'object' && !Array.isArray(preferences)) {
-        const allowed = ['notify_email', 'notify_sms', 'notify_telegram', 'notify_whatsapp'] as const;
-        const restored: DbUpdate<'profiles'> = {};
-        for (const key of allowed) {
-            const value = preferences[key];
-            if (typeof value === 'boolean') restored[key] = value;
-        }
-        if (Object.keys(restored).length) await admin.from('profiles').update(restored).eq('id', userId);
-    }
-    const { data: authData } = await admin.auth.admin.getUserById(userId);
-    const { error: metadataError } = await admin.auth.admin.updateUserById(userId, {
-        user_metadata: {
-            ...(authData.user?.user_metadata ?? {}),
-            account_deletion_pending: null,
-            account_deletion_scheduled_for: null,
-        },
-    });
-    if (metadataError) throw databaseFailure(metadataError, 'Не удалось восстановить аккаунт');
+    await restoreNotificationPreferences(admin, userId, request?.preference_snapshot);
+    await clearDeletionMetadata(admin, userId);
     return { ok: true as const };
+}
+
+/**
+ * A request that met a blocker on its due date (finalize_due_account_deletions sets `blocked`) is
+ * closed for good and never retried by itself: the blocker usually comes from the user's own use of
+ * the account during the grace period (a new booking, a staff card, a business role), and deleting
+ * such an account weeks later without a fresh confirmation would be irreversible and unexpected.
+ * The user requests again once the reasons are gone; the profile says so.
+ *
+ * What the database function leaves behind is a dead end: the notification switches stay off and the
+ * account still carries the "deletion pending" marks. This step, run by the daily data-retention job
+ * right after the finalize step, gives each newly blocked account its notifications back, clears the
+ * marks, records the blockers seen now and closes the request (cancelled_at), so it is handled once.
+ * Every write is repeatable: a failure part-way is finished by the next run.
+ */
+export async function releaseBlockedAccountDeletions(admin: AdminLike, batchLimit = 50): Promise<number> {
+    const { data, error } = await admin
+        .from('account_deletion_requests')
+        .select('user_id, preference_snapshot')
+        .eq('status', 'blocked')
+        .is('cancelled_at', null)
+        .order('updated_at', { ascending: true })
+        .limit(batchLimit);
+    if (error) throw databaseFailure(error, 'Blocked account deletions could not be loaded');
+    let released = 0;
+    for (const row of data ?? []) {
+        const blockers = await assessAccountDeletion(admin, row.user_id);
+        await restoreNotificationPreferences(admin, row.user_id, row.preference_snapshot);
+        await clearDeletionMetadata(admin, row.user_id);
+        const now = new Date().toISOString();
+        const { data: closed, error: closeError } = await admin
+            .from('account_deletion_requests')
+            .update({
+                cancelled_at: now,
+                updated_at: now,
+                blocker_snapshot: blockers.map(({ code, count }) => ({ code, count })),
+            })
+            .eq('user_id', row.user_id)
+            .eq('status', 'blocked')
+            .is('cancelled_at', null)
+            .select('user_id');
+        if (closeError) throw databaseFailure(closeError, 'Blocked account deletion could not be closed');
+        if (closed?.length) released += 1;
+    }
+    return released;
 }
