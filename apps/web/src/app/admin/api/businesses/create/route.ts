@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import {
     createManualBusiness,
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
         const { data: isSuperAdmin, error: roleError } = await supabase.rpc('is_super_admin');
         if (roleError) {
             return NextResponse.json(
-                { ok: false, code: 'role_check_failed', error: roleError.message },
+                { ok: false, code: 'role_check_failed', error: reportDatabaseError('AdminBusinessCreate', roleError) },
                 { status: 400 },
             );
         }
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
             {
                 ok: false,
                 code: 'unexpected_error',
-                error: error instanceof Error ? error.message : String(error),
+                error: publicErrorMessage(error, DATABASE_FAILURE_MESSAGES.internal),
             },
             { status: 500 },
         );

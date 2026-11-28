@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -36,7 +37,7 @@ export async function POST(req: Request, ctx: unknown) {
         if (authError || !user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
         const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supa, user.id);
-        if (superErr) return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
+        if (superErr) return NextResponse.json({ ok: false, error: reportDatabaseError('AdminUserUpdateBasic', superErr) }, { status: 400 });
         if (!superRow) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         // 2) Обновляем auth.users через service role
@@ -56,13 +57,13 @@ export async function POST(req: Request, ctx: unknown) {
         });
 
         if (updErr) {
-            return NextResponse.json({ ok: false, error: updErr.message }, { status: 400 });
+            return NextResponse.json({ ok: false, error: reportDatabaseError('AdminUserUpdateBasic', updErr, DATABASE_FAILURE_MESSAGES.save) }, { status: 400 });
         }
 
         return NextResponse.json({ ok: true });
     } catch (e) {
         logError('AdminUserUpdateBasic', 'Failed to update user', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }

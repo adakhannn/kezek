@@ -14,6 +14,7 @@ import {
     readAdminUserStats,
 } from '@/lib/adminPanelReadService';
 import { createErrorResponse, withErrorHandler } from '@/lib/apiErrorHandler';
+import { logError } from '@/lib/log';
 import { getRouteParam } from '@/lib/routeParams';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 import { isUuid } from '@/lib/validation';
@@ -24,8 +25,14 @@ import { isUuid } from '@/lib/validation';
  * after the caller is verified as a global super admin; failures are errors, never empty data.
  */
 
-const loadFailed = (message: string | null) =>
-    createErrorResponse('service_unavailable', 'Не удалось загрузить данные админки', message ? { reason: message } : undefined, 503);
+/**
+ * A failed admin read: the raw database text goes to the log (Sentry), the client gets the
+ * generic message and the read's machine code as details.reason (R25-29, ENG-47).
+ */
+function loadFailed(scope: string, failure: { error: string; message: string | null } | null) {
+    if (failure) logError(scope, 'Admin read failed', { reason: failure.error, message: failure.message });
+    return createErrorResponse('service_unavailable', 'Не удалось загрузить данные админки', failure ? { reason: failure.error } : undefined, 503);
+}
 
 async function uuidParam(context: unknown, key: string): Promise<string | null> {
     const value = await getRouteParam(context, key);
@@ -50,7 +57,7 @@ export function runAdminBusinessListHttp() {
         const access = await requireCurrentSuperAdmin();
         if (!access.ok) return access.response;
         const result = await readAdminBusinessList(access.supabase, createSupabaseAdminClient());
-        if (!result.ok) return loadFailed(result.message);
+        if (!result.ok) return loadFailed('AdminBusinessList', result);
         return NextResponse.json({ ok: true, items: result.items });
     });
 }
@@ -65,7 +72,7 @@ export function runAdminBusinessDetailHttp(context: unknown) {
         if (!result.ok) {
             return result.error === 'not_found'
                 ? createErrorResponse('not_found', 'Бизнес не найден', undefined, 404)
-                : loadFailed(result.message);
+                : loadFailed('AdminBusinessDetail', result);
         }
         return NextResponse.json(result);
     });
@@ -81,7 +88,7 @@ export function runAdminBranchListHttp(context: unknown) {
         if (!result.ok) {
             return result.error === 'not_found'
                 ? createErrorResponse('not_found', 'Бизнес не найден', undefined, 404)
-                : loadFailed(result.message);
+                : loadFailed('AdminBranchList', result);
         }
         return NextResponse.json(result);
     });
@@ -98,7 +105,7 @@ export function runAdminBranchDetailHttp(context: unknown) {
         if (!result.ok) {
             return result.error === 'not_found'
                 ? createErrorResponse('not_found', 'Филиал не найден', undefined, 404)
-                : loadFailed(result.message);
+                : loadFailed('AdminBranchDetail', result);
         }
         return NextResponse.json(result);
     });
@@ -109,7 +116,7 @@ export function runAdminBusinessApplicationsHttp() {
         const access = await requireCurrentSuperAdmin();
         if (!access.ok) return access.response;
         const result = await readAdminBusinessApplications(createSupabaseAdminClient());
-        if (!result.ok) return loadFailed(result.message);
+        if (!result.ok) return loadFailed('AdminBusinessApplications', result);
         return NextResponse.json(result);
     });
 }
@@ -124,7 +131,7 @@ export function runAdminUserDetailHttp(context: unknown) {
         if (!result.ok) {
             return result.error === 'not_found'
                 ? createErrorResponse('not_found', 'Пользователь не найден', undefined, 404)
-                : loadFailed(result.message);
+                : loadFailed('AdminUserDetail', result);
         }
         return NextResponse.json(result);
     });
@@ -138,7 +145,7 @@ export function runAdminUserStatsHttp() {
             const stats = await readAdminUserStats(createSupabaseAdminClient(), access.user.id);
             return NextResponse.json({ ok: true, stats });
         } catch {
-            return loadFailed(null);
+            return loadFailed('AdminUserStats', null);
         }
     });
 }

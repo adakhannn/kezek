@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { slugifyBusinessName } from '@/lib/businessSlug';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 
@@ -95,7 +96,7 @@ export async function createManualBusiness(params: {
         .limit(1)
         .maybeSingle();
 
-    if (slugError) return fail(400, 'duplicate_check_failed', slugError.message);
+    if (slugError) return fail(400, 'duplicate_check_failed', reportDatabaseError('ManualBusinessCreation', slugError, DATABASE_FAILURE_MESSAGES.load));
     if (slugMatch) return fail(409, 'slug_taken', 'This URL slug is already used by another business');
 
     const { data: categoryRows, error: categoryError } = await params.admin
@@ -103,7 +104,7 @@ export async function createManualBusiness(params: {
         .select('slug,is_active')
         .in('slug', categories);
 
-    if (categoryError) return fail(400, 'category_check_failed', categoryError.message);
+    if (categoryError) return fail(400, 'category_check_failed', reportDatabaseError('ManualBusinessCreation', categoryError, DATABASE_FAILURE_MESSAGES.load));
 
     const activeCategorySlugs = new Set(
         (categoryRows ?? []).filter((row: { is_active: boolean | null }) => row.is_active !== false).map((row: { slug: string }) => row.slug),
@@ -134,7 +135,7 @@ export async function createManualBusiness(params: {
         .ilike('name', escapeLike(name))
         .limit(10);
 
-    if (nameError) return fail(400, 'duplicate_check_failed', nameError.message);
+    if (nameError) return fail(400, 'duplicate_check_failed', reportDatabaseError('ManualBusinessCreation', nameError, DATABASE_FAILURE_MESSAGES.load));
     registerDuplicates(
         (nameMatches ?? []).filter(
             (row: { name: string }) => normalizeComparableName(row.name) === normalizeComparableName(name),
@@ -149,7 +150,7 @@ export async function createManualBusiness(params: {
             .contains('phones', [phone])
             .limit(10);
 
-        if (phoneError) return fail(400, 'duplicate_check_failed', phoneError.message);
+        if (phoneError) return fail(400, 'duplicate_check_failed', reportDatabaseError('ManualBusinessCreation', phoneError, DATABASE_FAILURE_MESSAGES.load));
         registerDuplicates(phoneMatches, 'phone');
     }
 
@@ -206,7 +207,7 @@ export async function createManualBusiness(params: {
 
     if (contextAuditError) {
         await params.admin.from('businesses').delete().eq('id', createdBusiness.id);
-        return fail(500, 'audit_failed', contextAuditError.message);
+        return fail(500, 'audit_failed', reportDatabaseError('ManualBusinessCreation', contextAuditError, DATABASE_FAILURE_MESSAGES.save));
     }
 
     return { ok: true, businessId: createdBusiness.id };

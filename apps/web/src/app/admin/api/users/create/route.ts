@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -30,7 +31,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request) {
         if (!me.user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
         const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ ok: false, error: eSuper.message }, { status: 400 });
+        if (eSuper) return NextResponse.json({ ok: false, error: reportDatabaseError('AdminUsersCreate', eSuper) }, { status: 400 });
         if (!isSuper) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         // Тело запроса
@@ -94,7 +95,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request) {
             if (createErr) {
                 const msg = /already registered/i.test(createErr.message)
                     ? 'Пользователь уже существует'
-                    : createErr.message;
+                    : reportDatabaseError('AdminUsersCreate', createErr, DATABASE_FAILURE_MESSAGES.save);
                 return NextResponse.json({ ok: false, error: msg }, { status: 409 });
             }
 
@@ -116,7 +117,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request) {
         if (createErr) {
             const msg = /already registered/i.test(createErr.message)
                 ? 'Пользователь уже существует'
-                : createErr.message;
+                : reportDatabaseError('AdminUsersCreate', createErr, DATABASE_FAILURE_MESSAGES.save);
             return NextResponse.json({ ok: false, error: msg }, { status: 409 });
         }
 
@@ -125,7 +126,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request) {
 
         return NextResponse.json({ ok: true, id: uid, method: 'phone_otp' });
     } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         logError('AdminUsersCreate', 'user create error', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }

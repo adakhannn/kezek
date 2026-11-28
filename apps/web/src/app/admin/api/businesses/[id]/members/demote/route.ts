@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import {NextResponse} from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import {
     canChangeBusinessMember,
     loadBusinessMemberRoleKeys,
@@ -59,7 +60,7 @@ export async function POST(req: Request, context: unknown) {
             .maybeSingle();
 
         if (roleErr) {
-            return NextResponse.json({ok: false, error: roleErr.message}, {status: 400});
+            return NextResponse.json({ok: false, error: reportDatabaseError('AdminMembersDemote', roleErr, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
         }
         if (!clientRole?.id) {
             return NextResponse.json({ok: false, error: 'client role not found'}, {status: 400});
@@ -74,7 +75,7 @@ export async function POST(req: Request, context: unknown) {
             .neq('role_id', clientRole.id);
 
         if (delErr) {
-            return NextResponse.json({ok: false, error: delErr.message}, {status: 400});
+            return NextResponse.json({ok: false, error: reportDatabaseError('AdminMembersDemote', delErr, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
         }
 
         // гарантируем наличие client (idемпотентно)
@@ -87,19 +88,14 @@ export async function POST(req: Request, context: unknown) {
 
         if (upsertErr) {
             // дружелюбный хинт, если не хватает индекса
-            const hint =
-                /ON CONFLICT|unique|constraint/i.test(upsertErr.message)
-                    ? `${upsertErr.message}. Убедись, что созданы индексы:
-• CREATE UNIQUE INDEX IF NOT EXISTS user_roles_global_uniq ON public.user_roles (user_id, role_id) WHERE biz_id IS NULL;
-• CREATE UNIQUE INDEX IF NOT EXISTS user_roles_per_biz_uniq ON public.user_roles (user_id, role_id, biz_id) WHERE biz_id IS NOT NULL;`
-                    : upsertErr.message;
+            const hint = reportDatabaseError('AdminMembersDemote', upsertErr, DATABASE_FAILURE_MESSAGES.save);
             return NextResponse.json({ok: false, error: hint}, {status: 400});
         }
 
         return NextResponse.json({ok: true});
     } catch (e: unknown) {
         logError('AdminMembersDemote', 'Failed to demote business member', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

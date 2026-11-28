@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { releaseApplicationBlock } from '@/lib/applicationPolicy';
 import { notifyOwnerApplicationApproved } from '@/lib/businessRoleApplicationNotificationService';
 import {
@@ -55,7 +56,7 @@ export const POST = withLocalizedMessages(async function POST(request: Request, 
         .eq('id', applicationId)
         .maybeSingle();
     if (applicationError) {
-        return Response.json({ ok: false, message: applicationError.message }, { status: 400 });
+        return Response.json({ ok: false, message: reportDatabaseError('ApplicationNotification', applicationError, DATABASE_FAILURE_MESSAGES.save) }, { status: 400 });
     }
     if (!application) {
         return Response.json({ ok: false, message: 'Заявка не найдена.' }, { status: 404 });

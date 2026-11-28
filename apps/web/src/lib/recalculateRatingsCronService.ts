@@ -229,7 +229,8 @@ export async function runRecalculateRatingsCron({
 
         return {
             ok: false as const,
-            error: error.message || 'Ratings recalculation failed',
+            // The raw RPC text is in the log and the alert e-mail, not in the response (R25-29).
+            error: 'Ratings recalculation failed',
             status: 500,
         };
     }

@@ -93,11 +93,13 @@ describe('recalculateRatingsCronService', () => {
             nowMs: () => 1000,
         });
 
+        // The raw RPC text goes to the log and the alert e-mail only (R25-29).
         expect(result).toEqual({
             ok: false,
-            error: 'rpc failed',
+            error: 'Ratings recalculation failed',
             status: 500,
         });
+        expect(JSON.stringify(result)).not.toContain('rpc failed');
         expect(sendAlertEmail).toHaveBeenCalled();
     });
 

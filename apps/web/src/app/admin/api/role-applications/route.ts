@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export async function GET(request: Request) {
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
 
     const { data, error: listError } = await query;
     if (listError) {
-        return Response.json({ ok: false, message: listError.message }, { status: 400 });
+        return Response.json({ ok: false, message: reportDatabaseError('AdminRoleApplications', listError, DATABASE_FAILURE_MESSAGES.save) }, { status: 400 });
     }
 
     const items = data ?? [];
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
             .in('application_kind', ['owner', 'staff'])
             .gt('blocked_until', new Date().toISOString())
             .is('released_at', null);
-        if (blockError) return Response.json({ ok: false, message: blockError.message }, { status: 400 });
+        if (blockError) return Response.json({ ok: false, message: reportDatabaseError('AdminRoleApplications', blockError, DATABASE_FAILURE_MESSAGES.save) }, { status: 400 });
         blocks = (blockRows ?? []).filter((b): b is typeof b & { subject_user_id: string } => b.subject_user_id !== null);
     }
 

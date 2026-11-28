@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import {PostgrestError} from '@supabase/supabase-js';
 import {NextResponse} from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import {logError} from '@/lib/log';
 import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -62,7 +63,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
         const {data: {user}} = await supa.auth.getUser();
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
         const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
+        if (eSuper) return NextResponse.json({ok: false, error: reportDatabaseError('CategoryUpdate', eSuper)}, {status: 400});
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         // Next route parameters are asynchronous; never send an unresolved ID to persistence.
@@ -81,7 +82,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
             .eq('id', id)
             .maybeSingle<CategoryRow>();
 
-        if (eCur) return NextResponse.json({ok: false, error: eCur.message}, {status: 400});
+        if (eCur) return NextResponse.json({ok: false, error: reportDatabaseError('CategoryUpdate', eCur, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
         if (!cur) return NextResponse.json({ok: false, error: 'not_found'}, {status: 404});
 
         const patch: Patch = {};
@@ -123,7 +124,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
                 old_slug: cur.slug,
                 new_slug: patch.slug as string,
             });
-            if (eRep) return NextResponse.json({ok: false, error: eRep.message}, {status: 400});
+            if (eRep) return NextResponse.json({ok: false, error: reportDatabaseError('CategoryUpdate', eRep, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
         }
 
         if (Object.keys(patch).length === 0) {
@@ -135,14 +136,14 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
             const pgErr = eUpd as PostgrestError;
             const isDup = pgErr.code === '23505' || /duplicate|unique/i.test(pgErr.message);
             return NextResponse.json(
-                {ok: false, error: isDup ? 'Такой slug уже существует' : pgErr.message},
+                {ok: false, error: isDup ? 'Такой slug уже существует' : reportDatabaseError('CategoryUpdate', pgErr, DATABASE_FAILURE_MESSAGES.save)},
                 {status: isDup ? 409 : 400},
             );
         }
 
         return NextResponse.json({ok: true, updated: true, slug: patch.slug ?? cur.slug});
     } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         logError('CategoryUpdate', 'Failed to update category', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

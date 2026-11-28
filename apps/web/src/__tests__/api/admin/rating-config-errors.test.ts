@@ -4,6 +4,7 @@ jest.mock('@/lib/log', () => ({ logError: jest.fn(), logWarn: jest.fn(), logDebu
 
 import { GET, POST } from '@/app/admin/api/rating-config/route';
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { DATABASE_FAILURE_MESSAGES } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -28,7 +29,7 @@ function signedInSuperAdmin(from = jest.fn()) {
 const validWeights = { staff_reviews_weight: 35, staff_productivity_weight: 25, staff_loyalty_weight: 20, staff_discipline_weight: 20, window_days: 30 };
 const post = () => POST(new Request('http://localhost/admin/api/rating-config', { method: 'POST', body: JSON.stringify(validWeights) }));
 
-describe('rating-config 5xx answers log their cause once (ARCH-04)', () => {
+describe('rating-config 5xx answers log their cause once and never echo it (ARCH-04, R25-29)', () => {
     beforeEach(() => jest.clearAllMocks());
 
     test('GET: a failed config read answers 500 and logs the database error', async () => {
@@ -38,7 +39,7 @@ describe('rating-config 5xx answers log their cause once (ARCH-04)', () => {
         const response = await GET();
 
         expect(response.status).toBe(500);
-        expect(await response.json()).toEqual({ ok: false, error: configError.message });
+        expect(await response.json()).toEqual({ ok: false, error: DATABASE_FAILURE_MESSAGES.load });
         expect(logError).toHaveBeenCalledTimes(1);
         expect(logError).toHaveBeenCalledWith('RatingConfig', 'Failed to load rating config', configError);
     });
@@ -50,7 +51,7 @@ describe('rating-config 5xx answers log their cause once (ARCH-04)', () => {
         const response = await GET();
 
         expect(response.status).toBe(500);
-        expect(await response.json()).toEqual({ ok: false, error: 'session store down' });
+        expect(await response.json()).toEqual({ ok: false, error: DATABASE_FAILURE_MESSAGES.internal });
         expect(logError).toHaveBeenCalledTimes(1);
         expect(logError).toHaveBeenCalledWith('RatingConfig', 'Unexpected error loading rating config', failure);
     });
@@ -63,7 +64,7 @@ describe('rating-config 5xx answers log their cause once (ARCH-04)', () => {
         const response = await post();
 
         expect(response.status).toBe(500);
-        expect(await response.json()).toEqual({ ok: false, error: insertError.message });
+        expect(await response.json()).toEqual({ ok: false, error: DATABASE_FAILURE_MESSAGES.save });
         expect(logError).toHaveBeenCalledTimes(1);
         expect(logError).toHaveBeenCalledWith('RatingConfig', 'Failed to save rating config', insertError);
     });
@@ -76,7 +77,7 @@ describe('rating-config 5xx answers log their cause once (ARCH-04)', () => {
         const response = await post();
 
         expect(response.status).toBe(500);
-        expect(await response.json()).toEqual({ ok: false, error: 'service role key missing' });
+        expect(await response.json()).toEqual({ ok: false, error: DATABASE_FAILURE_MESSAGES.internal });
         expect(logError).toHaveBeenCalledTimes(1);
         expect(logError).toHaveBeenCalledWith('RatingConfig', 'Unexpected error saving rating config', failure);
     });

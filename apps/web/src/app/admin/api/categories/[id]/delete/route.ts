@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { withLocalizedMessages } from '@/lib/serverMessages';
@@ -25,7 +26,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
         if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
         const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
-        if (eSuper)  return NextResponse.json({ ok: false, error: eSuper.message }, { status: 400 });
+        if (eSuper)  return NextResponse.json({ ok: false, error: reportDatabaseError('CategoryDelete', eSuper) }, { status: 400 });
         if (!isSuper) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         // Service-клиент для админских операций
@@ -41,7 +42,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
             .eq('id', categoryId)
             .maybeSingle<CategoryRow>();
 
-        if (eCat)   return NextResponse.json({ ok: false, error: eCat.message }, { status: 400 });
+        if (eCat)   return NextResponse.json({ ok: false, error: reportDatabaseError('CategoryDelete', eCat, DATABASE_FAILURE_MESSAGES.delete) }, { status: 400 });
         if (!cat)   return NextResponse.json({ ok: false, error: 'not_found' }, { status: 404 });
 
         // Считаем, где используется
@@ -50,7 +51,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
             .select('id', { count: 'exact', head: true })
             .contains('categories', [cat.slug]);
 
-        if (eCnt) return NextResponse.json({ ok: false, error: eCnt.message }, { status: 400 });
+        if (eCnt) return NextResponse.json({ ok: false, error: reportDatabaseError('CategoryDelete', eCnt, DATABASE_FAILURE_MESSAGES.delete) }, { status: 400 });
 
         // Если используется и force не включён — стоп
         if ((count ?? 0) > 0 && !force) {
@@ -63,16 +64,16 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
         // Если используется и force включён — удаляем slug из всех businesses.categories
         if ((count ?? 0) > 0 && force) {
             const { error: eRm } = await admin.rpc('cat_remove_slug', { the_slug: cat.slug });
-            if (eRm) return NextResponse.json({ ok: false, error: eRm.message }, { status: 400 });
+            if (eRm) return NextResponse.json({ ok: false, error: reportDatabaseError('CategoryDelete', eRm, DATABASE_FAILURE_MESSAGES.delete) }, { status: 400 });
         }
 
         // Удаляем саму категорию
         const { error: eDel } = await admin.from('categories').delete().eq('id', cat.id);
-        if (eDel) return NextResponse.json({ ok: false, error: eDel.message }, { status: 400 });
+        if (eDel) return NextResponse.json({ ok: false, error: reportDatabaseError('CategoryDelete', eDel, DATABASE_FAILURE_MESSAGES.delete) }, { status: 400 });
 
         return NextResponse.json({ ok: true, removed: count ?? 0 });
     } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         logError('CategoryDelete', 'Failed to delete category', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }

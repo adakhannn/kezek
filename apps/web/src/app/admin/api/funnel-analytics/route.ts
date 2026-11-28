@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
-import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, DATABASE_FAILURE_MESSAGES, databaseErrorMessage, withErrorHandler } from '@/lib/apiErrorHandler';
 import { logError, logDebug } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -83,7 +83,7 @@ export async function GET(req: Request) {
         if (error) {
             logError('FunnelAnalyticsAPI', 'Error fetching funnel events', { error: error.message });
             return NextResponse.json(
-                { ok: false, error: error.message },
+                { ok: false, error: databaseErrorMessage(error, DATABASE_FAILURE_MESSAGES.load) },
                 { status: 500 }
             );
         }

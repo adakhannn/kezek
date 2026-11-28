@@ -2,6 +2,7 @@
 import {NextResponse} from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -28,12 +29,12 @@ export async function GET() {
             .order('is_system', {ascending: false})
             .order('key', {ascending: true});
 
-        if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
+        if (error) return NextResponse.json({ok: false, error: reportDatabaseError('AdminRoles', error, DATABASE_FAILURE_MESSAGES.load)}, {status: 400});
 
         return NextResponse.json({ok: true, items});
     } catch (e: unknown) {
         logError('AdminRoles', 'Failed to list roles', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }
