@@ -94,9 +94,9 @@ test.describe('Пакеты визитов: план → продажа → бр
             await page.getByLabel('Поиск', { exact: true }).fill('E2E Клиент пакет');
             const row = page.locator('tr', { hasText: 'E2E Клиент пакет' });
             await expect(row).toHaveCount(1);
-            await row.getByRole('button', { name: 'Пришел', exact: true }).click();
+            await row.getByRole('button', { name: 'Пришёл', exact: true }).click();
             await page.getByRole('dialog').getByRole('button', { name: 'Подтвердить', exact: true }).click();
-            await expect(row).toContainText('пришел');
+            await expect(row).toContainText('пришёл');
         });
 
         await test.step('5. Проверить остаток по пакету в «Проданные пакеты»', async () => {

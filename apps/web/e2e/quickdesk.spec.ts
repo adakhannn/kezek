@@ -120,7 +120,7 @@ test.describe('QuickDesk - управление бронированиями', (
 
         await expect(page.getByLabel('Услуга', { exact: true })).toBeDisabled();
         await expect(page.getByLabel('Время', { exact: true })).toBeDisabled();
-        await expect(page.getByText('Выбери филиал, услугу и мастера')).toBeVisible();
+        await expect(page.getByText('Выберите филиал, услугу и мастера')).toBeVisible();
         await expect(page.getByRole('button', { name: 'Создать запись' })).toBeDisabled();
     });
 
@@ -152,14 +152,14 @@ test.describe('QuickDesk - управление бронированиями', (
 
     test('должен отметить посещение (пришёл)', async ({ page }) => {
         const row = await bookingRow(page, 'E2E Пришёл');
-        await row.getByRole('button', { name: 'Пришел', exact: true }).click();
+        await row.getByRole('button', { name: 'Пришёл', exact: true }).click();
         await confirmDialog(page);
-        await expect(row).toContainText('пришел');
+        await expect(row).toContainText('пришёл');
     });
 
     test('должен отметить no-show (не пришёл)', async ({ page }) => {
         const row = await bookingRow(page, 'E2E Неявка');
-        await row.getByRole('button', { name: 'Не пришел', exact: true }).click();
+        await row.getByRole('button', { name: 'Не пришёл', exact: true }).click();
         await confirmDialog(page);
         await page.locator('select', { has: page.locator('option[value="no_show"]') }).selectOption('no_show');
         await expect(page.locator('tr', { hasText: 'E2E Неявка' })).toContainText(/не приш[её]л/i);
