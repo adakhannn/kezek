@@ -138,51 +138,15 @@ export function BookingFormSections({
     const noStaffForRestoredServiceDay = step === 4 && !canGoNext && !!branchId && !!dayStr
         && !staffLoading && !staffError && staffFiltered.length === 0;
 
-    const stepMeta: Record<number, { title: string; description: string; next: string }> = {
-        1: {
-            title: t('booking.flow.step1Title', 'Сначала выберите филиал'),
-            description: t('booking.flow.step1Description', 'После выбора локации система покажет только релевантные сценарии записи.'),
-            next: t('booking.flow.step1Next', 'Дальше откроется выбор даты.'),
-        },
-        2: {
-            title: t('booking.flow.step2Title', 'Теперь выберите день'),
-            description: t('booking.flow.step2Description', 'Дата помогает отфильтровать реально доступных специалистов.'),
-            next: t('booking.flow.step2Next', 'Дальше откроется выбор мастера.'),
-        },
-        3: {
-            title: t('booking.flow.step3Title', 'Определитесь со специалистом'),
-            description: t('booking.flow.step3Description', 'Можно выбрать конкретного мастера или доверить системе ближайший слот.'),
-            next: t('booking.flow.step3Next', 'Дальше откроется выбор услуг.'),
-        },
-        4: {
-            title: t('booking.flow.step4Title', 'Соберите визит из услуг'),
-            description: t('booking.flow.step4Description', 'На этом шаге уже видно длительность и ориентир по стоимости.'),
-            next: t('booking.flow.step4Next', 'Дальше останется выбрать точное время.'),
-        },
-        5: {
-            title: t('booking.flow.step5Title', 'Выберите свободное время'),
-            description: isAuthed
-                ? t('booking.summary.selectSlotFirst', 'Выберите свободный слот, и система продолжит подтверждение записи.')
-                : t('booking.flow.step5Description', 'Клик по слоту продолжит запись через авторизацию или гостевой сценарий.'),
-            next: t('booking.flow.step5Next', 'После выбора слота поток перейдёт к подтверждению.'),
-        },
-    };
+    // The time step is where a guest learns that sign-in (or guest details) comes next;
+    // a signed-in client already gets the slot hint from SlotPicker.
+    const step5Caption = isAuthed
+        ? null
+        : t('booking.flow.step5Description', 'После выбора времени войдите в аккаунт или продолжите как гость.');
 
     return (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(19rem,0.65fr)]">
             <div className="space-y-4">
-                <Card variant="elevated" padding="lg">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                            <p className="type-label text-[var(--accent-primary)]">{stepMeta[step].title}</p>
-                            <p className="type-body mt-2 text-[var(--text-secondary)]">{stepMeta[step].description}</p>
-                        </div>
-                        <div className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
-                            {stepMeta[step].next}
-                        </div>
-                    </div>
-                </Card>
-
                 {step === 1 ? (
                     <BranchSelector
                         branches={branches}
@@ -196,13 +160,9 @@ export function BookingFormSections({
                 {step === 2 ? (
                     <Card variant="elevated" padding="lg">
                         <div className="mb-5">
-                            <p className="type-label text-[var(--accent-primary)]">{t('booking.step2.kicker', 'Шаг 2')}</p>
-                            <h2 className="type-section-title mt-2 text-[var(--text-primary)]">
+                            <h2 className="type-section-title text-[var(--text-primary)]">
                                 {t('booking.step2.title', 'Выберите день')}
                             </h2>
-                            <p className="type-caption mt-2 text-[var(--text-secondary)]">
-                                {t('booking.step2.description', 'Календарь показывает ближайшие доступные даты для продолжения записи.')}
-                            </p>
                         </div>
                         <div className="space-y-4">
                             <BookingDateCalendar
@@ -229,8 +189,7 @@ export function BookingFormSections({
                 {step === 3 ? (
                     <Card variant="elevated" padding="lg">
                         <div className="mb-5">
-                            <p className="type-label text-[var(--accent-primary)]">{t('booking.step3.kicker', 'Шаг 3')}</p>
-                            <h2 className="type-section-title mt-2 text-[var(--text-primary)]">
+                            <h2 className="type-section-title text-[var(--text-primary)]">
                                 {t('booking.step3.title', 'Выберите мастера')}
                             </h2>
                         </div>
@@ -248,8 +207,7 @@ export function BookingFormSections({
                 {step === 4 ? (
                     <Card variant="elevated" padding="lg">
                         <div className="mb-5">
-                            <p className="type-label text-[var(--accent-primary)]">{t('booking.step4.kicker', 'Шаг 4')}</p>
-                            <h2 className="type-section-title mt-2 text-[var(--text-primary)]">
+                            <h2 className="type-section-title text-[var(--text-primary)]">
                                 {t('booking.step4.title', 'Выберите услуги')}
                             </h2>
                         </div>
@@ -285,10 +243,12 @@ export function BookingFormSections({
                 {step === 5 ? (
                     <Card variant="elevated" padding="lg">
                         <div className="mb-5">
-                            <p className="type-label text-[var(--accent-primary)]">{t('booking.step5.kicker', 'Шаг 5')}</p>
-                            <h2 className="type-section-title mt-2 text-[var(--text-primary)]">
+                            <h2 className="type-section-title text-[var(--text-primary)]">
                                 {t('booking.step5.title', 'Выберите время')}
                             </h2>
+                            {step5Caption ? (
+                                <p className="type-caption mt-2 text-[var(--text-secondary)]">{step5Caption}</p>
+                            ) : null}
                         </div>
                         <SlotPicker
                             slots={slots}

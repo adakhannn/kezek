@@ -24,18 +24,10 @@ export function BranchSelector({
 }: BranchSelectorProps) {
     return (
         <Card variant="elevated" padding="lg">
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <p className="type-label text-[var(--accent-primary)]">
-                        {t('booking.step1.kicker', 'Шаг 1')}
-                    </p>
-                    <h2 className="type-section-title mt-2 text-[var(--text-primary)]">
-                        {t('booking.step1.title', 'Выберите филиал')}
-                    </h2>
-                    <p className="type-caption mt-2 text-[var(--text-secondary)]">
-                        {t('booking.step1.description', 'Начните с локации, чтобы дальше система показала релевантных сотрудников и доступные услуги.')}
-                    </p>
-                </div>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <h2 className="type-section-title text-[var(--text-primary)]">
+                    {t('booking.step1.title', 'Выберите филиал')}
+                </h2>
                 <Badge variant="info">{t('booking.step1.branchesCount', 'Филиалы: {count}').replace('{count}', String(branches.length))}</Badge>
             </div>
 
@@ -72,7 +64,7 @@ export function BranchSelector({
                                 })}
                             >
                                 <div className="flex w-full items-start justify-between gap-3">
-                                    <div className="space-y-2">
+                                    <div className="min-w-0 space-y-2">
                                         <div className="flex items-center gap-2">
                                             <span
                                                 className={[
@@ -100,15 +92,16 @@ export function BranchSelector({
                                         score={branch.rating_score}
                                         t={t}
                                         variant="badge"
-                                        className="px-2 py-0.5 [&_svg]:h-3 [&_svg]:w-3"
+                                        hideWhenEmpty
+                                        className="shrink-0 px-2 py-0.5 [&_svg]:h-3 [&_svg]:w-3"
                                     />
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Badge variant={active ? 'accent' : 'neutral'}>
-                                        {stateLabel}
-                                    </Badge>
-                                </div>
+                                {active ? (
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Badge variant="accent">{stateLabel}</Badge>
+                                    </div>
+                                ) : null}
                             </button>
                         );
                     })}

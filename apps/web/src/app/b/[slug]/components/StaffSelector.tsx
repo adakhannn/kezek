@@ -128,7 +128,7 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr, loadin
                                     <span className="type-label truncate text-[var(--text-primary)]" data-testid="master-option">
                                         {formatName(person.full_name)}
                                     </span>
-                                    <RatingDisplay score={person.rating_score} t={t} variant="badge" className="ml-2 px-2 py-0.5 [&_svg]:w-3 [&_svg]:h-3" />
+                                    <RatingDisplay score={person.rating_score} t={t} variant="badge" hideWhenEmpty className="ml-2 px-2 py-0.5 [&_svg]:w-3 [&_svg]:h-3" />
                                 </div>
                                 <div className="mt-2">
                                     <Badge variant={active ? 'accent' : 'neutral'}>
