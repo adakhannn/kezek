@@ -1,7 +1,7 @@
 /**
  * E2E: Пакеты визитов — полный сценарий
  * Владелец создаёт план → продаёт пакет клиенту в QuickDesk → записывает его → отмечает посещение
- * → в «Проданные пакеты» остаток уменьшился; в кабинете клиента визит «Оплачено пакетом».
+ * → в «Проданные пакеты» остаток уменьшился; в кабинете клиента визит «По пакету визитов».
  *
  * Фикстура (scripts/e2e-seed.mjs): клиент E2E_TEST_CLIENT_EMAIL и его вчерашний визит
  * «E2E Клиент пакет» (confirmed), который можно отметить.
@@ -112,7 +112,7 @@ test.describe('Пакеты визитов: план → продажа → бр
         });
     });
 
-    test('в кабинете клиента отображается «Оплачено пакетом»', async ({ page }) => {
+    test('в кабинете клиента отображается «По пакету визитов»', async ({ page }) => {
         await signInWithEmailSeed(page, readRequiredEnv('E2E_TEST_CLIENT_EMAIL'));
         await page.goto('/cabinet');
         // Yesterday's visit is in the history tab.
@@ -122,6 +122,6 @@ test.describe('Пакеты визитов: план → продажа → бр
             await expect(history).toHaveAttribute('aria-selected', 'true', { timeout: 2_000 });
         }).toPass({ timeout: 20_000 });
 
-        await expect(page.getByText(/Оплачено пакетом/).first()).toBeVisible({ timeout: 20_000 });
+        await expect(page.getByText(/По пакету визитов/).first()).toBeVisible({ timeout: 20_000 });
     });
 });

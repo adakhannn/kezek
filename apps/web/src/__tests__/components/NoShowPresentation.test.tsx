@@ -42,11 +42,12 @@ describe.each(locales)('no-show card in %s', (locale, dictionary, label) => {
     });
 });
 
-test('keeps package name quotation marks and amount unchanged after JSX lint repair', () => {
+test('names the visit package without payment wording and keeps the amount', () => {
     setLanguage('ru', { ...cabinetRu, ...bookingRu });
     render(<BookingCard bookingId="paid-package" status="paid" start_at="2026-10-12T10:15:00Z" end_at="2026-10-12T11:15:00Z"
         service={null} staff={null} branch={null} business={null} canCancel={false}
         subscriptionApplied={{ plan_name_ru: 'Fixture plan', final_amount: 200 }} />);
-    expect(screen.getByText('Оплачено пакетом: "Fixture plan"', { exact: false })).toBeTruthy();
+    expect(screen.getByText('По пакету визитов «Fixture plan»', { exact: true })).toBeTruthy();
+    expect(screen.queryByText(/Оплачено/)).toBeNull();
     expect(screen.getByText(/200 сом/)).toBeTruthy();
 });

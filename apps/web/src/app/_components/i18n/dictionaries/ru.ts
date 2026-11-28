@@ -35,6 +35,7 @@ import { selectBusinessRu } from './selectBusiness.ru';
 import { servicesRu } from './services.ru';
 import { staffRu } from './staff.ru';
 import { timeRangeRu } from './timeRange.ru';
+import { visitDateRu } from './visitDate.ru';
 
 export const ru: Translations = Object.assign(
     {},
@@ -62,6 +63,7 @@ export const ru: Translations = Object.assign(
     datePickerRu,
     monthPickerRu,
     timeRangeRu,
+    visitDateRu,
     notificationsRu,
     bookingsRu,
     footerRu,

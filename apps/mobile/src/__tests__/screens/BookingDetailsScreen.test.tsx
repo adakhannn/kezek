@@ -317,7 +317,7 @@ describe('BookingDetailsScreen', () => {
 
         renderWithProviders(<BookingDetailsScreen />);
 
-        expect(await screen.findByText('Оплачено пакетом «10 визитов»')).toBeTruthy();
+        expect(await screen.findByText('По пакету визитов «10 визитов»')).toBeTruthy();
     });
 
     // C9: review of a past paid visit.
