@@ -2,11 +2,11 @@
 
 Статус: автоматически построенная карта исходников. Генератор читает TypeScript AST и локальные re-export; приложение и handlers не выполняются.
 
-В текущем дереве: **210 route-файлов, 255 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
+В текущем дереве: **211 route-файлов, 262 явных METHOD/path**. Автоматические HEAD/OPTIONS framework не добавляются; middleware, rewrites и доступность deployment этой картой не проверяются.
 
 Для каждой пары есть один api-contract marker в тематическом справочнике. Это контроль полноты навигации; факты контракта сверены чтением исходников, runtime NOT_RUN.
 
-Контрольная сумма 598 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `e77899abbef2af9fe53157c4d8601d67a5333b646056f8c05dce7c5a1d57e84e`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
+Контрольная сумма 601 исходных файлов (routes и явно связанные из справочников TS/JS/SQL/config): `540723dc13f3055aa811545b710809c6ff35484df1b8e23c94dbef326c223d3c`. Изменение этих файлов требует повторной сверки затронутого описания перед обновлением каталога. Транзитивные зависимости без прямой ссылки этим fingerprint не охвачены.
 
 [Руководство API](../../API_DOCUMENTATION.md) объясняет границы контрактов. Колонка «Делегирование» содержит вызванные из route функции с префиксом run и re-export; это указатель чтения, не полный граф вызовов или доказательство авторизации.
 
@@ -251,3 +251,9 @@
 | `/dashboard/api/branches/[id]/admins/remove` | POST | [route](../../apps/web/src/app/dashboard/api/branches/[id]/admins/remove/route.ts) | [runBranchAdminChangeHttp](../../apps/web/src/lib/branchAdminChangeHttpService.ts) | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/dashboard/api/role-applications/[id]/status` | POST | [route](../../apps/web/src/app/dashboard/api/role-applications/[id]/status/route.ts) | Внутри route; читать исходник | [справочник](BUSINESS_WORKFLOWS.md) |
 | `/dashboard/api/role-applications` | GET | [route](../../apps/web/src/app/dashboard/api/role-applications/route.ts) | Внутри route; читать исходник | [справочник](BUSINESS_WORKFLOWS.md) |
+
+## /sb
+
+| Путь | Явные методы | Исходник | Делегирование | Контракт |
+| --- | --- | --- | --- | --- |
+| `/sb/[...path]` | GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS | [route](../../apps/web/src/app/sb/[...path]/route.ts) | Внутри route; читать исходник | [справочник](CLIENT_AND_AUTH_FLOWS.md) |

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { colors } from '../../constants/colors';
+import { displayStorageUrl } from '../../lib/supabaseProxy';
 
 /** Two letters of a name: "Айгерим Касымова" -> "АК", "Bolot" -> "BO". */
 export function initialsOf(name: string | null | undefined): string {
@@ -47,7 +48,7 @@ export default function Avatar({ name, uri, size = 40, ring = false, style, test
         >
             {showImage ? (
                 <Image
-                    source={{ uri: uri! }}
+                    source={{ uri: displayStorageUrl(uri!) }}
                     style={[StyleSheet.absoluteFill, box]}
                     onError={() => setFailed(true)}
                     accessibilityIgnoresInvertColors

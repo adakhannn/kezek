@@ -4,7 +4,8 @@ import Constants from 'expo-constants';
 import { logEnvVars } from '../utils/debug';
 import { logError, logDebug } from './log';
 import { secureSessionStorage } from './secureSessionStorage';
-import { createSupabaseFetch } from './supabaseFetch';
+import { createSupabaseFetch, SUPABASE_REQUEST_TIMEOUT_MS } from './supabaseFetch';
+import { appSupabaseProxyConfig, appSupabaseProxyFetch } from './supabaseProxy';
 import { installNativeAuthCrypto } from './authCrypto';
 
 installNativeAuthCrypto();
@@ -44,6 +45,8 @@ Then restart Expo with: npx expo start --clear`;
     throw new Error(errorMsg);
 }
 
+const proxyFetch = appSupabaseProxyFetch(appSupabaseProxyConfig(supabaseUrl));
+
 // Custom storage для React Native (использует SecureStore)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
@@ -54,7 +57,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         detectSessionInUrl: false,
     },
     // R25-30: every Supabase request ends within a bound, so screens show an error instead of spinning.
-    global: { fetch: createSupabaseFetch() },
+    // R25-31: with EXPO_PUBLIC_SUPABASE_PROXY_URL set, requests go through our /sb proxy (same client URL,
+    // so the stored session keeps its key); unset, exactly the direct fetch as before.
+    global: { fetch: proxyFetch ? createSupabaseFetch(SUPABASE_REQUEST_TIMEOUT_MS, proxyFetch) : createSupabaseFetch() },
     // postgrest-js retries failed reads itself (with the 20 s bound: ~90 s per query); react-query
     // already retries, so a blocked or slow network made screens spin for minutes.
     db: { retry: false },

@@ -16,6 +16,7 @@ import { bookingCountForm } from '@/lib/bookingCountForm';
 import { resolvePublicContacts } from '@/lib/businessContacts';
 import { formatStaffName, getServiceName } from '@/lib/i18nHelpers';
 import { supabase } from '@/lib/supabaseClient';
+import { displayAvatarUrl } from '@/lib/supabaseProxyClient';
 
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; contact_phone?: string | null; contact_whatsapp?: string | null; contact_email?: string | null; website_url?: string | null; rating_score: number | null };
 type Branch = { id: string; name: string; address?: string | null; rating_score: number | null; contact_phone?: string | null; contact_whatsapp?: string | null; contact_email?: string | null; website_url?: string | null; inherit_business_contacts?: boolean | null; directory_links?: Record<string, string | null> | null };
@@ -401,7 +402,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                                             unoptimized
                                                             width={48}
                                                             height={48}
-                                                            src={person.avatar_url}
+                                                            src={displayAvatarUrl(person.avatar_url)}
                                                             alt={formatName(person.full_name)}
                                                             className="h-12 w-12 rounded-full object-cover"
                                                         />

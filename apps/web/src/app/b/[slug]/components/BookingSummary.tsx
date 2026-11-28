@@ -8,6 +8,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Card } from '@/components/ui/Card';
 import { formatStaffName, getServiceName } from '@/lib/i18nHelpers';
+import { displayAvatarUrl } from '@/lib/supabaseProxyClient';
 
 type BookingSummaryProps = {
     branchName: string | null;
@@ -172,7 +173,7 @@ export function BookingSummary({
                                             unoptimized
                                             width={40}
                                             height={40}
-                                            src={staffCurrent.avatar_url}
+                                            src={displayAvatarUrl(staffCurrent.avatar_url)}
                                             alt={formatName(staffCurrent.full_name)}
                                             className="h-10 w-10 rounded-full object-cover"
                                             onError={(event) => {
