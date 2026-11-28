@@ -2,6 +2,7 @@
 import {NextResponse} from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { getRouteParam } from '@/lib/routeParams';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -58,12 +59,12 @@ export async function POST(req: Request, context: unknown) {
         // key / is_system не меняем этим роутом
         const {error} = await supa.from('roles').update(patch).eq('id', id);
 
-        if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
+        if (error) return NextResponse.json({ok: false, error: reportDatabaseError('AdminRoles', error, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
 
         return NextResponse.json({ok: true});
     } catch (e: unknown) {
         logError('AdminRoles', 'Failed to update role', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

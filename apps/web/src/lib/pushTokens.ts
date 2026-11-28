@@ -70,9 +70,22 @@ export async function unregisterPushToken(admin: DbClient, userId: string, token
     if (error) throw new PushTokenStoreError('UNREGISTER');
 }
 
-/** The tokens of these users, for the booking notification planner. A read failure throws. */
+/**
+ * The tokens of these users, for the booking notification planner. A read failure throws.
+ * A user with a pending account deletion gets no push during the grace period, the same rule as
+ * e-mail, Telegram and WhatsApp (requestAccountDeletion switches those profile flags off). The
+ * tokens are kept, so cancelling the deletion brings push back without re-registering the device.
+ */
 export async function listPushTokens(admin: DbClient, userIds: string[]): Promise<Array<{ user_id: string; token: string }>> {
-    const ids = [...new Set(userIds.filter(Boolean))];
+    const requested = [...new Set(userIds.filter(Boolean))];
+    if (requested.length === 0) return [];
+    const { data: pending, error: pendingError } = await admin.from('account_deletion_requests')
+        .select('user_id')
+        .in('user_id', requested)
+        .eq('status', 'pending');
+    if (pendingError) throw new PushTokenStoreError('LIST');
+    const pendingIds = new Set((pending ?? []).map(row => row.user_id));
+    const ids = requested.filter(id => !pendingIds.has(id));
     if (ids.length === 0) return [];
     const { data, error } = await admin.from('push_tokens')
         .select('user_id, token')

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireCurrentSuperAdmin } from '@/lib/adminHttpAccess';
+import { DATABASE_FAILURE_MESSAGES, databaseFailure, publicErrorMessage } from '@/lib/apiErrorHandler';
 import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateQuery } from '@/lib/validation/apiValidation';
@@ -33,7 +34,7 @@ async function getEventCount(
         .lt('created_at', toIso);
 
     if (error) {
-        throw new Error(error.message);
+        throw databaseFailure(error, DATABASE_FAILURE_MESSAGES.load);
     }
 
     return count ?? 0;
@@ -181,8 +182,8 @@ export async function GET(req: Request) {
             },
         });
     } catch (e) {
-        const error = e instanceof Error ? e.message : String(e);
-        logError('AdminAuthFlowMetricsAPI', 'Unexpected error', { error });
+        const error = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
+        logError('AdminAuthFlowMetricsAPI', 'Unexpected error', e);
         return NextResponse.json(
             { ok: false, error },
             { status: 500 },

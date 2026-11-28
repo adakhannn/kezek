@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { branchCreateError, resolveInitialDirectoryLinks } from '@/lib/branchCreateService';
 import { validatePublicContacts, type PublicContactFields } from '@/lib/businessContacts';
 import {logError} from '@/lib/log';
@@ -37,7 +38,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
         if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
         const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ ok: false, error: eSuper.message }, { status: 400 });
+        if (eSuper) return NextResponse.json({ ok: false, error: reportDatabaseError('BranchCreate', eSuper) }, { status: 400 });
         if (!isSuper) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         const admin = createSupabaseAdminClient();
@@ -85,7 +86,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
 
         return NextResponse.json({ ok: true, id: data?.id });
     } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         logError('BranchCreate', 'Failed to create branch', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireCurrentSuperAdmin } from '@/lib/adminHttpAccess';
+import { DATABASE_FAILURE_MESSAGES, databaseErrorMessage, publicErrorMessage } from '@/lib/apiErrorHandler';
 import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateQuery } from '@/lib/validation/apiValidation';
@@ -83,7 +84,7 @@ export async function GET(req: Request) {
         if (error) {
             logError('AdminMetricsAPI', 'Error fetching metrics', { error: error.message });
             return NextResponse.json(
-                { ok: false, error: error.message },
+                { ok: false, error: databaseErrorMessage(error, DATABASE_FAILURE_MESSAGES.load) },
                 { status: 500 }
             );
         }
@@ -105,8 +106,8 @@ export async function GET(req: Request) {
             },
         });
     } catch (e) {
-        const error = e instanceof Error ? e.message : String(e);
-        logError('AdminMetricsAPI', 'Unexpected error', { error });
+        const error = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
+        logError('AdminMetricsAPI', 'Unexpected error', e);
         return NextResponse.json(
             { ok: false, error },
             { status: 500 }

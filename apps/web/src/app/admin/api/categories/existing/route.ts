@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import {NextResponse} from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import {logError} from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -21,7 +22,7 @@ export async function GET() {
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
         const {data: isSuper, error: eSuper} = await supabase.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
+        if (eSuper) return NextResponse.json({ok: false, error: reportDatabaseError('CategorySuggest', eSuper)}, {status: 400});
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         // собираем уникальные категории из businesses.categories (text[])
@@ -32,7 +33,7 @@ export async function GET() {
             .limit(10000)
             .returns<BizCategoriesRow[]>();
 
-        if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
+        if (error) return NextResponse.json({ok: false, error: reportDatabaseError('CategorySuggest', error, DATABASE_FAILURE_MESSAGES.load)}, {status: 400});
 
         const set = new Set<string>();
         for (const row of data ?? []) {
@@ -44,7 +45,7 @@ export async function GET() {
 
         return NextResponse.json({ok: true, data: Array.from(set).sort()});
     } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         logError('CategorySuggest', 'Failed to suggest categories', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

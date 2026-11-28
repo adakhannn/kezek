@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError, logWarn } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { withLocalizedMessages } from '@/lib/serverMessages';
@@ -29,7 +30,7 @@ export const GET = withLocalizedMessages(async function GET(req: Request, ctx: u
 
         const { data: isSuper, error: superErr } = await supa.rpc('is_super_admin');
 
-        if (superErr) return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
+        if (superErr) return NextResponse.json({ ok: false, error: reportDatabaseError('OwnerList', superErr) }, { status: 400 });
         if (!isSuper) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         // Сервис-клиент
@@ -54,7 +55,7 @@ export const GET = withLocalizedMessages(async function GET(req: Request, ctx: u
             .eq('role_id', ownerRole.id);
 
         if (ownerRolesErr) {
-            return NextResponse.json({ ok: false, error: ownerRolesErr.message }, { status: 400 });
+            return NextResponse.json({ ok: false, error: reportDatabaseError('OwnerList', ownerRolesErr, DATABASE_FAILURE_MESSAGES.load) }, { status: 400 });
         }
 
         const ownerIds = (ownerRoles ?? []).map(r => r.user_id).filter(Boolean) as string[];
@@ -90,7 +91,7 @@ export const GET = withLocalizedMessages(async function GET(req: Request, ctx: u
         return NextResponse.json({ ok: true, owners });
     } catch (e) {
         logError('OwnerList', 'Failed to list business owners', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 });

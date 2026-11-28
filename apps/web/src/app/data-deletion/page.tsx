@@ -2,8 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { getLegalT, type LegalKey } from '@/app/_components/i18n/legal';
-import { formatLocalizedDate } from '@/lib/kyDateFormat';
+import { formatLegalUpdatedAt, getLegalT, type LegalKey } from '@/app/_components/i18n/legal';
 import { getPublicSiteHost, getPublicSiteOrigin } from '@/lib/siteOrigin';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,9 +15,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const DELETED_DATA: ReadonlyArray<[LegalKey, LegalKey]> = [
     ['legal.dataDeletion.s2.profile.label', 'legal.dataDeletion.s2.profile.text'],
-    ['legal.dataDeletion.s2.bookings.label', 'legal.dataDeletion.s2.bookings.text'],
-    ['legal.dataDeletion.s2.reviews.label', 'legal.dataDeletion.s2.reviews.text'],
     ['legal.dataDeletion.s2.auth.label', 'legal.dataDeletion.s2.auth.text'],
+    ['legal.dataDeletion.s2.reviews.label', 'legal.dataDeletion.s2.reviews.text'],
+    ['legal.dataDeletion.s2.packages.label', 'legal.dataDeletion.s2.packages.text'],
+    ['legal.dataDeletion.s2.bookings.label', 'legal.dataDeletion.s2.bookings.text'],
 ];
 const STEPS: ReadonlyArray<[LegalKey, LegalKey]> = [
     ['legal.dataDeletion.s3.step1.title', 'legal.dataDeletion.s3.step1.text'],
@@ -31,7 +31,7 @@ const PARTIAL_OPTIONS: readonly LegalKey[] = ['legal.dataDeletion.s5.i1', 'legal
 
 export default async function DataDeletionPage() {
     const { locale, t } = await getLegalT();
-    const updated = formatLocalizedDate(new Date(), locale, { year: 'numeric', month: 'long', day: 'numeric' });
+    const updated = formatLegalUpdatedAt(locale);
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
@@ -169,7 +169,7 @@ export default async function DataDeletionPage() {
                                 <p className="text-sm text-gray-700 dark:text-gray-300">
                                     <strong>{t('legal.common.serviceLabel')}</strong> Kezek<br/>
                                     <strong>{t('legal.common.websiteLabel')}</strong> <a href={getPublicSiteOrigin()} className="text-indigo-600 dark:text-indigo-400 hover:underline">{getPublicSiteHost()}</a><br/>
-                                    <strong>Email:</strong> {t('legal.common.emailText')}<br/>
+                                    <strong>{t('legal.common.supportLabel')}</strong> {t('legal.common.supportText')}<br/>
                                     <strong>{t('legal.dataDeletion.s7.relatedLabel')}</strong> <Link href="/privacy" className="text-indigo-600 dark:text-indigo-400 hover:underline">{t('legal.dataDeletion.s7.privacyLink')}</Link>
                                 </p>
                             </div>

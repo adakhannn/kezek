@@ -80,6 +80,11 @@ export function AccountDeletionPanel() {
     }
 
     const pending = state?.request?.status === 'pending';
+    // A request that met a blocker on its due date is not retried by itself (accountDeletionService).
+    const notDone = state?.request?.status === 'blocked';
+    const requestedAt = state?.request
+        ? formatLocalizedDate(new Date(state.request.requested_at), locale, { dateStyle: 'medium' })
+        : null;
     const confirmationPhrase = t('cabinet.profile.deletion.confirmationPhrase', 'УДАЛИТЬ');
     const scheduledFor = state?.request
         ? formatLocalizedDate(new Date(state.request.scheduled_for), locale, {
@@ -112,6 +117,13 @@ export function AccountDeletionPanel() {
                 />
             ) : (
                 <>
+                    {notDone ? (
+                        <AlertBanner
+                            variant="warning"
+                            title={t('cabinet.profile.deletion.notDone.title', 'Аккаунт не удалён')}
+                            message={t('cabinet.profile.deletion.notDone.message', 'Запрос на удаление от {date} не выполнен: в назначенный день у аккаунта было то, что мешает удалению, — бизнес, роль, карточка сотрудника или будущая запись. Сам запрос больше не повторится. Устраните причины и запросите удаление снова.').replace('{date}', requestedAt ?? '')}
+                        />
+                    ) : null}
                     {state?.blockers?.length ? (
                         <div className="rounded-[var(--radius-md)] bg-amber-50 p-4 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
                             <p className="type-label">{t('cabinet.profile.deletion.blocked.title', 'Сейчас удалить аккаунт нельзя:')}</p>

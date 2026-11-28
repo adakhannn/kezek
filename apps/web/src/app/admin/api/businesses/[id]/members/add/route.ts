@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import {NextResponse} from 'next/server';
 
 import { contactPhoneDigits, findAccountIdByConfirmedContact } from '@/lib/accountContactLookup';
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import {sendEmailPassword} from '@/lib/senders/email';
@@ -85,7 +86,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
             .eq('key', roleKey)
             .maybeSingle();
 
-        if (eRole) return NextResponse.json({ok: false, error: eRole.message}, {status: 400});
+        if (eRole) return NextResponse.json({ok: false, error: reportDatabaseError('AdminMembersAdd', eRole, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
         if (!roleRow?.id) {
             return NextResponse.json({ok: false, error: `Роль ${roleKey} не найдена`}, {status: 400});
         }
@@ -109,7 +110,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
                 phone_confirm: false,
                 user_metadata: {full_name, phone: phoneE164 ?? undefined},
             });
-            if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
+            if (error) return NextResponse.json({ok: false, error: reportDatabaseError('AdminMembersAdd', error, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
 
             const createdId = data?.user?.id;
             if (!createdId) {
@@ -124,7 +125,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
                 user_metadata: {full_name},
             });
             if (updErr) {
-                return NextResponse.json({ok: false, error: updErr.message}, {status: 400});
+                return NextResponse.json({ok: false, error: reportDatabaseError('AdminMembersAdd', updErr, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
             }
         }
 
@@ -141,12 +142,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
 
         if (upsertErr) {
             // дружелюбное описание, если нет нужного индекса/constraint
-            const hint =
-                /ON CONFLICT|unique|constraint/i.test(upsertErr.message)
-                    ? `${upsertErr.message}. Проверь, что есть UNIQUE индексы:
-  • CREATE UNIQUE INDEX user_roles_global_uniq ON public.user_roles (user_id, role_id) WHERE biz_id IS NULL;
-  • CREATE UNIQUE INDEX user_roles_per_biz_uniq ON public.user_roles (user_id, role_id, biz_id) WHERE biz_id IS NOT NULL;`
-                    : upsertErr.message;
+            const hint = reportDatabaseError('AdminMembersAdd', upsertErr, DATABASE_FAILURE_MESSAGES.save);
             return NextResponse.json({ok: false, error: hint}, {status: 400});
         }
 
@@ -175,7 +171,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, cont
         });
     } catch (e: unknown) {
         logError('AdminMembersAdd', 'Failed to add business member', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 });

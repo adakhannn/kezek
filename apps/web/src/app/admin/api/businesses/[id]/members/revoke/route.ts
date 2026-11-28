@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import {
     canAssignBusinessRole,
     canChangeBusinessMember,
@@ -63,7 +64,7 @@ export async function POST(req: Request, context: unknown) {
             .eq('user_id', user_id)
             .eq('role_id', roleRow.id)
             .eq('biz_id', biz_id);
-        if (delErr) return NextResponse.json({ ok: false, error: delErr.message }, { status: 400 });
+        if (delErr) return NextResponse.json({ ok: false, error: reportDatabaseError('AdminMembersRevoke', delErr, DATABASE_FAILURE_MESSAGES.delete) }, { status: 400 });
 
         // если сняли owner — очистим owner_id у бизнеса (если это он)
         if (role_key === 'owner') {
@@ -77,7 +78,7 @@ export async function POST(req: Request, context: unknown) {
         return NextResponse.json({ ok: true });
     } catch (e) {
         logError('AdminMembersRevoke', 'Failed to revoke business role', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }

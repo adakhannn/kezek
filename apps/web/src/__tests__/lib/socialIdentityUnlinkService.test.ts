@@ -55,6 +55,22 @@ describe('unlinkSocialIdentity', () => {
         expect(admin.rpc).not.toHaveBeenCalled();
     });
 
+    test('Sign in with Apple counts as a login method: Google can be unlinked beside it', async () => {
+        const { admin } = createAdmin({ identities: [{ provider: 'apple' }, { provider: 'google' }] });
+        const result = await unlinkSocialIdentity({ admin: admin as never, userId: 'user-id', provider: 'google' });
+
+        expect(result).toEqual({ ok: true, data: { provider: 'google', remainingMethods: 1 } });
+        expect(admin.rpc).toHaveBeenCalledWith('unlink_auth_identity', { target_user_id: 'user-id', target_provider: 'google' });
+    });
+
+    test('an Apple-only account has nothing else to unlink, and Apple is never unlinked here', async () => {
+        const { admin } = createAdmin({ identities: [{ provider: 'apple' }] });
+        const result = await unlinkSocialIdentity({ admin: admin as never, userId: 'user-id', provider: 'google' });
+
+        expect(result).toMatchObject({ ok: false, status: 404, details: { code: 'identity_not_connected' } });
+        expect(admin.rpc).not.toHaveBeenCalled();
+    });
+
     test('unlinks Google when another method remains', async () => {
         const { admin } = createAdmin({
             identities: [{ provider: 'google' }],

@@ -94,7 +94,12 @@ describe('page reads as JSON', () => {
         expect((await branchList(new Request('http://localhost'), ctx({ id: BIZ }))).status).toBe(404);
 
         jest.mocked(createSupabaseAdminClient).mockReturnValue(adminWith({ branches: { data: null, error: { message: 'boom' } } }) as never);
-        expect((await branchList(new Request('http://localhost'), ctx({ id: BIZ }))).status).toBe(503);
+        const failed = await branchList(new Request('http://localhost'), ctx({ id: BIZ }));
+        expect(failed.status).toBe(503);
+        // The database text stays in the log; the client gets the read's machine code (R25-29).
+        const body = await failed.json();
+        expect(body.details).toEqual({ reason: 'load' });
+        expect(JSON.stringify(body)).not.toContain('boom');
     });
 
     test('a branch whose working hours cannot be read is an error, never "closed every day"', async () => {

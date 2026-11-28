@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import {NextResponse} from 'next/server';
 
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import { runBusinessDelete } from '@/lib/businessDeleteService';
 import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
@@ -21,7 +22,7 @@ export const POST = withLocalizedMessages(async function POST(_req: Request, con
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
         const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
+        if (eSuper) return NextResponse.json({ok: false, error: reportDatabaseError('BusinessDelete', eSuper)}, {status: 400});
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         const result = await runBusinessDelete({ admin: createSupabaseAdminClient(), bizId });

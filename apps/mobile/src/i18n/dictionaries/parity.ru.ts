@@ -10,6 +10,8 @@ export const parityRu = {
     'parity.connections.connect': 'Подключить',
     'parity.connections.unlink': 'Отвязать',
     'parity.connections.yandex': 'Яндекс',
+    'parity.connections.apple': 'Apple',
+    'parity.connections.appleReadOnly': 'Вход через Apple отключается в настройках Apple ID на устройстве.',
     'parity.connections.linked': 'Способ входа успешно подключён',
     'parity.connections.googleLinkError': 'Не удалось подключить Google',
     'parity.connections.unlinkTitle': 'Отвязать {provider}?',

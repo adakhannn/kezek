@@ -7,6 +7,8 @@ export const parityKy: Record<keyof typeof parityRu, string> = {
     'parity.connections.connect': 'Туташтыруу',
     'parity.connections.unlink': 'Ажыратуу',
     'parity.connections.yandex': 'Яндекс',
+    'parity.connections.apple': 'Apple',
+    'parity.connections.appleReadOnly': 'Apple аркылуу кирүү түзмөктөгү Apple ID жөндөөлөрүндө өчүрүлөт.',
     'parity.connections.linked': 'Кирүү ыкмасы ийгиликтүү туташтырылды',
     'parity.connections.googleLinkError': 'Google туташтыруу мүмкүн болгон жок',
     'parity.connections.unlinkTitle': '{provider} ажыратылсынбы?',

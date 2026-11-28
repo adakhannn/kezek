@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import {PostgrestError} from '@supabase/supabase-js';
 import {NextResponse} from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import {logError} from '@/lib/log';
 import { withLocalizedMessages } from '@/lib/serverMessages';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -48,7 +49,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request) {
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
         const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
+        if (eSuper) return NextResponse.json({ok: false, error: reportDatabaseError('CategoryCreate', eSuper)}, {status: 400});
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         const admin = createSupabaseAdminClient();
@@ -72,14 +73,14 @@ export const POST = withLocalizedMessages(async function POST(req: Request) {
             const pgErr = error as PostgrestError;
             const isDuplicate = pgErr.code === '23505' || /duplicate|unique/i.test(pgErr.message);
             return NextResponse.json(
-                {ok: false, error: isDuplicate ? 'Такой slug уже существует' : pgErr.message},
+                {ok: false, error: isDuplicate ? 'Такой slug уже существует' : reportDatabaseError('CategoryCreate', pgErr, DATABASE_FAILURE_MESSAGES.save)},
                 {status: isDuplicate ? 409 : 400},
             );
         }
 
         return NextResponse.json({ok: true, id: data?.id});
     } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         logError('CategoryCreate', 'Failed to create category', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

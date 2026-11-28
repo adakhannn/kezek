@@ -2,6 +2,7 @@
 import {NextResponse} from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { getRouteParam } from '@/lib/routeParams';
 import { withLocalizedMessages } from '@/lib/serverMessages';
@@ -38,7 +39,7 @@ export const POST = withLocalizedMessages(async function POST(_req: Request, con
             .eq('id', id)
             .maybeSingle();
 
-        if (roleGetErr) return NextResponse.json({ok: false, error: roleGetErr.message}, {status: 400});
+        if (roleGetErr) return NextResponse.json({ok: false, error: reportDatabaseError('AdminRoles', roleGetErr, DATABASE_FAILURE_MESSAGES.delete)}, {status: 400});
         if (!roleRow) return NextResponse.json({ok: false, error: 'not found'}, {status: 404});
         if (roleRow.is_system) {
             return NextResponse.json({ok: false, error: 'Системную роль удалять нельзя'}, {status: 400});
@@ -50,14 +51,14 @@ export const POST = withLocalizedMessages(async function POST(_req: Request, con
             const friendly =
                 /23503/.test((error).code ?? '') || /foreign key/i.test(error.message)
                     ? 'Нельзя удалить: роль используется. Сначала уберите её из user_roles.'
-                    : error.message;
+                    : reportDatabaseError('AdminRoles', error, DATABASE_FAILURE_MESSAGES.delete);
             return NextResponse.json({ok: false, error: friendly}, {status: 400});
         }
 
         return NextResponse.json({ok: true});
     } catch (e: unknown) {
         logError('AdminRoles', 'Failed to delete role', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 });

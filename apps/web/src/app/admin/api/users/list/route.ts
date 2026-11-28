@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
 import { parseAdminUserPage } from '@/lib/adminUserStats';
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { readPlatformAdminStates } from '@/lib/platformAdminState';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -62,7 +63,7 @@ export async function GET(req: Request) {
 
         // доступ только глобальному супер-админу
         const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supa, meData.user.id);
-        if (superErr) return NextResponse.json({ ok: false, error: superErr.message } satisfies ListErr, { status: 400 });
+        if (superErr) return NextResponse.json({ ok: false, error: reportDatabaseError('AdminUsersList', superErr) } satisfies ListErr, { status: 400 });
         if (!superRow) return NextResponse.json({ ok: false, error: 'FORBIDDEN' } satisfies ListErr, { status: 403 });
 
         // 2) Админ-клиент (service role)

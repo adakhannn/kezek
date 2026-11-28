@@ -7,6 +7,8 @@ export const parityEn: Record<keyof typeof parityRu, string> = {
     'parity.connections.connect': 'Connect',
     'parity.connections.unlink': 'Unlink',
     'parity.connections.yandex': 'Yandex',
+    'parity.connections.apple': 'Apple',
+    'parity.connections.appleReadOnly': 'Sign in with Apple is turned off in the Apple ID settings on your device.',
     'parity.connections.linked': 'Sign-in method connected successfully',
     'parity.connections.googleLinkError': 'Could not connect Google',
     'parity.connections.unlinkTitle': 'Unlink {provider}?',

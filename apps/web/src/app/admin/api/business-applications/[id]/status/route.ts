@@ -1,6 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { DATABASE_FAILURE_MESSAGES, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { rejectApplicationWithPolicy } from '@/lib/applicationPolicy';
 import { approveBusinessApplicationAndCreateBusiness } from '@/lib/businessApplicationService';
 import { notifyBusinessApplicationApproved } from '@/lib/businessRoleApplicationNotificationService';
@@ -70,6 +71,6 @@ export async function POST(request: Request, context: unknown) {
         reviewed_by: user.id,
         updated_at: new Date().toISOString(),
     }).eq('id', id);
-    if (error) return Response.json({ ok: false, error: error.message }, { status: 400 });
+    if (error) return Response.json({ ok: false, error: reportDatabaseError('ApplicationNotification', error, DATABASE_FAILURE_MESSAGES.save) }, { status: 400 });
     return Response.json({ ok: true });
 }

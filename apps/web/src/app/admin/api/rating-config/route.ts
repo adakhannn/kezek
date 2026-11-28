@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { checkCurrentUserIsSuperAdmin } from '@/lib/adminAccess';
+import { DATABASE_FAILURE_MESSAGES, databaseErrorMessage, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -40,7 +41,7 @@ export async function GET() {
         const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supabase, user.id);
 
         if (superErr) {
-            return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
+            return NextResponse.json({ ok: false, error: reportDatabaseError('RatingConfig', superErr) }, { status: 400 });
         }
         if (!superRow) {
             return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
@@ -57,7 +58,7 @@ export async function GET() {
 
         if (configError) {
             logError('RatingConfig', 'Failed to load rating config', configError);
-            return NextResponse.json({ ok: false, error: configError.message }, { status: 500 });
+            return NextResponse.json({ ok: false, error: databaseErrorMessage(configError, DATABASE_FAILURE_MESSAGES.load) }, { status: 500 });
         }
 
         return NextResponse.json({
@@ -66,7 +67,7 @@ export async function GET() {
         });
     } catch (error) {
         logError('RatingConfig', 'Unexpected error loading rating config', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message = publicErrorMessage(error, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }
 }
@@ -88,7 +89,7 @@ export async function POST(req: Request) {
         const { isSuperAdmin: superRow, error: superErr } = await checkCurrentUserIsSuperAdmin(supabase, user.id);
 
         if (superErr) {
-            return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
+            return NextResponse.json({ ok: false, error: reportDatabaseError('RatingConfig', superErr) }, { status: 400 });
         }
         if (!superRow) {
             return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
@@ -143,7 +144,7 @@ export async function POST(req: Request) {
 
         if (insertError) {
             logError('RatingConfig', 'Failed to save rating config', insertError);
-            return NextResponse.json({ ok: false, error: insertError.message }, { status: 500 });
+            return NextResponse.json({ ok: false, error: databaseErrorMessage(insertError, DATABASE_FAILURE_MESSAGES.save) }, { status: 500 });
         }
 
         let recalcTriggered = false;
@@ -156,7 +157,7 @@ export async function POST(req: Request) {
                     p_days_back: daysBack,
                 });
                 recalcTriggered = !recalcErr;
-                if (recalcErr) recalcError = recalcErr.message;
+                if (recalcErr) recalcError = reportDatabaseError('RatingConfig', recalcErr, DATABASE_FAILURE_MESSAGES.save);
             }
         }
 
@@ -168,7 +169,7 @@ export async function POST(req: Request) {
         });
     } catch (error) {
         logError('RatingConfig', 'Unexpected error saving rating config', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message = publicErrorMessage(error, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }
 }

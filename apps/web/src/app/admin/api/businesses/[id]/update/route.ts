@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { validatePublicContactPatch } from '@/lib/businessContacts';
 import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
@@ -130,13 +131,13 @@ export async function PATCH(req: Request, context: unknown) {
             .single();
 
         if (updateErr) {
-            return NextResponse.json({ ok: false, error: updateErr.message }, { status: 400 });
+            return NextResponse.json({ ok: false, error: reportDatabaseError('AdminBusinessUpdate', updateErr, DATABASE_FAILURE_MESSAGES.save) }, { status: 400 });
         }
 
         return NextResponse.json({ ok: true, data: updated });
     } catch (e) {
         logError('AdminBusinessUpdate', 'Failed to update business', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }

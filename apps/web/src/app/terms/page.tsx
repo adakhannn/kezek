@@ -2,8 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { aroundSlot, getLegalT, type LegalKey } from '@/app/_components/i18n/legal';
-import { formatLocalizedDate } from '@/lib/kyDateFormat';
+import { aroundSlot, formatLegalUpdatedAt, getLegalT, type LegalKey } from '@/app/_components/i18n/legal';
 import { getPublicSiteOrigin } from '@/lib/siteOrigin';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,17 +14,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const ACCOUNT_RULES: readonly LegalKey[] = ['legal.terms.s3.i1', 'legal.terms.s3.i2', 'legal.terms.s3.i3'];
-const BOOKING_RULES: readonly LegalKey[] = ['legal.terms.s4.i1', 'legal.terms.s4.i2', 'legal.terms.s4.i3'];
+const BOOKING_RULES: readonly LegalKey[] = ['legal.terms.s4.i1', 'legal.terms.s4.i2', 'legal.terms.s4.i3', 'legal.terms.s4.i4'];
 const OBLIGATIONS: readonly LegalKey[] = ['legal.terms.s5.i1', 'legal.terms.s5.i2', 'legal.terms.s5.i3'];
 const LIABILITY_EXCLUSIONS: readonly LegalKey[] = ['legal.terms.s6.i1', 'legal.terms.s6.i2', 'legal.terms.s6.i3'];
 
 export default async function TermsPage() {
     const { locale, t } = await getLegalT();
-    const updated = formatLocalizedDate(new Date(), locale, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
+    const updated = formatLegalUpdatedAt(locale);
     const [beforePrivacyLink, afterPrivacyLink] = aroundSlot(t('legal.terms.s7.p'), 'link');
     const [beforeTermsUrl, afterTermsUrl] = aroundSlot(t('legal.terms.s8.p'), 'url');
     return (

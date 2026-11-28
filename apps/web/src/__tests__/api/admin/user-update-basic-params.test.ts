@@ -1,4 +1,5 @@
 import { POST, PUT } from '@/app/admin/api/users/[id]/update-basic/route';
+import { DATABASE_FAILURE_MESSAGES } from '@/lib/apiErrorHandler';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
@@ -62,6 +63,6 @@ it('reports update failure through the PUT alias', async () => {
     admin.auth.admin.updateUserById.mockResolvedValue({ error: { message: 'update rejected' } });
     const response = await PUT(request(), { params: Promise.resolve({ id: userId }) });
     expect(response.status).toBe(400);
-    expect((await response.json()).error).toBe('update rejected');
+    expect((await response.json()).error).toBe(DATABASE_FAILURE_MESSAGES.save);
     expect(admin.auth.admin.updateUserById).toHaveBeenCalledTimes(1);
 });

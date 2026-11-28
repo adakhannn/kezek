@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import {NextResponse} from 'next/server';
 
+import { reportDatabaseError } from '@/lib/apiErrorHandler';
 import { runBranchDelete } from '@/lib/branchDeleteService';
 import { logError } from '@/lib/log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
         const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
+        if (eSuper) return NextResponse.json({ok: false, error: reportDatabaseError('BranchDelete', eSuper)}, {status: 400});
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         const result = await runBranchDelete({ admin: createSupabaseAdminClient(), branchId, bizId: id });

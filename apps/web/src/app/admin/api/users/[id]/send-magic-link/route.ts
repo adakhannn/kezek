@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import {NextResponse} from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { getSiteOrigin } from '@/lib/env';
 import {logError} from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
@@ -30,7 +31,7 @@ export const POST = withLocalizedMessages(async function POST(_req: Request, con
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
         const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
+        if (eSuper) return NextResponse.json({ok: false, error: reportDatabaseError('SendMagicLink', eSuper)}, {status: 400});
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         // Admin client (service role)
@@ -38,7 +39,7 @@ export const POST = withLocalizedMessages(async function POST(_req: Request, con
 
         // Берём email пользователя
         const {data: userResp, error: eGet} = await admin.auth.admin.getUserById(userId);
-        if (eGet) return NextResponse.json({ok: false, error: eGet.message}, {status: 400});
+        if (eGet) return NextResponse.json({ok: false, error: reportDatabaseError('SendMagicLink', eGet, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
 
         const email = userResp?.user?.email ?? null;
         if (!email) {
@@ -52,14 +53,14 @@ export const POST = withLocalizedMessages(async function POST(_req: Request, con
             email,
             options: {redirectTo: `${SITE}/auth/callback?next=/admin`},
         });
-        if (eGen) return NextResponse.json({ok: false, error: eGen.message}, {status: 400});
+        if (eGen) return NextResponse.json({ok: false, error: reportDatabaseError('SendMagicLink', eGen, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
 
         const actionLink =
             (linkData as { properties?: { action_link?: string | null } } | null)?.properties?.action_link ?? null;
 
         return NextResponse.json({ok: true, link: actionLink});
     } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         logError('SendMagicLink', 'Failed to send magic link', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

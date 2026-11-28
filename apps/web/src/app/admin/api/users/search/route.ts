@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
         if (!user) return NextResponse.json({ ok:false, error:'auth' }, { status:401 });
         
         const { data: isSuper, error: superErr } = await supa.rpc('is_super_admin');
-        if (superErr) return NextResponse.json({ ok:false, error: superErr.message }, { status:400 });
+        if (superErr) return NextResponse.json({ ok:false, error: reportDatabaseError('AdminUsersSearch', superErr) }, { status:400 });
         if (!isSuper) return NextResponse.json({ ok:false, error:'forbidden' }, { status:403 });
 
         // читаем q
@@ -44,12 +45,12 @@ export async function GET(req: Request) {
         }
 
         const { data, error } = await query;
-        if (error) return NextResponse.json({ ok:false, error: error.message }, { status:400 });
+        if (error) return NextResponse.json({ ok:false, error: reportDatabaseError('AdminUsersSearch', error, DATABASE_FAILURE_MESSAGES.load) }, { status:400 });
 
         return NextResponse.json({ ok:true, items: data ?? [] });
     } catch (e: unknown) {
         logError('AdminUsersSearch', 'User search failed', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ ok:false, error: msg }, { status:500 });
     }
 }

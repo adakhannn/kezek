@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import {NextResponse} from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import {
     canAssignBusinessRole,
     parseBusinessMemberRoleKey,
@@ -57,7 +58,7 @@ export async function POST(req: Request, context: unknown) {
 
         if (insErr && insErr.code !== '23505') {
             // 23505 — уже есть такая роль → не считаем ошибкой
-            return NextResponse.json({ok: false, error: insErr.message}, {status: 400});
+            return NextResponse.json({ok: false, error: reportDatabaseError('AdminMembersGrant', insErr, DATABASE_FAILURE_MESSAGES.save)}, {status: 400});
         }
 
         // если выдаём 'owner' — обновим поле owner_id у бизнеса
@@ -68,7 +69,7 @@ export async function POST(req: Request, context: unknown) {
         return NextResponse.json({ok: true});
     } catch (e) {
         logError('AdminMembersGrant', 'Failed to grant business role', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

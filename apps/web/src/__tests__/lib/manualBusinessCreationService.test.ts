@@ -122,6 +122,7 @@ describe('createManualBusiness', () => {
         });
 
         expect(result).toMatchObject({ ok: false, code: 'audit_failed', status: 500 });
+        expect(JSON.stringify(result)).not.toContain('audit unavailable');
         expect(admin.from).toHaveBeenLastCalledWith('businesses');
     });
 });

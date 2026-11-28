@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import {logError} from '@/lib/log';
 import { explicitSchedulingEnabled } from '@/lib/scheduling/config';
 import { withLocalizedMessages } from '@/lib/serverMessages';
@@ -33,7 +34,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request) {
         if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
         const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ ok: false, error: eSuper.message }, { status: 400 });
+        if (eSuper) return NextResponse.json({ ok: false, error: reportDatabaseError('BranchSchedule', eSuper) }, { status: 400 });
         if (!isSuper) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         const admin = createSupabaseAdminClient();
@@ -48,7 +49,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request) {
             .maybeSingle();
 
         if (branchError) {
-            return NextResponse.json({ ok: false, error: branchError.message }, { status: 400 });
+            return NextResponse.json({ ok: false, error: reportDatabaseError('BranchSchedule', branchError, DATABASE_FAILURE_MESSAGES.save) }, { status: 400 });
         }
         if (!branch) {
             return NextResponse.json({ ok: false, error: 'Филиал не найден' }, { status: 404 });
@@ -89,13 +90,13 @@ export const POST = withLocalizedMessages(async function POST(req: Request) {
         if (inserts.length > 0) {
             const { error: insertError } = await admin.from('branch_working_hours').insert(inserts);
             if (insertError) {
-                return NextResponse.json({ ok: false, error: insertError.message }, { status: 400 });
+                return NextResponse.json({ ok: false, error: reportDatabaseError('BranchSchedule', insertError, DATABASE_FAILURE_MESSAGES.save) }, { status: 400 });
             }
         }
 
         return NextResponse.json({ ok: true });
     } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         logError('BranchSchedule', 'Failed to save branch schedule', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
@@ -110,7 +111,7 @@ export const GET = withLocalizedMessages(async function GET(req: Request) {
         if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
         const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ ok: false, error: eSuper.message }, { status: 400 });
+        if (eSuper) return NextResponse.json({ ok: false, error: reportDatabaseError('BranchSchedule', eSuper) }, { status: 400 });
         if (!isSuper) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         const admin = createSupabaseAdminClient();
@@ -124,7 +125,7 @@ export const GET = withLocalizedMessages(async function GET(req: Request) {
             .maybeSingle();
 
         if (branchError) {
-            return NextResponse.json({ ok: false, error: branchError.message }, { status: 400 });
+            return NextResponse.json({ ok: false, error: reportDatabaseError('BranchSchedule', branchError, DATABASE_FAILURE_MESSAGES.load) }, { status: 400 });
         }
         if (!branch) {
             return NextResponse.json({ ok: false, error: 'Филиал не найден' }, { status: 404 });
@@ -139,12 +140,12 @@ export const GET = withLocalizedMessages(async function GET(req: Request) {
             .order('day_of_week');
 
         if (scheduleError) {
-            return NextResponse.json({ ok: false, error: scheduleError.message }, { status: 400 });
+            return NextResponse.json({ ok: false, error: reportDatabaseError('BranchSchedule', scheduleError, DATABASE_FAILURE_MESSAGES.load) }, { status: 400 });
         }
 
         return NextResponse.json({ ok: true, schedule: schedule || [] });
     } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         logError('BranchSchedule', 'Failed to load branch schedule', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { DATABASE_FAILURE_MESSAGES, publicErrorMessage, reportDatabaseError } from '@/lib/apiErrorHandler';
 import { logError, logWarn } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { withLocalizedMessages } from '@/lib/serverMessages';
@@ -29,7 +30,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, ctx:
 
         const { data: isSuper, error: superErr } = await supa.rpc('is_super_admin');
 
-        if (superErr) return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
+        if (superErr) return NextResponse.json({ ok: false, error: reportDatabaseError('OwnerSave', superErr) }, { status: 400 });
         if (!isSuper) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         // Сервис-клиент
@@ -75,7 +76,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, ctx:
             .eq('role_id', ownerRole.id);
 
         if (deleteErr) {
-            return NextResponse.json({ ok: false, error: deleteErr.message }, { status: 400 });
+            return NextResponse.json({ ok: false, error: reportDatabaseError('OwnerSave', deleteErr, DATABASE_FAILURE_MESSAGES.save) }, { status: 400 });
         }
 
         // Добавляем новых владельцев
@@ -91,7 +92,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, ctx:
                 .insert(ownerRoles);
 
             if (insertErr) {
-                return NextResponse.json({ ok: false, error: insertErr.message }, { status: 400 });
+                return NextResponse.json({ ok: false, error: reportDatabaseError('OwnerSave', insertErr, DATABASE_FAILURE_MESSAGES.save) }, { status: 400 });
             }
 
             // Обновляем owner_id в businesses на первого владельца (для обратной совместимости)
@@ -118,7 +119,7 @@ export const POST = withLocalizedMessages(async function POST(req: Request, ctx:
         return NextResponse.json({ ok: true, owner_ids: userIds });
     } catch (e) {
         logError('OwnerSave', 'Failed to save business owners', e);
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = publicErrorMessage(e, DATABASE_FAILURE_MESSAGES.internal);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 });

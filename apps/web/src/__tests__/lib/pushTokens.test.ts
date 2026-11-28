@@ -50,14 +50,30 @@ test('unregister is scoped to the user; removal after DeviceNotRegistered is by 
 });
 
 test('list reads distinct users once, skips the query without users, and throws on a read error', async () => {
-    let mock = table([{ data: [{ user_id: 'a', token: TOKEN }], error: null }]);
+    let mock = table([{ data: [], error: null }, { data: [{ user_id: 'a', token: TOKEN }], error: null }]);
     expect(await listPushTokens(mock.client, ['a', 'a', ''])).toEqual([{ user_id: 'a', token: TOKEN }]);
-    expect(mock.calls[0]).toContainEqual({ method: 'in', args: ['user_id', ['a']] });
+    expect(mock.from).toHaveBeenNthCalledWith(1, 'account_deletion_requests');
+    expect(mock.calls[0]).toContainEqual({ method: 'eq', args: ['status', 'pending'] });
+    expect(mock.from).toHaveBeenNthCalledWith(2, 'push_tokens');
+    expect(mock.calls[1]).toContainEqual({ method: 'in', args: ['user_id', ['a']] });
     mock = table([]);
     expect(await listPushTokens(mock.client, [])).toEqual([]);
     expect(mock.from).not.toHaveBeenCalled();
+    mock = table([{ data: [], error: null }, { data: null, error: { message: 'down' } }]);
+    await expect(listPushTokens(mock.client, ['a'])).rejects.toThrow('PUSH_TOKEN_LIST_FAILED');
     mock = table([{ data: null, error: { message: 'down' } }]);
     await expect(listPushTokens(mock.client, ['a'])).rejects.toThrow('PUSH_TOKEN_LIST_FAILED');
+});
+
+test('a user with a pending account deletion gets no push, like the other channels', async () => {
+    let mock = table([{ data: [{ user_id: 'leaving' }], error: null }, { data: [{ user_id: 'staying', token: TOKEN }], error: null }]);
+    expect(await listPushTokens(mock.client, ['leaving', 'staying'])).toEqual([{ user_id: 'staying', token: TOKEN }]);
+    expect(mock.calls[0]).toContainEqual({ method: 'in', args: ['user_id', ['leaving', 'staying']] });
+    expect(mock.calls[1]).toContainEqual({ method: 'in', args: ['user_id', ['staying']] });
+    // Nobody left to notify: the token table is not read at all.
+    mock = table([{ data: [{ user_id: 'leaving' }], error: null }]);
+    expect(await listPushTokens(mock.client, ['leaving'])).toEqual([]);
+    expect(mock.from).toHaveBeenCalledTimes(1);
 });
 
 test('a masked token cannot be used', () => {
